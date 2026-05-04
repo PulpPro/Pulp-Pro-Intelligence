@@ -10,32 +10,38 @@ export default function App() {
     if (activePage === "batches") return <BatchesPage />;
   };
 
+  const navItemStyle = (page) => ({
+    padding: "10px 15px",
+    borderRadius: "8px",
+    marginBottom: "8px",
+    cursor: "pointer",
+    background: activePage === page ? "#333" : "transparent",
+    color: activePage === page ? "#4ade80" : "#ccc",
+    fontWeight: activePage === page ? "600" : "400"
+  });
+
   return (
-    <div style={{ display: "flex", height: "100vh", background: "#111", color: "white" }}>
+    <div style={{ display: "flex", height: "100vh", background: "#0f172a", color: "white", fontFamily: "Arial" }}>
       
       {/* Sidebar */}
-      <div style={{ width: "200px", background: "#222", padding: "15px" }}>
-        <h2>Pulp Pro</h2>
+      <div style={{ width: "240px", background: "#020617", padding: "20px", borderRight: "1px solid #1e293b" }}>
+        <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "30px" }}>
+          Pulp Pro
+        </h2>
 
-        <div style={{ marginTop: "20px" }}>
-          <p 
-            style={{ cursor: "pointer", marginBottom: "10px" }}
-            onClick={() => setActivePage("dashboard")}
-          >
+        <div>
+          <div style={navItemStyle("dashboard")} onClick={() => setActivePage("dashboard")}>
             Dashboard
-          </p>
+          </div>
 
-          <p 
-            style={{ cursor: "pointer" }}
-            onClick={() => setActivePage("batches")}
-          >
+          <div style={navItemStyle("batches")} onClick={() => setActivePage("batches")}>
             Batches
-          </p>
+          </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div style={{ flex: 1, padding: "20px" }}>
+      {/* Main */}
+      <div style={{ flex: 1, padding: "30px" }}>
         {renderPage()}
       </div>
 

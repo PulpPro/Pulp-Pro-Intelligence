@@ -1,5 +1,4 @@
 // Brands Module
-
 function renderBrands(fruit) {
     const grid = document.getElementById('brandGrid');
 

@@ -1,11 +1,3 @@
-// Register Service Worker
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-            .catch(err => console.log('SW failed', err));
-    });
-}
-
 // Global State
 let scanHistory = JSON.parse(localStorage.getItem('pulpProHistory')) || [];
 let favorites = JSON.parse(localStorage.getItem('pulpProFavorites')) || [];
@@ -23,7 +15,6 @@ window.addEventListener('load', () => {
     renderFavorites();
     setTimeout(() => {
         document.body.classList.add('loaded');
-        document.getElementById('codeIn').focus();
     }, 2600);
 });
 

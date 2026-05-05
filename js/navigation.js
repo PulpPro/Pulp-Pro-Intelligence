@@ -117,5 +117,5 @@ function loadTheme() {
     }
 }
 
-// Initialize theme on page load
+// Initialize theme on load
 document.addEventListener('DOMContentLoaded', loadTheme);

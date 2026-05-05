@@ -11,7 +11,12 @@ const allViews = [
 function hideAllViews() {
     allViews.forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.classList.add('hidden');
+        if (!el) return;
+        if (id === 'appInterface') {
+            el.style.display = 'none';
+        } else {
+            el.classList.add('hidden');
+        }
     });
 }
 
@@ -41,8 +46,9 @@ function selectBrand(brand) {
     activeBrand = brand;
     document.getElementById('brandName').innerText = brand;
     hideAllViews();
-    document.getElementById('appInterface').classList.remove('hidden');
+    document.getElementById('appInterface').style.display = 'flex';
     initCalculator();
+    updateFavoriteUI();
 }
 
 function openCalc(brand, fruit) {
@@ -50,7 +56,7 @@ function openCalc(brand, fruit) {
     activeBrand = brand;
     document.getElementById('brandName').innerText = brand;
     hideAllViews();
-    document.getElementById('appInterface').classList.remove('hidden');
+    document.getElementById('appInterface').style.display = 'flex';
     initCalculator();
     updateFavoriteUI();
 }

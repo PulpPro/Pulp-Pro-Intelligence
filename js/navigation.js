@@ -110,12 +110,4 @@ function toggleTheme() {
 
 // Load saved theme
 function loadTheme() {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'light') {
-        document.body.classList.add('light-theme');
-        document.getElementById('themeText').innerText = 'Light Mode';
-    }
-}
-
-// Initialize theme on load
-document.addEventListener('DOMContentLoaded', loadTheme);
+    const savedTheme

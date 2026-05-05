@@ -10,7 +10,8 @@ const allViews = [
     'middle-hub',
     'brand-hub',
     'appInterface',
-    'defect-hub'
+    'defect-hub',
+    'defect-scanner-view'
 ];
 
 function hideAllViews() {

@@ -110,7 +110,7 @@ function copyResult() {
 
     const appUrl = 'https://pulppro.github.io/Pulp-Pro-Intelligence/';
 
-    const plainText = `Pulp Pro Report: ${appUrl}\nCode: ${code}\nAge: ${days} Days\nHarvest Date: ${date}`;
+    const plainText = `Pulp Pro Report\nCode: ${code}\nAge: ${days} Days\nHarvest Date: ${date}`;
     const htmlText = `
         <div style="font-family: sans-serif;">
             <p><a href="${appUrl}" style="color:#a6e22e; font-weight:bold; text-decoration:none;">Pulp Pro Report</a></p>

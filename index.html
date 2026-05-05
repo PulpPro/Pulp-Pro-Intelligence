@@ -40,6 +40,7 @@
 
 <div id="menu-overlay" onclick="toggleMenu()"></div>
 
+<!-- FRUIT HUB -->
 <div id="fruit-hub" class="nav-view">
 <div class="hub-title">Select Commodity</div>
 <div class="selection-grid-container">
@@ -50,13 +51,13 @@
 <div class="selection-card" onclick="openDefectDetector()"><img src="rotten.png" alt="defect"><div class="commodity-name-section"><span>Defect Detector</span></div></div>
 </div>
 </div>
-
 <div id="favorites-section" class="hidden">
 <div class="hub-title" style="color: var(--pulp-amber); font-size: 0.8rem; margin-top:20px;">Saved Favorites</div>
 <div class="fav-grid" id="fav-grid"></div>
 </div>
 </div>
 
+<!-- MIDDLE HUB -->
 <div id="middle-hub" class="nav-view hidden">
 <div class="hub-title" id="middleHubTitle">Banana Menu</div>
 <div class="list-container">
@@ -67,12 +68,14 @@
 <button class="btn-main" style="margin-top:40px; background:transparent; border:1px solid var(--border-glass); color:var(--text-main);" onclick="showHub()">← Back</button>
 </div>
 
+<!-- BRAND HUB -->
 <div id="brand-hub" class="nav-view hidden">
 <div class="hub-title" id="brandHubTitle">Select Brand</div>
 <div class="list-container" id="brandGrid"></div>
 <button class="btn-main" style="margin-top:40px; background:transparent; border:1px solid var(--border-glass); color:var(--text-main);" onclick="openMiddleHub(activeFruit)">← Back</button>
 </div>
 
+<!-- DEFECT HUB -->
 <div id="defect-hub" class="nav-view hidden">
 <div class="hub-title">Defect Detector</div>
 <div class="list-container">
@@ -83,22 +86,16 @@
 <button class="btn-main" style="margin-top:40px; background:transparent; border:1px solid var(--border-glass); color:var(--text-main);" onclick="showHub()">← Back</button>
 </div>
 
+<!-- DEFECT SCANNER VIEW -->
 <div id="defect-scanner-view" class="nav-view hidden">
 <div class="hub-title" id="defectScannerTitle">Scan Banana</div>
-<video id="defectCameraFeed" autoplay playsinline style="width:100%; border-radius:12px;"></video>
+<video id="defectCameraFeed" autoplay playsinline style="width:100%; border-radius:12px; margin-bottom:15px;"></video>
 <canvas id="defectCanvas" style="display:none;"></canvas>
 <div id="defectResults" style="margin-top:15px;"></div>
 <button class="btn-main" style="margin-top:20px; background:transparent; border:1px solid var(--border-glass); color:var(--text-main);" onclick="backToDefectHub()">← Back</button>
 </div>
 
-<div id="defect-scanner-view" class="nav-view hidden">
-  <div class="hub-title" id="defectScannerTitle">Scan Banana</div>
-  <video id="defectCameraFeed" autoplay playsinline style="width:100%; border-radius:12px;"></video>
-  <canvas id="defectCanvas" style="display:none;"></canvas>
-  <div id="defectResults" style="margin-top:15px;"></div>
-  <button class="btn-main" style="margin-top:20px; background:transparent; border:1px solid var(--border-glass); color:var(--text-main);" onclick="backToDefectHub()">← Back</button>
-</div>
-  
+<!-- CALCULATOR -->
 <div class="app-container" id="appInterface">
 <div class="app-card" id="appCard">
 <i class="bi bi-star-fill fav-toggle" id="favStar" onclick="toggleFavorite()"></i>
@@ -115,24 +112,15 @@
 </div>
 <button class="btn-main" style="margin-top:25px; background:transparent; border:none; opacity:0.4; font-size:0.6rem; color:var(--text-main);" onclick="openBrands(activeFruit)">← Back to Brands</button>
 </div>
-
 <div id="historySection" class="history-section"><div id="historyList"></div></div>
 </div>
 
-<script>
-if ('serviceWorker' in navigator) {
-window.addEventListener('load', () => {
-navigator.serviceWorker.register('sw.js').catch(err => console.log('SW failed', err));
-});
-}
-</script>
-
 <script src="js/app.js"></script>
-<script src="js/favorites.js"></script>
-<script src="js/history.js"></script>
-<script src="js/brands.js"></script>
 <script src="js/navigation.js"></script>
 <script src="js/calculator.js"></script>
-<script src="js/defect-detector.js"></script></body>
+<script src="js/history.js"></script>
+<script src="js/favorites.js"></script>
+<script src="js/brands.js"></script>
+<script src="js/defect-detector.js"></script>
+</body>
 </html>
-```

@@ -1,12 +1,11 @@
-// Open Brand Hub
-function openBrands(fruit) {
-    activeFruit = fruit;
-    switchView('brand-hub');
+// Brands Module
+
+function renderBrands(fruit) {
     const grid = document.getElementById('brandGrid');
 
     if (fruit === 'banana') {
         grid.innerHTML = `
-            <div class="list-btn" onclick="openCalc('Chiquita')">Chiquita</div>
+            <div class="list-btn" onclick="selectBrand('Chiquita')">Chiquita</div>
             <div class="list-btn disabled">Fyffes (Soon)</div>
             <div class="list-btn disabled">Favorita (Soon)</div>
             <div class="list-btn disabled">Agrofair (Soon)</div>

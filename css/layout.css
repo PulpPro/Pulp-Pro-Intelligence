@@ -77,6 +77,9 @@
 
 /* Nav Views */
 .nav-view {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     max-width: 900px; width: 100%;
     text-align: center; opacity: 0;
     transition: 0.5s; margin-top: 80px;
@@ -128,9 +131,13 @@
 
 /* App Container */
 .app-container {
-    display: none; flex-direction: column;
+    display: none;
+    flex-direction: column;
     gap: 30px; width: 100%;
     max-width: 400px; margin-top: 40px;
+}
+.app-container.visible {
+    display: flex;
 }
 @media (min-width: 992px) {
     .app-container {

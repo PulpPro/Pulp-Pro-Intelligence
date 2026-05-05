@@ -44,9 +44,13 @@ function checkFruit(historicalCode = null) {
     const dChar = val.charCodeAt(1);
     const yDigit = val.charAt(2);
 
+    let d = dChar - 64;
+    if (yDigit === '2') d += 26;
+
     const isValid = (mChar >= 65 && mChar <= 76) &&
                     (dChar >= 65 && dChar <= 90) &&
-                    (yDigit === '1' || yDigit === '2');
+                    (yDigit === '1' || yDigit === '2') &&
+                    (d >= 1 && d <= 31);
 
     if (!isValid) {
         box.classList.add('hidden');
@@ -56,8 +60,6 @@ function checkFruit(historicalCode = null) {
 
     const now = new Date();
     const m = mChar - 65;
-    let d = dChar - 64;
-    if (yDigit === '2') d += 26;
 
     let hDate = new Date(now.getFullYear(), m, d);
     if (hDate > now) hDate.setFullYear(now.getFullYear() - 1);

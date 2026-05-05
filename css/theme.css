@@ -53,3 +53,9 @@ body {
         transform: translate3d(4px, 0, 0);
     }
 }
+
+@keyframes scanMove {
+    0%   { top: 0%; }
+    50%  { top: calc(100% - 3px); }
+    100% { top: 0%; }
+}

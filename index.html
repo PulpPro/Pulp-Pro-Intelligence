@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pulp Pro</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="edited-image.png">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+    <div id="splash-screen">
+        <img src="edited-image.png" class="splash-logo">
+        <div class="splash-text">PULP PRO</div>
+    </div>
+
+    <div id="menu-trigger" onclick="toggleMenu()"><span></span></div>
+
+    <div id="menu-drawer">
+        <div style="text-align:center; margin-bottom:40px;">
+            <img src="edited-image.png" style="width:50px; margin-bottom:10px;">
+            <div style="font-weight:900; color:var(--pulp-lime);">PULP PRO</div>
+        </div>
+        <div class="menu-item" onclick="showHub(); toggleMenu();"><span>🏠 Home</span></div>
+        <div class="settings-label">App Settings</div>
+        <div class="menu-item" onclick="toggleTheme()"><span>🌓 <span id="themeText">Dark Mode</span></span></div>
+        <div class="menu-item" onclick="clearHistory()" style="color:var(--pulp-red);"><span>⚠️ Clear Logs</span></div>
+        <div class="menu-item" onclick="sendFeedback()"><span>💬 Send Feedback</span></div>
+        
+        <div id="menu-fav-container">
+            <div class="menu-item" onclick="toggleMenuFavs()"><span>⭐ Favorites</span><i class="bi bi-chevron-down" id="favChevron"></i></div>
+            <div id="menu-fav-list"></div>
+        </div>
+    </div>
+    <div id="menu-overlay" onclick="toggleMenu()"></div>
+
+    <div id="fruit-hub" class="nav-view">
+        <div class="hub-title">Select Commodity</div>
+        <div class="selection-grid-container">
+            <div class="selection-grid">
+                <div class="selection-card" onclick="openMiddleHub('banana')"><img src="banana.png" alt="banana"><div class="commodity-name-section"><span>Banana</span></div></div>
+                <div class="selection-card" onclick="openMiddleHub('mango')"><img src="mango.png" alt="mango"><div class="commodity-name-section"><span>Mango</span><span style="color:var(--pulp-amber); font-size:0.6rem; letter-spacing:1px;">(SOON)</span></div></div>
+                <div class="selection-card" onclick="openMiddleHub('avocado')"><img src="avocado.png" alt="avocado"><div class="commodity-name-section"><span>Avocado</span><span style="color:var(--pulp-amber); font-size:0.6rem; letter-spacing:1px;">(SOON)</span></div></div>
+            </div>
+        </div>
+        <div id="favorites-section" class="hidden">
+            <div class="hub-title" style="color: var(--pulp-amber); font-size: 0.8rem; margin-top:20px;">Saved Favorites</div>
+            <div class="fav-grid" id="fav-grid"></div>
+        </div>
+    </div>
+
+    <div id="middle-hub" class="nav-view hidden">
+        <div class="hub-title" id="middleHubTitle">Banana Menu</div>
+        <div class="list-container">
+            <div class="list-btn" id="brandsBtn" onclick="openBrands(activeFruit)">Banana Brands</div>
+            <div class="list-btn disabled">Defects (Soon)</div>
+            <div class="list-btn disabled">Ripening (Soon)</div>
+        </div>
+        <button class="btn-main" style="margin-top:40px; background:transparent; border:1px solid var(--border-glass); color:var(--text-main);" onclick="showHub()">← Back</button>
+    </div>
+
+    <div id="brand-hub" class="nav-view hidden">
+        <div class="hub-title" id="brandHubTitle">Select Brand</div>
+        <div class="list-container" id="brandGrid"></div>
+        <button class="btn-main" style="margin-top:40px; background:transparent; border:1px solid var(--border-glass); color:var(--text-main);" onclick="openMiddleHub(activeFruit)">← Back</button>
+    </div>
+
+    <div class="app-container" id="appInterface">
+        <div class="app-card" id="appCard">
+            <i class="bi bi-star-fill fav-toggle" id="favStar" onclick="toggleFavorite()"></i>
+            <img src="edited-image.png" style="width:50px; margin-bottom:10px;">
+            <div id="brandName" style="font-size: 1.4rem; font-weight: 900; color: var(--pulp-lime); text-transform: uppercase;">Chiquita</div>
+            <div id="commodityLabel" style="font-weight: 900; letter-spacing: 4px; opacity: 0.5; font-size: 0.7rem; margin-bottom: 25px; color:var(--text-main);">BANANA AGE CHECKER</div>
+            <div class="input-wrapper"><input type="text" id="codeIn" placeholder="---" maxlength="3" autofocus></div>
+            <button onclick="checkFruit()" class="btn-main" id="calcBtn">Calculate</button>
+            <div id="resBox" class="result-display hidden">
+                <div id="statusLabel" style="font-weight:900;">READY</div>
+                <div id="daysValue">--</div>
+                <div id="dateText" style="font-size: 1.3rem; font-weight: 900; margin-top: 10px;">-- -- ----</div>
+                <button class="btn btn-copy" onclick="copyResult()" id="copyBtn"><i class="bi bi-clipboard"></i> COPY</button>
+            </div>
+            <button class="btn-main" style="margin-top:25px; background:transparent; border:none; opacity:0.4; font-size:0.6rem; color:var(--text-main);" onclick="openBrands(activeFruit)">← Back to Brands</button>
+        </div>
+        <div id="historySection" class="history-section"><div id="historyList"></div></div>
+    </div>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW failed', err));
+            });
+        }
+    </script>
+
+    <script src="js/app.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/calculator.js"></script>
+    <script src="js/history.js"></script>
+    <script src="js/favorites.js"></script>
+    <script src="js/brands.js"></script>
+
+</body>
+</html>

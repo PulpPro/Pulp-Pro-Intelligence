@@ -42,6 +42,17 @@ function selectBrand(brand) {
     document.getElementById('brandName').innerText = brand;
     hideAllViews();
     document.getElementById('appInterface').classList.remove('hidden');
+    initCalculator();
+}
+
+function openCalc(brand, fruit) {
+    activeFruit = fruit;
+    activeBrand = brand;
+    document.getElementById('brandName').innerText = brand;
+    hideAllViews();
+    document.getElementById('appInterface').classList.remove('hidden');
+    initCalculator();
+    updateFavoriteUI();
 }
 
 function openDefectDetector() {

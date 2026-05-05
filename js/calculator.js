@@ -108,10 +108,12 @@ function copyResult() {
 
     if (document.getElementById('resBox').classList.contains('hidden')) return;
 
-    const plainText = `Pulp Pro Report\nCode: ${code}\nAge: ${days} Days\nHarvest Date: ${date}`;
+    const appUrl = 'https://pulppro.github.io/Pulp-Pro-Intelligence/';
+
+    const plainText = `Pulp Pro Report: ${appUrl}\nCode: ${code}\nAge: ${days} Days\nHarvest Date: ${date}`;
     const htmlText = `
         <div style="font-family: sans-serif;">
-            <p><strong>Pulp Pro Report</strong></p>
+            <p><a href="${appUrl}" style="color:#a6e22e; font-weight:bold; text-decoration:none;">Pulp Pro Report</a></p>
             <p>Code: <span style="color:#ff4d4d; font-weight:bold;">${code}</span></p>
             <p>Age: <span style="color:#ff4d4d; font-weight:bold;">${days} Days</span></p>
             <p>Harvest Date: ${date}</p>

@@ -68,7 +68,18 @@ function openDefectDetector() {
 
 function startDefectScan(fruit) {
     const fruitNames = { banana: 'Banana', mango: 'Mango', avocado: 'Avocado' };
-    document.getElementById('defectScannerTitle').innerText = 'Scan ' + fruitNames[fruit];
+    document.getElementById('defectScannerTitle').innerText = '— ' + fruitNames[fruit] + ' —';
+    document.getElementById('scanBtn').innerHTML = '<i class="bi bi-camera"></i> SCAN';
+    document.getElementById('scanStatus').innerText = '';
+    document.getElementById('defectResults').innerHTML = '';
+
+    // Store active model globally for triggerScan()
+    window._defectModel = {
+        banana: { projectName: 'banana-defects', version: 1, apiKey: '9xIqfcEBoTfMaxCPncH5' },
+        mango:  { projectName: 'mango-defect',   version: 1, apiKey: '9xIqfcEBoTfMaxCPncH5' },
+        avocado:{ projectName: 'avocado-defect-detection', version: 1, apiKey: '9xIqfcEBoTfMaxCPncH5' }
+    }[fruit];
+
     hideAllViews();
     document.getElementById('defect-scanner-view').classList.remove('hidden');
     DefectDetector.open(fruit);

@@ -91,6 +91,14 @@
 <button class="btn-main" style="margin-top:20px; background:transparent; border:1px solid var(--border-glass); color:var(--text-main);" onclick="backToDefectHub()">← Back</button>
 </div>
 
+<div id="defect-scanner-view" class="nav-view hidden">
+  <div class="hub-title" id="defectScannerTitle">Scan Banana</div>
+  <video id="defectCameraFeed" autoplay playsinline style="width:100%; border-radius:12px;"></video>
+  <canvas id="defectCanvas" style="display:none;"></canvas>
+  <div id="defectResults" style="margin-top:15px;"></div>
+  <button class="btn-main" style="margin-top:20px; background:transparent; border:1px solid var(--border-glass); color:var(--text-main);" onclick="backToDefectHub()">← Back</button>
+</div>
+  
 <div class="app-container" id="appInterface">
 <div class="app-card" id="appCard">
 <i class="bi bi-star-fill fav-toggle" id="favStar" onclick="toggleFavorite()"></i>

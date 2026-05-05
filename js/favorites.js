@@ -16,7 +16,8 @@ function toggleFavorite() {
 function updateFavoriteUI() {
     const id = `${activeFruit}_${activeBrand}`;
     const isFav = favorites.some(f => f.id === id);
-    document.getElementById('favStar').classList.toggle('active', isFav);
+    const star = document.getElementById('favStar');
+    if (star) star.classList.toggle('active', isFav);
 }
 
 // Render Favorites on Home & Menu

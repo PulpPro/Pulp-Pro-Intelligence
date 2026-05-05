@@ -111,14 +111,18 @@ function copyResult() {
     if (document.getElementById('resBox').classList.contains('hidden')) return;
 
     const appUrl = 'https://pulppro.github.io/Pulp-Pro-Intelligence/';
+    const logoUrl = 'https://pulppro.github.io/Pulp-Pro-Intelligence/edited-image.png';
 
     const plainText = `Pulp Pro Report\nCode: ${code}\nAge: ${days} Days\nHarvest Date: ${date}`;
     const htmlText = `
-        <div style="font-family: sans-serif;">
-            <p><a href="${appUrl}" style="color:#a6e22e; font-weight:bold; text-decoration:none;">Pulp Pro Report</a></p>
-            <p>Code: <span style="color:#ff4d4d; font-weight:bold;">${code}</span></p>
-            <p>Age: <span style="color:#ff4d4d; font-weight:bold;">${days} Days</span></p>
-            <p>Harvest Date: ${date}</p>
+        <div style="font-family: sans-serif; color: #121212;">
+            <div style="background-color: #000000; border-radius: 8px; padding: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px;">
+                <img src="${logoUrl}" style="width: 40px; height: 40px; border-radius: 4px;">
+                <a href="${appUrl}" style="color: #a6e22e; font-weight: bold; text-decoration: none; font-size: 16px;">Pulp Pro Report</a>
+            </div>
+            <p style="margin: 8px 0;"><strong>Code:</strong> <span style="color: #ff4d4d; font-weight: bold;">${code}</span></p>
+            <p style="margin: 8px 0;"><strong>Age:</strong> <span style="color: #ff4d4d; font-weight: bold;">${days} Days</span></p>
+            <p style="margin: 8px 0;"><strong>Harvest Date:</strong> ${date}</p>
         </div>
     `;
 

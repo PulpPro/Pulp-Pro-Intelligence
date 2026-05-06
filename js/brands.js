@@ -1,4 +1,4 @@
-// Brands Module
+// Render brands into brand hub
 function renderBrands(fruit) {
     const grid = document.getElementById('brandGrid');
 
@@ -12,8 +12,8 @@ function renderBrands(fruit) {
         `;
     } else {
         grid.innerHTML = `
-            <div style="opacity:0.5; padding:20px;">
-                Logic for ${fruit} brands coming soon.
+            <div style="opacity:0.5; padding:20px; text-align:center; font-weight:700; text-transform:uppercase; letter-spacing:2px;">
+                ${fruit} brands coming soon.
             </div>
         `;
     }

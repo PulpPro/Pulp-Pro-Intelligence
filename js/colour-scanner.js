@@ -5,17 +5,17 @@ const ColourScanner = (() => {
     const MAX_SCANS = 3;
 
     const COLOUR_STAGES = [
-        { value: 1,   hex: '#1a5c0a', name: 'Full Green',     shelfLife: '7+ Days',  status: 'Unripe',   statusColor: '#4caf50' },
-        { value: 1.5, hex: '#2e7d0e', name: 'Green+',         shelfLife: '6–7 Days', status: 'Unripe',   statusColor: '#4caf50' },
-        { value: 2,   hex: '#5a9e10', name: 'More Green',      shelfLife: '5–6 Days', status: 'Early',    statusColor: '#8bc34a' },
-        { value: 2.5, hex: '#8db81a', name: 'Green-Yellow',    shelfLife: '4–5 Days', status: 'Turning',  statusColor: '#cddc39' },
-        { value: 3,   hex: '#c8c81a', name: 'More Yellow',     shelfLife: '3–4 Days', status: 'Turning',  statusColor: '#ffeb3b' },
-        { value: 3.5, hex: '#d4b800', name: 'Yellow-Green',    shelfLife: '3 Days',   status: 'Ripening', statusColor: '#ffc107' },
-        { value: 4,   hex: '#f5c518', name: 'More Yellow',     shelfLife: '2–3 Days', status: 'Ripening', statusColor: '#ffd740' },
-        { value: 4.5, hex: '#f5b800', name: 'Full Yellow',     shelfLife: '2 Days',   status: 'Ready',    statusColor: '#ffb300' },
-        { value: 5,   hex: '#f5a000', name: 'Yellow + Flecks', shelfLife: '1–2 Days', status: 'Peak',     statusColor: '#ff8f00' },
-        { value: 5.5, hex: '#c87800', name: 'Yellow-Brown',    shelfLife: '1 Day',    status: 'Overripe', statusColor: '#ff6f00' },
-        { value: 6,   hex: '#7a4500', name: 'Full Brown',      shelfLife: 'Sell Now', status: 'Overripe', statusColor: '#ff5722' }
+        { value: 1,   hex: '#3d5c2a', name: 'Full Green',     shelfLife: '7+ Days',  status: 'Unripe',   statusColor: '#4caf50' },
+        { value: 1.5, hex: '#4a6b2e', name: 'Green+',         shelfLife: '6–7 Days', status: 'Unripe',   statusColor: '#4caf50' },
+        { value: 2,   hex: '#6b8c35', name: 'More Green',      shelfLife: '5–6 Days', status: 'Early',    statusColor: '#8bc34a' },
+        { value: 2.5, hex: '#8fa83c', name: 'Green-Yellow',    shelfLife: '4–5 Days', status: 'Turning',  statusColor: '#cddc39' },
+        { value: 3,   hex: '#b8b830', name: 'More Yellow',     shelfLife: '3–4 Days', status: 'Turning',  statusColor: '#ffeb3b' },
+        { value: 3.5, hex: '#c9b025', name: 'Yellow-Green',    shelfLife: '3 Days',   status: 'Ripening', statusColor: '#ffc107' },
+        { value: 4,   hex: '#d4aa22', name: 'More Yellow',     shelfLife: '2–3 Days', status: 'Ripening', statusColor: '#ffd740' },
+        { value: 4.5, hex: '#d4a020', name: 'Full Yellow',     shelfLife: '2 Days',   status: 'Ready',    statusColor: '#ffb300' },
+        { value: 5,   hex: '#c8901a', name: 'Yellow + Flecks', shelfLife: '1–2 Days', status: 'Peak',     statusColor: '#ff8f00' },
+        { value: 5.5, hex: '#a87018', name: 'Yellow-Brown',    shelfLife: '1 Day',    status: 'Overripe', statusColor: '#ff6f00' },
+        { value: 6,   hex: '#7a5010', name: 'Full Brown',      shelfLife: 'Sell Now', status: 'Overripe', statusColor: '#ff5722' }
     ];
 
     function hexToRgb(hex) {
@@ -27,10 +27,14 @@ const ColourScanner = (() => {
     }
 
     function colourDistance(rgb1, rgb2) {
+        const rMean = (rgb1.r + rgb2.r) / 2;
+        const dr = rgb1.r - rgb2.r;
+        const dg = rgb1.g - rgb2.g;
+        const db = rgb1.b - rgb2.b;
         return Math.sqrt(
-            Math.pow(rgb1.r - rgb2.r, 2) +
-            Math.pow(rgb1.g - rgb2.g, 2) +
-            Math.pow(rgb1.b - rgb2.b, 2)
+            (2 + rMean / 256) * dr * dr +
+            4 * dg * dg +
+            (2 + (255 - rMean) / 256) * db * db
         );
     }
 
@@ -65,7 +69,7 @@ const ColourScanner = (() => {
 
         const cx = Math.floor(canvas.width / 2);
         const cy = Math.floor(canvas.height / 2);
-        const size = 60;
+        const size = 80;
         const data = ctx.getImageData(cx - size / 2, cy - size / 2, size, size).data;
 
         let r = 0, g = 0, b = 0, count = 0;
@@ -83,10 +87,24 @@ const ColourScanner = (() => {
         try {
             if (cameraStream) stopCamera();
             cameraStream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+                video: {
+                    facingMode: 'environment',
+                    width: { ideal: 640 },
+                    height: { ideal: 480 },
+                    zoom: 1.0
+                }
             });
             const video = document.getElementById('csVideo');
             video.srcObject = cameraStream;
+
+            const track = cameraStream.getVideoTracks()[0];
+            if (track && track.getCapabilities) {
+                const capabilities = track.getCapabilities();
+                if (capabilities.zoom) {
+                    await track.applyConstraints({ advanced: [{ zoom: capabilities.zoom.min }] });
+                }
+            }
+
             await video.play();
             const placeholder = document.getElementById('csPlaceholder');
             if (placeholder) placeholder.style.display = 'none';

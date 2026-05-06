@@ -11,6 +11,7 @@ function hideAllViews() {
     document.getElementById('defect-type-view').classList.add('hidden');
     document.getElementById('defect-scan-view').classList.add('hidden');
     document.getElementById('defect-report-view').classList.add('hidden');
+    document.getElementById('defect-info-view').classList.add('hidden');
     document.getElementById('colour-scanner-view').classList.add('hidden');
     document.getElementById('appInterface').classList.add('hidden');
 }
@@ -27,8 +28,8 @@ function openMiddleHub(fruit) {
     activeFruit = fruit;
     const fruitNames = { banana:'Banana', mango:'Mango', avocado:'Avocado' };
     const name = fruitNames[fruit] || fruit;
-    document.getElementById('middleHubTitle').innerText = name + ' Menu';
-    document.getElementById('brandsBtn').innerText = name + ' Brands';
+    document.getElementById('middleHubTitle').innerText = name + ' ' + t('menu');
+    document.getElementById('brandsBtn').innerText = name + ' ' + t('brands');
     hideAllViews();
     document.getElementById('middle-hub').classList.remove('hidden');
 }
@@ -37,7 +38,7 @@ function openMiddleHub(fruit) {
 function openBrands(fruit) {
     activeFruit = fruit;
     const fruitNames = { banana:'Banana', mango:'Mango', avocado:'Avocado' };
-    document.getElementById('brandHubTitle').innerText = 'Select ' + (fruitNames[fruit] || fruit) + ' Brand';
+    document.getElementById('brandHubTitle').innerText = t('selectBrand') + ' — ' + (fruitNames[fruit] || fruit);
     hideAllViews();
     document.getElementById('brand-hub').classList.remove('hidden');
     renderBrands(fruit);
@@ -47,7 +48,7 @@ function openBrands(fruit) {
 function selectBrand(brand) {
     activeBrand = brand;
     document.getElementById('brandName').innerText = brand;
-    document.getElementById('commodityLabel').innerText = (activeFruit || 'fruit').toUpperCase() + ' AGE CHECKER';
+    document.getElementById('commodityLabel').innerText = (activeFruit || 'fruit').toUpperCase() + ' ' + t('bananaAgeChecker');
     document.getElementById('codeIn').value = '';
     document.getElementById('resBox').classList.add('hidden');
     hideAllViews();
@@ -63,10 +64,24 @@ function openDefectDetector() {
     document.getElementById('defect-hub').classList.remove('hidden');
 }
 
-// Open Colour Scanner — camera only starts here
+// Open Defect Detector directly from favorites
+function openDefectDetectorDirect(fruit, type) {
+    window.defectActiveFruit = fruit;
+    window.defectActiveType = type;
+    hideAllViews();
+    document.getElementById('defect-scan-view').classList.remove('hidden');
+    const fruitNames = { banana:'Banana', mango:'Mango', avocado:'Avocado' };
+    const typeLabel = type === 'external' ? t('external') : t('internal');
+    document.getElementById('defectScanTitle').innerText = fruitNames[fruit] + ' — ' + typeLabel;
+    updateDefectFavoriteUI();
+    DefectDetector.selectType(type);
+}
+
+// Open Colour Scanner
 function openColourScanner() {
     hideAllViews();
     document.getElementById('colour-scanner-view').classList.remove('hidden');
+    updateColourFavoriteUI();
     ColourScanner.init();
     ColourScanner.setScanMode('single');
 }
@@ -81,6 +96,6 @@ function toggleMenu() {
 function toggleTheme() {
     document.body.classList.toggle('light-theme');
     const isLight = document.body.classList.contains('light-theme');
-    document.getElementById('themeText').innerText = isLight ? 'Light Mode' : 'Dark Mode';
+    document.getElementById('themeText').innerText = isLight ? t('lightMode') : t('darkMode');
     localStorage.setItem('pulpTheme', isLight ? 'light' : 'dark');
 }

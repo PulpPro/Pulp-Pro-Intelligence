@@ -2,6 +2,7 @@ const ColourScanner = (() => {
     let cameraStream = null;
     let scanMode = 'single';
     let multiScans = [];
+    let capturedPhotos = [];
     const MAX_SCANS = 3;
 
     const COLOUR_STAGES = [
@@ -45,10 +46,8 @@ const ColourScanner = (() => {
             dist: colourDistance(input, hexToRgb(stage.hex))
         }));
         distances.sort((a, b) => a.dist - b.dist);
-
         const best = distances[0];
         const second = distances[1];
-
         if (second.dist - best.dist < 20) {
             const lo = best.stage.value < second.stage.value ? best.stage : second.stage;
             const hi = best.stage.value < second.stage.value ? second.stage : best.stage;
@@ -57,21 +56,28 @@ const ColourScanner = (() => {
         return { type: 'single', stage: best.stage };
     }
 
+    function capturePhotoDataUrl() {
+        const video = document.getElementById('csVideo');
+        const canvas = document.getElementById('csCanvas');
+        if (!video || !video.videoWidth) return null;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        return canvas.toDataURL('image/jpeg', 0.9);
+    }
+
     function sampleCameraColour() {
         const video = document.getElementById('csVideo');
         const canvas = document.getElementById('csCanvas');
         if (!video || !video.videoWidth) return null;
-
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(video, 0, 0);
-
         const cx = Math.floor(canvas.width / 2);
         const cy = Math.floor(canvas.height / 2);
         const size = 80;
         const data = ctx.getImageData(cx - size / 2, cy - size / 2, size, size).data;
-
         let r = 0, g = 0, b = 0, count = 0;
         for (let i = 0; i < data.length; i += 4) {
             r += data[i]; g += data[i + 1]; b += data[i + 2]; count++;
@@ -87,15 +93,10 @@ const ColourScanner = (() => {
         try {
             if (cameraStream) stopCamera();
             cameraStream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    facingMode: 'environment',
-                    width: { ideal: 640 },
-                    height: { ideal: 480 }
-                }
+                video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } }
             });
             const video = document.getElementById('csVideo');
             video.srcObject = cameraStream;
-
             const track = cameraStream.getVideoTracks()[0];
             if (track && track.getCapabilities) {
                 const capabilities = track.getCapabilities();
@@ -103,7 +104,6 @@ const ColourScanner = (() => {
                     await track.applyConstraints({ advanced: [{ zoom: capabilities.zoom.min }] });
                 }
             }
-
             await video.play();
             const placeholder = document.getElementById('csPlaceholder');
             if (placeholder) placeholder.style.display = 'none';
@@ -135,6 +135,7 @@ const ColourScanner = (() => {
 
     function init() {
         multiScans = [];
+        capturedPhotos = [];
         scanMode = 'single';
         const singleBtn = document.getElementById('csSingleBtn');
         const multiBtn = document.getElementById('csMultiBtn');
@@ -150,6 +151,7 @@ const ColourScanner = (() => {
     function setScanMode(mode) {
         scanMode = mode;
         multiScans = [];
+        capturedPhotos = [];
         const singleBtn = document.getElementById('csSingleBtn');
         const multiBtn = document.getElementById('csMultiBtn');
         if (singleBtn) singleBtn.classList.toggle('active', mode === 'single');
@@ -185,6 +187,7 @@ const ColourScanner = (() => {
         }
 
         setTimeout(() => {
+            const photoDataUrl = capturePhotoDataUrl();
             const rgb = sampleCameraColour();
             let result;
 
@@ -198,8 +201,10 @@ const ColourScanner = (() => {
             if (btn) btn.disabled = false;
 
             if (scanMode === 'single') {
+                capturedPhotos = [photoDataUrl];
                 showSingleResult(result);
             } else {
+                capturedPhotos.push(photoDataUrl);
                 multiScans.push(result);
                 renderMultiScans();
                 updateScanButton();
@@ -253,16 +258,11 @@ const ColourScanner = (() => {
         const name = getResultName(result);
         const shelfLife = getResultShelfLife(result);
         const status = getResultStatus(result);
-        const stageVal = result.type === 'single'
-            ? result.stage.value
-            : (result.lower.value + result.upper.value) / 2;
+        const stageVal = result.type === 'single' ? result.stage.value : (result.lower.value + result.upper.value) / 2;
         const barWidth = Math.round((stageVal / 6) * 100);
 
         const swatch = document.getElementById('csSingleSwatch');
-        if (swatch) {
-            swatch.style.background = colour;
-            swatch.style.boxShadow = `0 8px 30px ${colour}60`;
-        }
+        if (swatch) { swatch.style.background = colour; swatch.style.boxShadow = `0 8px 30px ${colour}60`; }
         const labelEl = document.getElementById('csSingleLabel');
         if (labelEl) labelEl.innerText = label;
         const nameEl = document.getElementById('csSingleName');
@@ -273,6 +273,19 @@ const ColourScanner = (() => {
         if (shelfEl) shelfEl.innerText = shelfLife;
         const statusEl = document.getElementById('csSingleStatus');
         if (statusEl) { statusEl.innerText = status.label; statusEl.style.color = status.color; }
+
+        // Show photo preview
+        const photoEl = document.getElementById('csSinglePhoto');
+        if (photoEl && capturedPhotos[0]) {
+            photoEl.src = capturedPhotos[0];
+            photoEl.style.display = 'block';
+            document.getElementById('csSinglePhotoPlaceholder').style.display = 'none';
+        }
+
+        // Reset note
+        const noteInput = document.getElementById('csNoteInput');
+        if (noteInput) noteInput.value = '';
+        updateNotePreview('');
 
         showView('cs-single-result');
     }
@@ -315,9 +328,7 @@ const ColourScanner = (() => {
         stopCamera();
 
         const avgValue = multiScans.reduce((sum, r) => {
-            const val = r.type === 'single'
-                ? r.stage.value
-                : (r.lower.value + r.upper.value) / 2;
+            const val = r.type === 'single' ? r.stage.value : (r.lower.value + r.upper.value) / 2;
             return sum + val;
         }, 0) / multiScans.length;
 
@@ -339,10 +350,7 @@ const ColourScanner = (() => {
         const status = getResultStatus(batchResult);
 
         const batchSwatch = document.getElementById('csBatchSwatch');
-        if (batchSwatch) {
-            batchSwatch.style.background = colour;
-            batchSwatch.style.boxShadow = `0 8px 30px ${colour}60`;
-        }
+        if (batchSwatch) { batchSwatch.style.background = colour; batchSwatch.style.boxShadow = `0 8px 30px ${colour}60`; }
         const batchLabel = document.getElementById('csBatchLabel');
         if (batchLabel) batchLabel.innerText = label;
         const batchShelf = document.getElementById('csBatchShelf');
@@ -352,8 +360,37 @@ const ColourScanner = (() => {
         const batchCount = document.getElementById('csBatchCount');
         if (batchCount) batchCount.innerText = multiScans.length + ' of ' + MAX_SCANS;
 
+        // Render batch photo grid
+        renderBatchPhotos();
         renderBatchBreakdown();
+
+        // Reset note
+        const noteInput = document.getElementById('csBatchNoteInput');
+        if (noteInput) noteInput.value = '';
+        updateBatchNotePreview('');
+
         showView('cs-batch-result');
+    }
+
+    function renderBatchPhotos() {
+        const container = document.getElementById('csBatchPhotoGrid');
+        if (!container) return;
+        container.innerHTML = multiScans.map((scan, i) => {
+            const colour = getResultColour(scan);
+            const label = getResultLabel(scan);
+            const photo = capturedPhotos[i];
+            return `
+            <div style="flex:1; min-width:0; border-radius:16px; overflow:hidden; background:#111; position:relative; height:90px;">
+                ${photo
+                    ? `<img src="${photo}" style="width:100%; height:100%; object-fit:cover;">`
+                    : `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:1.5rem;">🍌</div>`
+                }
+                <div style="position:absolute; bottom:0; left:0; right:0; padding:4px 6px; background:rgba(0,0,0,0.7);">
+                    <div style="font-size:0.45rem; font-weight:900; color:#fff; text-transform:uppercase; letter-spacing:1px;">Box ${i + 1}</div>
+                    <div style="font-size:0.5rem; font-weight:900; color:${colour};">${label}</div>
+                </div>
+            </div>`;
+        }).join('');
     }
 
     function renderBatchBreakdown() {
@@ -373,12 +410,340 @@ const ColourScanner = (() => {
         }).join('');
     }
 
+    // Note preview update for single scan
+    function updateNotePreview(val) {
+        const preview = document.getElementById('csNotePreview');
+        const previewText = document.getElementById('csNotePreviewText');
+        const charCount = document.getElementById('csNoteCharCount');
+        if (charCount) charCount.innerText = val.length + ' / 120';
+        if (preview && previewText) {
+            if (val.trim().length > 0) {
+                preview.classList.remove('hidden');
+                previewText.innerText = val;
+            } else {
+                preview.classList.add('hidden');
+            }
+        }
+    }
+
+    // Note preview update for batch scan
+    function updateBatchNotePreview(val) {
+        const preview = document.getElementById('csBatchNotePreview');
+        const previewText = document.getElementById('csBatchNotePreviewText');
+        const charCount = document.getElementById('csBatchNoteCharCount');
+        if (charCount) charCount.innerText = val.length + ' / 120';
+        if (preview && previewText) {
+            if (val.trim().length > 0) {
+                preview.classList.remove('hidden');
+                previewText.innerText = val;
+            } else {
+                preview.classList.add('hidden');
+            }
+        }
+    }
+
+    function getNote(inputId) {
+        const el = document.getElementById(inputId);
+        return el ? el.value.trim() : '';
+    }
+
+    function getNow() {
+        const now = new Date();
+        return now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()
+            + ' · ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // Share single result as image
+    async function shareReport() {
+        const label = document.getElementById('csSingleLabel')?.innerText || '';
+        const shelf = document.getElementById('csSingleShelf')?.innerText || '';
+        const status = document.getElementById('csSingleStatus')?.innerText || '';
+        const colour = document.getElementById('csSingleSwatch')?.style.background || '#78c830';
+        const note = getNote('csNoteInput');
+        const photo = capturedPhotos[0];
+
+        const canvas = await generateReportCanvas({
+            type: 'single', label, shelf, status, colour, note, photo,
+            timestamp: getNow()
+        });
+
+        shareCanvas(canvas, 'pulp-pro-colour-scan.png');
+    }
+
+    // Share batch result as image
+    async function shareBatchReport() {
+        const label = document.getElementById('csBatchLabel')?.innerText || '';
+        const shelf = document.getElementById('csBatchShelf')?.innerText || '';
+        const status = document.getElementById('csBatchStatus')?.innerText || '';
+        const colour = document.getElementById('csBatchSwatch')?.style.background || '#98c428';
+        const note = getNote('csBatchNoteInput');
+        const count = document.getElementById('csBatchCount')?.innerText || '';
+
+        const canvas = await generateBatchReportCanvas({
+            label, shelf, status, colour, note, count,
+            scans: multiScans, photos: capturedPhotos,
+            timestamp: getNow()
+        });
+
+        shareCanvas(canvas, 'pulp-pro-batch-scan.png');
+    }
+
+    async function generateReportCanvas({ type, label, shelf, status, colour, note, photo, timestamp }) {
+        const W = 1080;
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        let H = 900;
+        if (note) H += 80;
+        canvas.width = W;
+        canvas.height = H;
+
+        // Background
+        ctx.fillStyle = '#0a0a0a';
+        ctx.fillRect(0, 0, W, H);
+
+        // Photo
+        if (photo) {
+            const img = await loadImage(photo);
+            ctx.save();
+            roundRect(ctx, 40, 40, W - 80, 400, 40);
+            ctx.clip();
+            ctx.drawImage(img, 40, 40, W - 80, 400);
+            ctx.restore();
+            // Overlay gradient
+            const grad = ctx.createLinearGradient(0, 300, 0, 440);
+            grad.addColorStop(0, 'rgba(10,10,10,0)');
+            grad.addColorStop(1, 'rgba(10,10,10,0.95)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(40, 40, W - 80, 400);
+        } else {
+            ctx.fillStyle = 'rgba(22,22,24,0.98)';
+            roundRect(ctx, 40, 40, W - 80, 400, 40);
+            ctx.fill();
+        }
+
+        // Colour swatch
+        ctx.fillStyle = colour;
+        roundRect(ctx, 60, 460, 100, 100, 20);
+        ctx.fill();
+
+        // Label
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 52px -apple-system, sans-serif';
+        ctx.fillText(label, 180, 520);
+
+        // Bar background
+        ctx.fillStyle = 'rgba(255,255,255,0.08)';
+        roundRect(ctx, 60, 580, W - 120, 12, 6);
+        ctx.fill();
+
+        // Data rows
+        const rows = [
+            ['Shelf Life', shelf],
+            ['Status', status],
+            ['Date', timestamp]
+        ];
+        let y = 620;
+        rows.forEach(([key, val]) => {
+            ctx.fillStyle = 'rgba(255,255,255,0.35)';
+            ctx.font = '600 28px -apple-system, sans-serif';
+            ctx.fillText(key.toUpperCase(), 60, y);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 28px -apple-system, sans-serif';
+            ctx.fillText(val, 400, y);
+            y += 50;
+        });
+
+        // Note
+        if (note) {
+            ctx.fillStyle = 'rgba(166,226,46,0.1)';
+            roundRect(ctx, 60, y + 10, W - 120, 60, 16);
+            ctx.fill();
+            ctx.fillStyle = '#a6e22e';
+            ctx.font = '600 24px -apple-system, sans-serif';
+            ctx.fillText('NOTE: ' + note, 80, y + 48);
+            y += 80;
+        }
+
+        // Logo bar
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.fillRect(0, H - 80, W, 80);
+        ctx.fillStyle = '#a6e22e';
+        ctx.font = 'bold 30px -apple-system, sans-serif';
+        ctx.fillText('PULP PRO', 60, H - 38);
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        ctx.font = '400 24px -apple-system, sans-serif';
+        ctx.fillText('pulppro.github.io/Pulp-Pro-Intelligence', W - 580, H - 38);
+
+        return canvas;
+    }
+
+    async function generateBatchReportCanvas({ label, shelf, status, colour, note, count, scans, photos, timestamp }) {
+        const W = 1080;
+        const photoH = 220;
+        let H = 200 + (scans.length * (photoH + 120)) + 300;
+        if (note) H += 80;
+        const canvas = document.createElement('canvas');
+        canvas.width = W;
+        canvas.height = H;
+        const ctx = canvas.getContext('2d');
+
+        ctx.fillStyle = '#0a0a0a';
+        ctx.fillRect(0, 0, W, H);
+
+        // Title
+        ctx.fillStyle = '#a6e22e';
+        ctx.font = 'bold 36px -apple-system, sans-serif';
+        ctx.fillText('BATCH COLOUR SCAN', 60, 70);
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        ctx.font = '400 26px -apple-system, sans-serif';
+        ctx.fillText(timestamp, 60, 110);
+
+        let y = 150;
+
+        // Each box scan
+        for (let i = 0; i < scans.length; i++) {
+            const scan = scans[i];
+            const photo = photos[i];
+            const c = getResultColour(scan);
+            const lbl = getResultLabel(scan);
+            const sh = getResultShelfLife(scan);
+
+            ctx.fillStyle = 'rgba(22,22,24,0.98)';
+            roundRect(ctx, 40, y, W - 80, photoH + 100, 30);
+            ctx.fill();
+
+            if (photo) {
+                const img = await loadImage(photo);
+                ctx.save();
+                roundRect(ctx, 40, y, W - 80, photoH, 30);
+                ctx.clip();
+                ctx.drawImage(img, 40, y, W - 80, photoH);
+                ctx.restore();
+                const grad = ctx.createLinearGradient(0, y + photoH - 80, 0, y + photoH);
+                grad.addColorStop(0, 'rgba(22,22,24,0)');
+                grad.addColorStop(1, 'rgba(22,22,24,0.95)');
+                ctx.fillStyle = grad;
+                ctx.fillRect(40, y, W - 80, photoH);
+            }
+
+            ctx.fillStyle = c;
+            roundRect(ctx, 60, y + photoH + 15, 70, 70, 14);
+            ctx.fill();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 36px -apple-system, sans-serif';
+            ctx.fillText(`Box ${i + 1} — ${lbl}`, 150, y + photoH + 50);
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.font = '400 26px -apple-system, sans-serif';
+            ctx.fillText(`Shelf Life: ${sh}`, 150, y + photoH + 85);
+
+            y += photoH + 120;
+        }
+
+        // Divider
+        ctx.fillStyle = 'rgba(166,226,46,0.2)';
+        ctx.fillRect(40, y, W - 80, 2);
+        y += 20;
+
+        // Batch average
+        ctx.fillStyle = '#a6e22e';
+        ctx.font = 'bold 28px -apple-system, sans-serif';
+        ctx.fillText('BATCH AVERAGE', 60, y + 40);
+
+        ctx.fillStyle = colour;
+        roundRect(ctx, 60, y + 60, 80, 80, 16);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 44px -apple-system, sans-serif';
+        ctx.fillText(label, 160, y + 110);
+
+        const batchRows = [
+            ['Boxes Scanned', count],
+            ['Shelf Life', shelf],
+            ['Status', status]
+        ];
+        let by = y + 170;
+        batchRows.forEach(([key, val]) => {
+            ctx.fillStyle = 'rgba(255,255,255,0.35)';
+            ctx.font = '600 26px -apple-system, sans-serif';
+            ctx.fillText(key.toUpperCase(), 60, by);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 26px -apple-system, sans-serif';
+            ctx.fillText(val, 380, by);
+            by += 46;
+        });
+
+        // Note
+        if (note) {
+            ctx.fillStyle = 'rgba(166,226,46,0.1)';
+            roundRect(ctx, 60, by + 10, W - 120, 60, 16);
+            ctx.fill();
+            ctx.fillStyle = '#a6e22e';
+            ctx.font = '600 24px -apple-system, sans-serif';
+            ctx.fillText('NOTE: ' + note, 80, by + 48);
+            by += 80;
+        }
+
+        // Logo bar
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.fillRect(0, H - 80, W, 80);
+        ctx.fillStyle = '#a6e22e';
+        ctx.font = 'bold 30px -apple-system, sans-serif';
+        ctx.fillText('PULP PRO', 60, H - 38);
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        ctx.font = '400 24px -apple-system, sans-serif';
+        ctx.fillText('pulppro.github.io/Pulp-Pro-Intelligence', W - 580, H - 38);
+
+        return canvas;
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h - r);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        ctx.lineTo(x + r, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+    }
+
+    function loadImage(src) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = src;
+        });
+    }
+
+    async function shareCanvas(canvas, filename) {
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        const file = new File([blob], filename, { type: 'image/png' });
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file], title: 'Pulp Pro Colour Scan' });
+        } else {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    }
+
     function copySingleResult() {
         const label = document.getElementById('csSingleLabel')?.innerText || '';
         const shelf = document.getElementById('csSingleShelf')?.innerText || '';
         const status = document.getElementById('csSingleStatus')?.innerText || '';
+        const note = getNote('csNoteInput');
         const appUrl = 'https://pulppro.github.io/Pulp-Pro-Intelligence/';
-        const text = `Pulp Pro Intelligence: ${appUrl}\n━━━━━━━━━━━━━━━━━━━━\nBANANA COLOUR SCAN\n${label}\nShelf Life: ${shelf}\nStatus: ${status}`;
+        let text = `Pulp Pro Intelligence: ${appUrl}\n━━━━━━━━━━━━━━━━━━━━\nBANANA COLOUR SCAN\n${label}\nShelf Life: ${shelf}\nStatus: ${status}`;
+        if (note) text += `\nNote: ${note}`;
         navigator.clipboard.writeText(text).then(() => showCopyFeedback('csCopySingle'));
     }
 
@@ -387,9 +752,11 @@ const ColourScanner = (() => {
         const shelf = document.getElementById('csBatchShelf')?.innerText || '';
         const status = document.getElementById('csBatchStatus')?.innerText || '';
         const count = document.getElementById('csBatchCount')?.innerText || '';
+        const note = getNote('csBatchNoteInput');
         const appUrl = 'https://pulppro.github.io/Pulp-Pro-Intelligence/';
         const breakdownItems = multiScans.map((s, i) => `Box ${i + 1}: ${getResultLabel(s)}`).join('\n');
-        const text = `Pulp Pro Intelligence: ${appUrl}\n━━━━━━━━━━━━━━━━━━━━\nBANANA BATCH COLOUR SCAN\nBatch Average: ${label}\nBoxes Scanned: ${count}\nShelf Life: ${shelf}\nStatus: ${status}\n━━━━━━━━━━━━━━━━━━━━\n${breakdownItems}`;
+        let text = `Pulp Pro Intelligence: ${appUrl}\n━━━━━━━━━━━━━━━━━━━━\nBANANA BATCH COLOUR SCAN\nBatch Average: ${label}\nBoxes Scanned: ${count}\nShelf Life: ${shelf}\nStatus: ${status}\n━━━━━━━━━━━━━━━━━━━━\n${breakdownItems}`;
+        if (note) text += `\nNote: ${note}`;
         navigator.clipboard.writeText(text).then(() => showCopyFeedback('csCopyBatch'));
     }
 
@@ -409,6 +776,7 @@ const ColourScanner = (() => {
 
     function resetScanner() {
         multiScans = [];
+        capturedPhotos = [];
         const batchBtn = document.getElementById('csBatchBtn');
         if (batchBtn) batchBtn.style.display = 'none';
         showView('cs-scanner');
@@ -427,8 +795,12 @@ const ColourScanner = (() => {
         setScanMode,
         doScan,
         getBatchResult,
+        shareReport,
+        shareBatchReport,
         copySingleResult,
         copyBatchResult,
+        updateNotePreview,
+        updateBatchNotePreview,
         resetScanner,
         close
     };

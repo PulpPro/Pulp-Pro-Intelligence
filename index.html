@@ -16,12 +16,14 @@
 <link rel="stylesheet" href="css/components.css">
 </head>
 <body>
+
 <div id="splash-screen">
 <img src="edited-image.png" class="splash-logo">
 <div class="splash-text">PULP PRO</div>
 </div>
 
 <div id="menu-trigger" onclick="toggleMenu()"><span></span></div>
+
 <div id="menu-drawer">
 <div style="text-align:center; margin-bottom:40px;">
 <img src="edited-image.png" style="width:50px; margin-bottom:10px;">
@@ -40,7 +42,7 @@
 
 <div id="menu-overlay" onclick="toggleMenu()"></div>
 
-<!-- FRUIT HUB -->
+<!-- Fruit Hub -->
 <div id="fruit-hub" class="nav-view">
 <div class="hub-title">Select Commodity</div>
 <div class="selection-grid-container">
@@ -52,12 +54,12 @@
 </div>
 </div>
 <div id="favorites-section" class="hidden">
-<div class="hub-title" style="color: var(--pulp-amber); font-size: 0.8rem; margin-top:20px;">Saved Favorites</div>
+<div class="hub-title" style="color:var(--pulp-amber); font-size:0.8rem; margin-top:20px;">Saved Favorites</div>
 <div class="fav-grid" id="fav-grid"></div>
 </div>
 </div>
 
-<!-- MIDDLE HUB -->
+<!-- Middle Hub -->
 <div id="middle-hub" class="nav-view hidden">
 <div class="hub-title" id="middleHubTitle">Banana Menu</div>
 <div class="list-container">
@@ -65,110 +67,63 @@
 <div class="list-btn disabled">Defects (Soon)</div>
 <div class="list-btn disabled">Ripening (Soon)</div>
 </div>
-<button class="btn-main" style="margin-top:40px; background:transparent; border:1px solid var(--border-glass); color:var(--text-main);" onclick="showHub()">← Back</button>
+<button class="btn-main btn-back" onclick="showHub()">← Back</button>
 </div>
 
-<!-- BRAND HUB -->
+<!-- Brand Hub -->
 <div id="brand-hub" class="nav-view hidden">
 <div class="hub-title" id="brandHubTitle">Select Brand</div>
 <div class="list-container" id="brandGrid"></div>
-<button class="btn-main" style="margin-top:40px; background:transparent; border:1px solid var(--border-glass); color:var(--text-main);" onclick="openMiddleHub(activeFruit)">← Back</button>
+<button class="btn-main btn-back" onclick="openMiddleHub(activeFruit)">← Back</button>
 </div>
 
-<!-- DEFECT SCANNER VIEW -->
-<div id="defect-scanner-view" class="nav-view hidden">
-
-    <!-- Header -->
-    <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; justify-content:center;">
-        <img src="edited-image.png" style="width:32px; height:32px; border-radius:8px;">
-        <div>
-            <div style="font-size:0.55rem; letter-spacing:3px; color:var(--text-dim); text-transform:uppercase;">Pulp Pro</div>
-            <div style="font-size:1rem; font-weight:900; letter-spacing:2px; color:var(--pulp-lime); text-transform:uppercase;">Defect Scanner</div>
-        </div>
-    </div>
-
-    <!-- Fruit label -->
-    <div id="defectScannerTitle" style="font-size:0.65rem; letter-spacing:3px; color:var(--text-dim); text-transform:uppercase; margin-bottom:15px;"></div>
-
-    <!-- Camera -->
-    <div style="position:relative; width:100%; border-radius:20px; overflow:hidden; border:1px solid var(--border-glass);">
-        <video id="defectCameraFeed" autoplay playsinline style="width:100%; display:block; border-radius:20px;"></video>
-        <canvas id="defectCanvas" style="display:none;"></canvas>
-
-        <!-- Scan overlay (hidden by default) -->
-        <div id="scanOverlay" style="
-            display:none;
-            position:absolute; top:0; left:0;
-            width:100%; height:100%;
-            pointer-events:none;
-            border-radius:20px;
-            overflow:hidden;
-        ">
-            <!-- Scan line -->
-            <div id="scanLine" style="
-                position:absolute; left:0; width:100%; height:3px;
-                background: linear-gradient(90deg, transparent, var(--pulp-lime), transparent);
-                box-shadow: 0 0 12px var(--pulp-lime);
-                animation: scanMove 1.5s ease-in-out infinite;
-            "></div>
-            <!-- Corner brackets -->
-            <div style="position:absolute; top:16px; left:16px; width:30px; height:30px; border-top:3px solid var(--pulp-lime); border-left:3px solid var(--pulp-lime); border-radius:4px 0 0 0;"></div>
-            <div style="position:absolute; top:16px; right:16px; width:30px; height:30px; border-top:3px solid var(--pulp-lime); border-right:3px solid var(--pulp-lime); border-radius:0 4px 0 0;"></div>
-            <div style="position:absolute; bottom:16px; left:16px; width:30px; height:30px; border-bottom:3px solid var(--pulp-lime); border-left:3px solid var(--pulp-lime); border-radius:0 0 0 4px;"></div>
-            <div style="position:absolute; bottom:16px; right:16px; width:30px; height:30px; border-bottom:3px solid var(--pulp-lime); border-right:3px solid var(--pulp-lime); border-radius:0 0 4px 0;"></div>
-        </div>
-    </div>
-
-    <!-- Scan button -->
-    <button id="scanBtn" onclick="triggerScan()" class="btn-main" style="margin-top:20px; max-width:300px;">
-        <i class="bi bi-camera"></i> SCAN
-    </button>
-
-    <!-- Status text -->
-    <div id="scanStatus" style="margin-top:12px; font-size:0.65rem; letter-spacing:2px; color:var(--text-dim); text-transform:uppercase; min-height:20px;"></div>
-
-    <!-- Results -->
-    <div id="defectResults" style="margin-top:15px; width:100%;"></div>
-
-    <!-- Back button -->
-    <button class="btn-main" style="margin-top:20px; background:transparent; border:1px solid var(--border-glass); color:var(--text-main); max-width:300px;" onclick="backToDefectHub()">← Back</button>
-
+<!-- Defect Hub -->
+<div id="defect-hub" class="nav-view hidden">
+<div class="hub-title">Defect Detector</div>
+<div class="list-container">
+<div class="list-btn" onclick="startDefectScan('banana')">Scan Banana</div>
+<div class="list-btn" onclick="startDefectScan('mango')">Scan Mango</div>
+<div class="list-btn" onclick="startDefectScan('avocado')">Scan Avocado</div>
 </div>
-<!-- DEFECT SCANNER VIEW -->
-<div id="defect-scanner-view" class="nav-view hidden">
-<div class="hub-title" id="defectScannerTitle">Scan Banana</div>
-<video id="defectCameraFeed" autoplay playsinline style="width:100%; border-radius:12px; margin-bottom:15px;"></video>
-<canvas id="defectCanvas" style="display:none;"></canvas>
-<div id="defectResults" style="margin-top:15px;"></div>
-<button class="btn-main" style="margin-top:20px; background:transparent; border:1px solid var(--border-glass); color:var(--text-main);" onclick="backToDefectHub()">← Back</button>
+<button class="btn-main btn-back" onclick="showHub()">← Back</button>
 </div>
 
-<!-- CALCULATOR -->
-<div class="app-container" id="appInterface">
+<!-- App Interface (Calculator) -->
+<div class="app-container hidden" id="appInterface">
 <div class="app-card" id="appCard">
 <i class="bi bi-star-fill fav-toggle" id="favStar" onclick="toggleFavorite()"></i>
 <img src="edited-image.png" style="width:50px; margin-bottom:10px;">
-<div id="brandName" style="font-size: 1.4rem; font-weight: 900; color: var(--pulp-lime); text-transform: uppercase;">Chiquita</div>
-<div id="commodityLabel" style="font-weight: 900; letter-spacing: 4px; opacity: 0.5; font-size: 0.7rem; margin-bottom: 25px; color:var(--text-main);">BANANA AGE CHECKER</div>
+<div id="brandName" style="font-size:1.4rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase;">Chiquita</div>
+<div id="commodityLabel" style="font-weight:900; letter-spacing:4px; opacity:0.5; font-size:0.7rem; margin-bottom:25px; color:var(--text-main);">BANANA AGE CHECKER</div>
 <div class="input-wrapper"><input type="text" id="codeIn" placeholder="---" maxlength="3" autofocus></div>
 <button onclick="checkFruit()" class="btn-main" id="calcBtn">Calculate</button>
 <div id="resBox" class="result-display hidden">
 <div id="statusLabel" style="font-weight:900;">READY</div>
 <div id="daysValue">--</div>
-<div id="dateText" style="font-size: 1.3rem; font-weight: 900; margin-top: 10px;">-- -- ----</div>
+<div id="dateText" style="font-size:1.3rem; font-weight:900; margin-top:10px;">-- -- ----</div>
 <button class="btn btn-copy" onclick="copyResult()" id="copyBtn"><i class="bi bi-clipboard"></i> COPY</button>
 </div>
-<button class="btn-main" style="margin-top:25px; background:transparent; border:none; opacity:0.4; font-size:0.6rem; color:var(--text-main);" onclick="openBrands(activeFruit)">← Back to Brands</button>
+<button class="btn-main btn-back" style="margin-top:25px;" onclick="openBrands(activeFruit)">← Back to Brands</button>
 </div>
 <div id="historySection" class="history-section"><div id="historyList"></div></div>
 </div>
 
+<script>
+if ('serviceWorker' in navigator) {
+window.addEventListener('load', () => {
+navigator.serviceWorker.register('sw.js').catch(err => console.log('SW failed', err));
+});
+}
+</script>
+
+<!-- Scripts in correct order -->
 <script src="js/app.js"></script>
+<script src="js/favorites.js"></script>
+<script src="js/history.js"></script>
+<script src="js/brands.js"></script>
 <script src="js/navigation.js"></script>
 <script src="js/calculator.js"></script>
-<script src="js/history.js"></script>
-<script src="js/favorites.js"></script>
-<script src="js/brands.js"></script>
 <script src="js/defect-detector.js"></script>
+
 </body>
 </html>

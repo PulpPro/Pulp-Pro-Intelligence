@@ -280,7 +280,7 @@ const DefectDetector = (() => {
         showHub();
     }
 
-    return {
+   return {
         init,
         selectFruit,
         selectType,
@@ -288,6 +288,8 @@ const DefectDetector = (() => {
         capturePhoto,
         generateReport,
         copyReport,
+        showDefectView,
+        stopCamera,
         close
     };
 })();

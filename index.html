@@ -122,8 +122,15 @@
 
 <!-- Defect Scan View -->
 <div id="defect-scan-view" class="nav-view hidden">
-<div class="hub-title" id="defectScanTitle">Banana — External</div>
-<div style="max-width:400px; margin:0 auto;">
+<div style="max-width:400px; margin:0 auto; position:relative;">
+
+<!-- Favorite Star -->
+<i class="bi bi-star-fill fav-toggle" id="defectFavStar"
+   onclick="toggleFavorite('defect')"
+   style="position:absolute; top:0; right:0; z-index:10;"></i>
+
+<div class="hub-title" id="defectScanTitle" style="padding-right:40px;">Banana — External</div>
+
 <div class="camera-wrapper">
 <video id="defectVideo" autoplay playsinline muted style="display:none;"></video>
 <canvas id="defectCanvas" style="display:none;"></canvas>
@@ -135,11 +142,13 @@
 <i class="bi bi-camera-fill"></i> Scan
 </button>
 </div>
+
 <div style="margin:10px 0 14px; text-align:center;">
 <span id="defectDisclaimer" style="font-size:0.55rem; font-weight:700; color:var(--pulp-red); text-transform:uppercase; letter-spacing:1px; opacity:0.8;">
 ⚠️ Camera detection is colour-based. Accuracy may vary. Always verify results manually.
 </span>
 </div>
+
 <div id="defectScanResults" class="hidden"></div>
 <button class="btn-main btn-back" style="margin-top:10px;" onclick="DefectDetector.showDefectView('defect-type-view'); DefectDetector.stopCamera();">← Back</button>
 </div>
@@ -180,16 +189,25 @@
 
 <!-- Colour Scanner View -->
 <div id="colour-scanner-view" class="nav-view hidden">
-<div style="max-width:400px; margin:0 auto;">
+<div style="max-width:400px; margin:0 auto; position:relative;">
+
+<!-- Favorite Star -->
+<i class="bi bi-star-fill fav-toggle" id="colourFavStar"
+   onclick="toggleFavorite('colour')"
+   style="position:absolute; top:0; right:0; z-index:10;"></i>
+
 <div style="text-align:center; margin-bottom:14px;">
 <img src="edited-image.png" style="width:46px; border-radius:14px; margin-bottom:6px;">
 <div style="font-size:0.6rem; font-weight:900; color:var(--pulp-lime); letter-spacing:3px; text-transform:uppercase;">Pulp Pro</div>
 </div>
+
 <div class="hub-title" id="csScannerTitle">Banana Colour Scanner</div>
+
 <div style="display:flex; gap:8px; margin-bottom:14px;">
 <div class="cs-toggle-btn active" id="csSingleBtn" onclick="ColourScanner.setScanMode('single')">Single Scan</div>
 <div class="cs-toggle-btn" id="csMultiBtn" onclick="ColourScanner.setScanMode('multi')">Multi Scan</div>
 </div>
+
 <div id="cs-scanner">
 <div class="camera-wrapper">
 <video id="csVideo" autoplay playsinline muted style="display:none;"></video>
@@ -254,7 +272,7 @@
 <!-- App Interface (Calculator) -->
 <div class="app-container hidden" id="appInterface">
 <div class="app-card" id="appCard">
-<i class="bi bi-star-fill fav-toggle" id="favStar" onclick="toggleFavorite()"></i>
+<i class="bi bi-star-fill fav-toggle" id="favStar" onclick="toggleFavorite('calculator')"></i>
 <img src="edited-image.png" style="width:50px; margin-bottom:10px;">
 <div id="brandName" style="font-size:1.4rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase;">Chiquita</div>
 <div id="commodityLabel" style="font-weight:900; letter-spacing:4px; opacity:0.5; font-size:0.7rem; margin-bottom:25px; color:var(--text-main);">BANANA AGE CHECKER</div>

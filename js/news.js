@@ -2,8 +2,14 @@ const NewsManager = (() => {
     const API_KEY = 'pub_69f6c17e1162426fa0edc42bd8683c52';
     const CACHE_KEY = 'pulpProNews';
     const CACHE_TIME_KEY = 'pulpProNewsTime';
-    const CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 hours
-    const KEYWORDS = ['banana', 'mango', 'avocado'];
+    const CACHE_DURATION = 6 * 60 * 60 * 1000;
+
+    // More specific industry keywords for EU fruit trade
+    const QUERIES = [
+        { keyword: 'banana ripening import export fresh produce', fruit: 'banana' },
+        { keyword: 'mango fresh produce import EU market', fruit: 'mango' },
+        { keyword: 'avocado fresh produce import EU market', fruit: 'avocado' }
+    ];
 
     let allArticles = [];
     let activeFilter = 'all';
@@ -29,8 +35,8 @@ const NewsManager = (() => {
     async function fetchNews() {
         try {
             const results = await Promise.all(
-                KEYWORDS.map(keyword =>
-                    fetch(`https://newsdata.io/api/1/latest?apikey=${API_KEY}&q=${keyword}&language=en&category=business,science,food`)
+                QUERIES.map(q =>
+                    fetch(`https://newsdata.io/api/1/latest?apikey=${API_KEY}&q=${encodeURIComponent(q.keyword)}&language=en&category=business,food,science`)
                         .then(r => r.json())
                 )
             );
@@ -42,7 +48,7 @@ const NewsManager = (() => {
                         if (!allArticles.find(a => a.link === article.link)) {
                             allArticles.push({
                                 ...article,
-                                fruit: KEYWORDS[idx]
+                                fruit: QUERIES[idx].fruit
                             });
                         }
                     });
@@ -71,9 +77,7 @@ const NewsManager = (() => {
             const age = Date.now() - parseInt(cachedTime);
             if (age > CACHE_DURATION) return null;
             return { articles: JSON.parse(cached), timestamp: parseInt(cachedTime) };
-        } catch (e) {
-            return null;
-        }
+        } catch (e) { return null; }
     }
 
     function updateCacheStatus(timestamp) {
@@ -82,11 +86,8 @@ const NewsManager = (() => {
         const age = Date.now() - timestamp;
         const mins = Math.floor(age / 60000);
         const hrs = Math.floor(mins / 60);
-        let timeStr = '';
-        if (hrs > 0) timeStr = `${hrs} hour${hrs > 1 ? 's' : ''} ago`;
-        else if (mins > 0) timeStr = `${mins} minute${mins > 1 ? 's' : ''} ago`;
-        else timeStr = 'just now';
-        el.innerHTML = `<i class="bi bi-clock"></i> Last updated ${timeStr} — <span onclick="NewsManager.forceRefresh()" style="color:var(--pulp-lime); cursor:pointer; text-decoration:underline;">Refresh</span>`;
+        let timeStr = hrs > 0 ? `${hrs}h ago` : mins > 0 ? `${mins}m ago` : 'just now';
+        el.innerHTML = `<i class="bi bi-clock"></i> Updated ${timeStr} — <span onclick="NewsManager.forceRefresh()" style="color:var(--pulp-lime); cursor:pointer; text-decoration:underline;">Refresh</span>`;
         el.style.display = 'flex';
     }
 
@@ -118,12 +119,20 @@ const NewsManager = (() => {
     function timeAgo(dateStr) {
         if (!dateStr) return '';
         const date = new Date(dateStr);
-        const now = new Date();
-        const diff = Math.floor((now - date) / 1000);
+        const diff = Math.floor((new Date() - date) / 1000);
         if (diff < 60) return 'just now';
-        if (diff < 3600) return Math.floor(diff / 60) + ' min ago';
-        if (diff < 86400) return Math.floor(diff / 3600) + ' hr ago';
-        return Math.floor(diff / 86400) + ' days ago';
+        if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+        if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+        return Math.floor(diff / 86400) + 'd ago';
+    }
+
+    // Fix for clicking — store articles in a map instead of inline JSON
+    const articleMap = {};
+
+    function storeArticle(article) {
+        const id = 'art_' + Math.random().toString(36).substr(2, 9);
+        articleMap[id] = article;
+        return id;
     }
 
     function renderNews() {
@@ -143,11 +152,11 @@ const NewsManager = (() => {
 
         const featured = articles[0];
         const rest = articles.slice(1);
-
         list.innerHTML = renderFeatured(featured) + rest.map(renderCard).join('');
     }
 
     function renderFeatured(article) {
+        const id = storeArticle(article);
         const colour = getFruitColor(article.fruit);
         const emoji = getFruitEmoji(article.fruit);
         const fruit = article.fruit.charAt(0).toUpperCase() + article.fruit.slice(1);
@@ -155,13 +164,11 @@ const NewsManager = (() => {
         const time = timeAgo(article.pubDate);
 
         return `
-        <div class="news-featured-card" onclick="NewsManager.openArticle('${encodeURIComponent(JSON.stringify(article))}')">
-            <div class="news-featured-img" style="${img ? `background-image:url('${img}'); background-size:cover; background-position:center;` : `background: linear-gradient(135deg, rgba(22,22,24,0.98), rgba(40,40,40,0.98));`}">
+        <div class="news-featured-card" onclick="NewsManager.openArticleById('${id}')">
+            <div class="news-featured-img" style="${img ? `background-image:url('${img}'); background-size:cover; background-position:center;` : `background:rgba(22,22,24,0.98);`}">
                 ${!img ? `<div style="font-size:3.5rem;">${emoji}</div>` : ''}
                 <div class="news-featured-overlay"></div>
-                <div class="news-cat-badge" style="background:${colour}20; border:1px solid ${colour}50; color:${colour};">
-                    ${emoji} ${fruit}
-                </div>
+                <div class="news-cat-badge" style="background:${colour}20; border:1px solid ${colour}50; color:${colour};">${emoji} ${fruit}</div>
             </div>
             <div class="news-featured-body">
                 <div class="news-featured-title">${article.title || 'No title'}</div>
@@ -175,6 +182,7 @@ const NewsManager = (() => {
     }
 
     function renderCard(article) {
+        const id = storeArticle(article);
         const colour = getFruitColor(article.fruit);
         const emoji = getFruitEmoji(article.fruit);
         const fruit = article.fruit.charAt(0).toUpperCase() + article.fruit.slice(1);
@@ -182,8 +190,8 @@ const NewsManager = (() => {
         const time = timeAgo(article.pubDate);
 
         return `
-        <div class="news-card" onclick="NewsManager.openArticle('${encodeURIComponent(JSON.stringify(article))}')">
-            <div class="news-thumb" style="${img ? `background-image:url('${img}'); background-size:cover; background-position:center;` : `background:${colour}10;`}">
+        <div class="news-card" onclick="NewsManager.openArticleById('${id}')">
+            <div class="news-thumb" style="${img ? `background-image:url('${img}'); background-size:cover; background-position:center;` : `background:${colour}12;`}">
                 ${!img ? `<span style="font-size:1.8rem;">${emoji}</span>` : ''}
             </div>
             <div class="news-content">
@@ -198,12 +206,15 @@ const NewsManager = (() => {
         </div>`;
     }
 
-    function openArticle(encoded) {
-        try {
-            activeArticle = JSON.parse(decodeURIComponent(encoded));
-        } catch (e) { return; }
+    // New — open article by ID instead of encoded JSON
+    function openArticleById(id) {
+        const article = articleMap[id];
+        if (!article) return;
+        openArticle(article);
+    }
 
-        const article = activeArticle;
+    function openArticle(article) {
+        activeArticle = article;
         const colour = getFruitColor(article.fruit);
         const emoji = getFruitEmoji(article.fruit);
         const fruit = article.fruit.charAt(0).toUpperCase() + article.fruit.slice(1);
@@ -211,25 +222,37 @@ const NewsManager = (() => {
         const time = timeAgo(article.pubDate);
         const date = article.pubDate ? new Date(article.pubDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase() : '';
 
-        document.getElementById('articleHero').style.backgroundImage = img ? `url('${img}')` : '';
-        document.getElementById('articleHero').style.backgroundSize = 'cover';
-        document.getElementById('articleHero').style.backgroundPosition = 'center';
-        document.getElementById('articleEmoji').innerText = !img ? emoji : '';
-        document.getElementById('articleCatBadge').innerText = `${emoji} ${fruit}`;
-        document.getElementById('articleCatBadge').style.color = colour;
-        document.getElementById('articleCatBadge').style.borderColor = colour + '50';
-        document.getElementById('articleCatBadge').style.background = colour + '20';
-        document.getElementById('articleTitle').innerText = article.title || '';
-        document.getElementById('articleSource').innerText = article.source_id || '';
-        document.getElementById('articleTime').innerText = time;
-        document.getElementById('articleDate').innerText = date;
-        document.getElementById('articleCountry').innerText = article.country ? article.country.join(', ').toUpperCase() : '';
-        document.getElementById('articleSummary').innerText = article.description || article.content || 'No summary available for this article.';
+        const hero = document.getElementById('articleHero');
+        if (hero) {
+            hero.style.backgroundImage = img ? `url('${img}')` : '';
+            hero.style.backgroundSize = 'cover';
+            hero.style.backgroundPosition = 'center';
+        }
+        const emojiEl = document.getElementById('articleEmoji');
+        if (emojiEl) emojiEl.innerText = !img ? emoji : '';
+        const badge = document.getElementById('articleCatBadge');
+        if (badge) {
+            badge.innerText = `${emoji} ${fruit}`;
+            badge.style.color = colour;
+            badge.style.borderColor = colour + '50';
+            badge.style.background = colour + '20';
+        }
+
+        const fields = {
+            articleTitle: article.title || '',
+            articleSource: article.source_id || '',
+            articleTime: time,
+            articleDate: date,
+            articleCountry: article.country ? article.country.join(', ').toUpperCase() : '',
+            articleSummary: article.description || article.content || 'No summary available.'
+        };
+        Object.entries(fields).forEach(([id, val]) => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = val;
+        });
 
         const readBtn = document.getElementById('articleReadBtn');
-        if (readBtn) {
-            readBtn.onclick = () => { if (article.link) window.open(article.link, '_blank'); };
-        }
+        if (readBtn) readBtn.onclick = () => { if (article.link) window.open(article.link, '_blank'); };
 
         const shareBtn = document.getElementById('articleShareBtn');
         if (shareBtn) {
@@ -256,6 +279,7 @@ const NewsManager = (() => {
     function forceRefresh() {
         localStorage.removeItem(CACHE_KEY);
         localStorage.removeItem(CACHE_TIME_KEY);
+        allArticles = [];
         fetchNews();
     }
 
@@ -280,5 +304,5 @@ const NewsManager = (() => {
         </div>`;
     }
 
-    return { init, setFilter, openArticle, closeArticle, forceRefresh };
+    return { init, setFilter, openArticleById, closeArticle, forceRefresh };
 })();

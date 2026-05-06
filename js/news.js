@@ -1,19 +1,21 @@
 const NewsManager = (() => {
-    const API_KEY = 'pub_69f6c17e1162426fa0edc42bd8683c52';
     const CACHE_KEY = 'pulpProNews';
     const CACHE_TIME_KEY = 'pulpProNewsTime';
     const CACHE_DURATION = 6 * 60 * 60 * 1000;
 
-    // More specific industry keywords for EU fruit trade
-    const QUERIES = [
-        { keyword: 'banana ripening import export fresh produce', fruit: 'banana' },
-        { keyword: 'mango fresh produce import EU market', fruit: 'mango' },
-        { keyword: 'avocado fresh produce import EU market', fruit: 'avocado' }
+    // FreshPlaza RSS feeds via rss2json proxy — EU fresh produce industry
+    const RSS_FEEDS = [
+        { url: 'https://www.freshplaza.com/europe/rss/', fruit: 'all' },
+        { url: 'https://www.freshplaza.com/europe/topic/banana/rss/', fruit: 'banana' },
+        { url: 'https://www.freshplaza.com/europe/topic/mango/rss/', fruit: 'mango' },
+        { url: 'https://www.freshplaza.com/europe/topic/avocado/rss/', fruit: 'avocado' }
     ];
+
+    const RSS2JSON = 'https://api.rss2json.com/v1/api.json?rss_url=';
 
     let allArticles = [];
     let activeFilter = 'all';
-    let activeArticle = null;
+    const articleMap = {};
 
     function init() {
         activeFilter = 'all';
@@ -35,24 +37,42 @@ const NewsManager = (() => {
     async function fetchNews() {
         try {
             const results = await Promise.all(
-                QUERIES.map(q =>
-                    fetch(`https://newsdata.io/api/1/latest?apikey=${API_KEY}&q=${encodeURIComponent(q.keyword)}&language=en&category=business,food,science`)
+                RSS_FEEDS.map(feed =>
+                    fetch(RSS2JSON + encodeURIComponent(feed.url))
                         .then(r => r.json())
+                        .then(data => ({ data, fruit: feed.fruit }))
+                        .catch(() => null)
                 )
             );
 
             allArticles = [];
-            results.forEach((result, idx) => {
-                if (result.status === 'success' && result.results) {
-                    result.results.forEach(article => {
-                        if (!allArticles.find(a => a.link === article.link)) {
-                            allArticles.push({
-                                ...article,
-                                fruit: QUERIES[idx].fruit
-                            });
-                        }
+
+            results.forEach(result => {
+                if (!result || result.data.status !== 'ok') return;
+                const items = result.data.items || [];
+                items.forEach(item => {
+                    if (allArticles.find(a => a.link === item.link)) return;
+
+                    // Detect fruit from title/description if feed is 'all'
+                    let fruit = result.fruit;
+                    if (fruit === 'all') {
+                        const text = (item.title + ' ' + (item.description || '')).toLowerCase();
+                        if (text.includes('banana')) fruit = 'banana';
+                        else if (text.includes('mango')) fruit = 'mango';
+                        else if (text.includes('avocado')) fruit = 'avocado';
+                        else return; // Skip if not about our fruits
+                    }
+
+                    allArticles.push({
+                        title: item.title,
+                        description: item.description ? item.description.replace(/<[^>]*>/g, '').substring(0, 300) : '',
+                        link: item.link,
+                        image_url: item.enclosure?.link || item.thumbnail || null,
+                        pubDate: item.pubDate,
+                        source_id: 'FreshPlaza',
+                        fruit
                     });
-                }
+                });
             });
 
             allArticles.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
@@ -86,8 +106,8 @@ const NewsManager = (() => {
         const age = Date.now() - timestamp;
         const mins = Math.floor(age / 60000);
         const hrs = Math.floor(mins / 60);
-        let timeStr = hrs > 0 ? `${hrs}h ago` : mins > 0 ? `${mins}m ago` : 'just now';
-        el.innerHTML = `<i class="bi bi-clock"></i> Updated ${timeStr} — <span onclick="NewsManager.forceRefresh()" style="color:var(--pulp-lime); cursor:pointer; text-decoration:underline;">Refresh</span>`;
+        const timeStr = hrs > 0 ? `${hrs}h ago` : mins > 0 ? `${mins}m ago` : 'just now';
+        el.innerHTML = `<i class="bi bi-clock"></i> FreshPlaza · Updated ${timeStr} — <span onclick="NewsManager.forceRefresh()" style="color:var(--pulp-lime); cursor:pointer; text-decoration:underline;">Refresh</span>`;
         el.style.display = 'flex';
     }
 
@@ -118,16 +138,12 @@ const NewsManager = (() => {
 
     function timeAgo(dateStr) {
         if (!dateStr) return '';
-        const date = new Date(dateStr);
-        const diff = Math.floor((new Date() - date) / 1000);
+        const diff = Math.floor((new Date() - new Date(dateStr)) / 1000);
         if (diff < 60) return 'just now';
         if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
         if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
         return Math.floor(diff / 86400) + 'd ago';
     }
-
-    // Fix for clicking — store articles in a map instead of inline JSON
-    const articleMap = {};
 
     function storeArticle(article) {
         const id = 'art_' + Math.random().toString(36).substr(2, 9);
@@ -173,7 +189,7 @@ const NewsManager = (() => {
             <div class="news-featured-body">
                 <div class="news-featured-title">${article.title || 'No title'}</div>
                 <div class="news-meta-row">
-                    <span class="news-source">${article.source_id || 'Unknown'}</span>
+                    <span class="news-source">FreshPlaza EU</span>
                     <span class="news-dot"></span>
                     <span class="news-time">${time}</span>
                 </div>
@@ -198,7 +214,7 @@ const NewsManager = (() => {
                 <div class="news-cat" style="color:${colour};">${emoji} ${fruit}</div>
                 <div class="news-title">${article.title || 'No title'}</div>
                 <div class="news-meta-row">
-                    <span class="news-source">${article.source_id || 'Unknown'}</span>
+                    <span class="news-source">FreshPlaza EU</span>
                     <span class="news-dot"></span>
                     <span class="news-time">${time}</span>
                 </div>
@@ -206,7 +222,6 @@ const NewsManager = (() => {
         </div>`;
     }
 
-    // New — open article by ID instead of encoded JSON
     function openArticleById(id) {
         const article = articleMap[id];
         if (!article) return;
@@ -214,7 +229,6 @@ const NewsManager = (() => {
     }
 
     function openArticle(article) {
-        activeArticle = article;
         const colour = getFruitColor(article.fruit);
         const emoji = getFruitEmoji(article.fruit);
         const fruit = article.fruit.charAt(0).toUpperCase() + article.fruit.slice(1);
@@ -240,11 +254,11 @@ const NewsManager = (() => {
 
         const fields = {
             articleTitle: article.title || '',
-            articleSource: article.source_id || '',
+            articleSource: 'FreshPlaza EU',
             articleTime: time,
             articleDate: date,
-            articleCountry: article.country ? article.country.join(', ').toUpperCase() : '',
-            articleSummary: article.description || article.content || 'No summary available.'
+            articleCountry: '',
+            articleSummary: article.description || 'No summary available.'
         };
         Object.entries(fields).forEach(([id, val]) => {
             const el = document.getElementById(id);
@@ -288,7 +302,7 @@ const NewsManager = (() => {
         if (!list) return;
         list.innerHTML = `
         <div style="text-align:center; padding:60px 20px;">
-            <div style="font-size:0.7rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:2px; animation:pulse 1.5s infinite;">Loading News...</div>
+            <div style="font-size:0.7rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:2px; animation:pulse 1.5s infinite;">Loading FreshPlaza News...</div>
         </div>`;
     }
 

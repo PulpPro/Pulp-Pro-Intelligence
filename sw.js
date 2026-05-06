@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v1.4';
+const CACHE_VERSION = 'v1.5';
 const CACHE_NAME = 'pulp-pro-' + CACHE_VERSION;
 const ASSETS = [
     '/Pulp-Pro-Intelligence/',

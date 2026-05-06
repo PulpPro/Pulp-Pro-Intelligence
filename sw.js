@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v1.4';
 const CACHE_NAME = 'pulp-pro-' + CACHE_VERSION;
 const ASSETS = [
     '/Pulp-Pro-Intelligence/',
@@ -10,6 +10,7 @@ const ASSETS = [
     '/Pulp-Pro-Intelligence/avocado.png',
     '/Pulp-Pro-Intelligence/rotten.png',
     '/Pulp-Pro-Intelligence/colour.png',
+    '/Pulp-Pro-Intelligence/news.png',
     '/Pulp-Pro-Intelligence/css/theme.css',
     '/Pulp-Pro-Intelligence/css/layout.css',
     '/Pulp-Pro-Intelligence/css/components.css',
@@ -23,6 +24,7 @@ const ASSETS = [
     '/Pulp-Pro-Intelligence/js/defects-data.js',
     '/Pulp-Pro-Intelligence/js/defect-detector.js',
     '/Pulp-Pro-Intelligence/js/colour-scanner.js',
+    '/Pulp-Pro-Intelligence/js/news.js',
     'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
     'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css'
 ];

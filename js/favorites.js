@@ -16,8 +16,7 @@ function toggleFavorite() {
 function updateFavoriteUI() {
     const id = `${activeFruit}_${activeBrand}`;
     const isFav = favorites.some(f => f.id === id);
-    const star = document.getElementById('favStar');
-    if (star) star.classList.toggle('active', isFav);
+    document.getElementById('favStar').classList.toggle('active', isFav);
 }
 
 // Render Favorites on Home & Menu
@@ -34,7 +33,7 @@ function renderFavorites() {
 
     section.classList.remove('hidden');
     grid.innerHTML = favorites.map(f => `
-        <div class="fav-card" onclick="openCalc('${f.brand}', '${f.fruit}')">
+        <div class="fav-card" onclick="selectBrand('${f.brand}'); activeFruit='${f.fruit}';">
             <i class="bi bi-star-fill"></i>
             <span>${f.brand}</span>
             <small style="opacity:0.5; font-size:0.55rem; font-weight:800; color:var(--text-main);">
@@ -44,7 +43,7 @@ function renderFavorites() {
     `).join('');
 
     menuList.innerHTML = favorites.map(f => `
-        <div class="menu-fav-item" onclick="openCalc('${f.brand}', '${f.fruit}'); toggleMenu();">
+        <div class="menu-fav-item" onclick="activeFruit='${f.fruit}'; selectBrand('${f.brand}'); toggleMenu();">
             ${f.brand}
             <span>(${f.page || 'Age Checker'})</span>
         </div>

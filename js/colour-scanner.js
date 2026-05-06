@@ -5,17 +5,17 @@ const ColourScanner = (() => {
     const MAX_SCANS = 3;
 
     const COLOUR_STAGES = [
-        { value: 1,   hex: '#3d5c2a', name: 'Full Green',     shelfLife: '7+ Days',  status: 'Unripe',   statusColor: '#4caf50' },
-        { value: 1.5, hex: '#4a6b2e', name: 'Green+',         shelfLife: '6–7 Days', status: 'Unripe',   statusColor: '#4caf50' },
-        { value: 2,   hex: '#6b8c35', name: 'More Green',      shelfLife: '5–6 Days', status: 'Early',    statusColor: '#8bc34a' },
-        { value: 2.5, hex: '#8fa83c', name: 'Green-Yellow',    shelfLife: '4–5 Days', status: 'Turning',  statusColor: '#cddc39' },
-        { value: 3,   hex: '#b8b830', name: 'More Yellow',     shelfLife: '3–4 Days', status: 'Turning',  statusColor: '#ffeb3b' },
-        { value: 3.5, hex: '#c9b025', name: 'Yellow-Green',    shelfLife: '3 Days',   status: 'Ripening', statusColor: '#ffc107' },
-        { value: 4,   hex: '#d4aa22', name: 'More Yellow',     shelfLife: '2–3 Days', status: 'Ripening', statusColor: '#ffd740' },
-        { value: 4.5, hex: '#d4a020', name: 'Full Yellow',     shelfLife: '2 Days',   status: 'Ready',    statusColor: '#ffb300' },
-        { value: 5,   hex: '#c8901a', name: 'Yellow + Flecks', shelfLife: '1–2 Days', status: 'Peak',     statusColor: '#ff8f00' },
-        { value: 5.5, hex: '#a87018', name: 'Yellow-Brown',    shelfLife: '1 Day',    status: 'Overripe', statusColor: '#ff6f00' },
-        { value: 6,   hex: '#7a5010', name: 'Full Brown',      shelfLife: 'Sell Now', status: 'Overripe', statusColor: '#ff5722' }
+        { value: 1,   hex: '#78c830', name: 'Full Green',     shelfLife: '7+ Days',  status: 'Unripe',   statusColor: '#78c830' },
+        { value: 1.5, hex: '#86c82c', name: 'Green+',         shelfLife: '6–7 Days', status: 'Unripe',   statusColor: '#86c82c' },
+        { value: 2,   hex: '#98c428', name: 'More Green',      shelfLife: '5–6 Days', status: 'Early',    statusColor: '#98c428' },
+        { value: 2.5, hex: '#aec022', name: 'Green-Yellow',    shelfLife: '4–5 Days', status: 'Turning',  statusColor: '#aec022' },
+        { value: 3,   hex: '#c4bc1c', name: 'More Yellow',     shelfLife: '3–4 Days', status: 'Turning',  statusColor: '#c4bc1c' },
+        { value: 3.5, hex: '#d4b418', name: 'Yellow-Green',    shelfLife: '3 Days',   status: 'Ripening', statusColor: '#d4b418' },
+        { value: 4,   hex: '#dca814', name: 'More Yellow',     shelfLife: '2–3 Days', status: 'Ripening', statusColor: '#dca814' },
+        { value: 4.5, hex: '#e0a010', name: 'Full Yellow',     shelfLife: '2 Days',   status: 'Ready',    statusColor: '#e0a010' },
+        { value: 5,   hex: '#d89010', name: 'Yellow + Flecks', shelfLife: '1–2 Days', status: 'Peak',     statusColor: '#d89010' },
+        { value: 5.5, hex: '#bc7414', name: 'Yellow-Brown',    shelfLife: '1 Day',    status: 'Overripe', statusColor: '#bc7414' },
+        { value: 6,   hex: '#905818', name: 'Full Brown',      shelfLife: 'Sell Now', status: 'Overripe', statusColor: '#ff5722' }
     ];
 
     function hexToRgb(hex) {

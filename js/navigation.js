@@ -8,7 +8,9 @@ function hideAllViews() {
     document.getElementById('middle-hub').classList.add('hidden');
     document.getElementById('brand-hub').classList.add('hidden');
     document.getElementById('defect-hub').classList.add('hidden');
-    document.getElementById('defectDetectorView').classList.add('hidden');
+    document.getElementById('defect-type-view').classList.add('hidden');
+    document.getElementById('defect-scan-view').classList.add('hidden');
+    document.getElementById('defect-report-view').classList.add('hidden');
     document.getElementById('appInterface').classList.add('hidden');
 }
 
@@ -58,16 +60,6 @@ function selectBrand(brand) {
 function openDefectDetector() {
     hideAllViews();
     document.getElementById('defect-hub').classList.remove('hidden');
-}
-
-// Start Defect Scan for specific fruit
-function startDefectScan(fruit) {
-    activeFruit = fruit;
-    const fruitNames = { banana:'Banana', mango:'Mango', avocado:'Avocado' };
-    document.getElementById('defectScannerTitle').innerText = 'Scan ' + (fruitNames[fruit] || fruit);
-    hideAllViews();
-    document.getElementById('defectDetectorView').classList.remove('hidden');
-    DefectDetector.open(fruit);
 }
 
 // Toggle Menu Drawer

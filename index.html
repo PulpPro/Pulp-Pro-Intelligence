@@ -79,7 +79,7 @@
 <button class="btn-main btn-back" onclick="openMiddleHub(activeFruit)">← Back</button>
 </div>
 
-<!-- Defect Hub (Fruit Selection) -->
+<!-- Defect Hub -->
 <div id="defect-hub" class="nav-view hidden">
 <div class="hub-title">Defect Detector</div>
 <div class="list-container">
@@ -90,15 +90,15 @@
 <button class="btn-main btn-back" onclick="showHub()">← Back</button>
 </div>
 
-<!-- Defect Detector View (Camera + Results) -->
+<!-- Defect Detector View -->
 <div id="defectDetectorView" class="nav-view hidden">
 <div class="hub-title" id="defectScannerTitle">Scan Banana</div>
 <div class="app-card" style="max-width:400px; margin:0 auto;">
 <video id="defectCameraFeed" style="width:100%; border-radius:25px; background:#000;" autoplay playsinline muted></video>
 <canvas id="defectCanvas" style="display:none;"></canvas>
 <div style="display:flex; gap:10px; margin-top:20px;">
-<button class="btn-main" onclick="DefectDetector.startCamera(); DefectDetector.startDetection();" style="flex:1;">
-<i class="bi bi-camera"></i> Start Scan
+<button class="btn-main" onclick="DefectDetector.runScan();" style="flex:1;">
+<i class="bi bi-camera"></i> Scan
 </button>
 <button class="btn-main btn-back" onclick="DefectDetector.close(); showHub();" style="flex:1; margin-top:0;">
 <i class="bi bi-stop-circle"></i> Stop
@@ -110,7 +110,7 @@ Point camera at fruit to scan
 </div>
 </div>
 </div>
-<button class="btn-main btn-back" style="max-width:400px; margin:20px auto 0;" onclick="DefectDetector.close(); document.getElementById('defect-hub').classList.remove('hidden'); document.getElementById('defectDetectorView').classList.add('hidden');">← Back</button>
+<button class="btn-main btn-back" style="max-width:400px; margin:20px auto 0; display:block;" onclick="DefectDetector.close(); document.getElementById('defect-hub').classList.remove('hidden'); document.getElementById('defectDetectorView').classList.add('hidden');">← Back</button>
 </div>
 
 <!-- App Interface (Calculator) -->

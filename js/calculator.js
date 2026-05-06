@@ -1,24 +1,21 @@
-// Calculator Module
-function initCalculator() {
+// Input listeners
+document.addEventListener('DOMContentLoaded', () => {
     const inputField = document.getElementById('codeIn');
-    if (!inputField) return;
+    if (inputField) {
+        inputField.addEventListener('input', () => {
+            document.getElementById('resBox').classList.add('hidden');
+            renderHistory();
+        });
+        inputField.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                checkFruit();
+            }
+        });
+    }
+});
 
-    inputField.value = '';
-    document.getElementById('resBox').classList.add('hidden');
-
-    inputField.addEventListener('input', () => {
-        document.getElementById('resBox').classList.add('hidden');
-        renderHistory();
-    });
-
-    inputField.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            checkFruit();
-        }
-    });
-}
-
+// Handle keyboard after calculation
 function handlePostCalculation() {
     const inputField = document.getElementById('codeIn');
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -33,6 +30,7 @@ function handlePostCalculation() {
     }
 }
 
+// Main calculation logic
 function checkFruit(historicalCode = null) {
     const inputField = document.getElementById('codeIn');
     const val = historicalCode || inputField.value.toUpperCase();
@@ -76,47 +74,62 @@ function checkFruit(historicalCode = null) {
     }).toUpperCase();
 
     const label = document.getElementById('statusLabel');
+    let statusColor = '';
     box.classList.remove('hidden');
 
     if (diff > 31) {
         label.innerText = 'TOO OLD';
         box.className = 'result-display bg-old';
+        statusColor = '#ff4d4d';
     } else if (diff <= 21) {
         label.innerText = 'PERFECT';
         box.className = 'result-display bg-perfect';
+        statusColor = '#a6e22e';
     } else {
         label.innerText = 'ACCEPTABLE';
         box.className = 'result-display bg-acceptable';
+        statusColor = '#ff8c00';
     }
 
     if (!historicalCode) {
-        saveToHistory(val, diff);
+        saveToHistory(val, diff, statusColor);
         handlePostCalculation();
     }
     renderHistory();
 }
 
+// Shake animation on invalid input
 function triggerShake() {
     document.getElementById('appCard').classList.add('shake');
     setTimeout(() => document.getElementById('appCard').classList.remove('shake'), 400);
 }
 
+// Copy result to clipboard
 function copyResult() {
-    const inputField = document.getElementById('codeIn');
     const days = document.getElementById('daysValue').innerText;
     const date = document.getElementById('dateText').innerText;
-    const code = inputField.value.toUpperCase();
+    const code = document.getElementById('codeIn').value.toUpperCase();
+    const appUrl = 'https://pulppro.github.io/Pulp-Pro-Intelligence/';
 
     if (document.getElementById('resBox').classList.contains('hidden')) return;
 
-    const plainText = `Pulp Pro Report\nCode: ${code}\nAge: ${days} Days\nHarvest Date: ${date}`;
-    const htmlText = `<div style="font-family:sans-serif;"><p><strong>Pulp Pro Report</strong></p><p>Code: <strong>${code}</strong></p><p>Age: <strong>${days} Days</strong></p><p>Harvest Date: ${date}</p></div>`;
+    const plainText = `Pulp Pro Intelligence: ${appUrl}\nCode: ${code}\nAge: ${days} Days\nHarvest Date: ${date}`;
+    const htmlText = `
+        <div style="font-family: sans-serif;">
+            <p><a href="${appUrl}" style="color:#a6e22e; font-weight:900; text-decoration:none;">Pulp Pro Intelligence</a></p>
+            <p>Code: <strong>${code}</strong></p>
+            <p>Age: <strong>${days} Days</strong></p>
+            <p>Harvest Date: ${date}</p>
+        </div>
+    `;
 
     try {
         const blobHTML = new Blob([htmlText], { type: 'text/html' });
         const blobText = new Blob([plainText], { type: 'text/plain' });
         const data = [new ClipboardItem({ 'text/plain': blobText, 'text/html': blobHTML })];
-        navigator.clipboard.write(data).then(showCopySuccess).catch(() => {
+        navigator.clipboard.write(data).then(() => {
+            showCopySuccess();
+        }).catch(() => {
             navigator.clipboard.writeText(plainText).then(showCopySuccess);
         });
     } catch (err) {
@@ -124,6 +137,7 @@ function copyResult() {
     }
 }
 
+// Copy success feedback
 function showCopySuccess() {
     const btn = document.getElementById('copyBtn');
     btn.classList.add('success');

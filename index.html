@@ -79,38 +79,79 @@
 <button class="btn-main btn-back" onclick="openMiddleHub(activeFruit)">← Back</button>
 </div>
 
-<!-- Defect Hub -->
+<!-- Defect Hub — Fruit Selection -->
 <div id="defect-hub" class="nav-view hidden">
 <div class="hub-title">Defect Detector</div>
 <div class="list-container">
-<div class="list-btn" onclick="startDefectScan('banana')">🍌 Scan Banana</div>
-<div class="list-btn" onclick="startDefectScan('mango')">🥭 Scan Mango</div>
-<div class="list-btn" onclick="startDefectScan('avocado')">🥑 Scan Avocado</div>
+<div class="list-btn" onclick="DefectDetector.selectFruit('banana')">🍌 Banana</div>
+<div class="list-btn" onclick="DefectDetector.selectFruit('mango')">🥭 Mango</div>
+<div class="list-btn" onclick="DefectDetector.selectFruit('avocado')">🥑 Avocado</div>
 </div>
 <button class="btn-main btn-back" onclick="showHub()">← Back</button>
 </div>
 
-<!-- Defect Detector View -->
-<div id="defectDetectorView" class="nav-view hidden">
-<div class="hub-title" id="defectScannerTitle">Scan Banana</div>
-<div class="app-card" style="max-width:400px; margin:0 auto;">
-<video id="defectCameraFeed" style="width:100%; border-radius:25px; background:#000;" autoplay playsinline muted></video>
-<canvas id="defectCanvas" style="display:none;"></canvas>
-<div style="display:flex; gap:10px; margin-top:20px;">
-<button class="btn-main" onclick="DefectDetector.runScan();" style="flex:1;">
-<i class="bi bi-camera"></i> Scan
+<!-- Defect Type View — Internal / External -->
+<div id="defect-type-view" class="nav-view hidden">
+<div class="hub-title" id="defectTypeTitle">Banana — Select Type</div>
+<div style="max-width:400px; margin:0 auto;">
+<div class="type-btn" onclick="DefectDetector.selectType('external')">
+<div class="type-btn-title">🔍 External Defects</div>
+<div class="type-btn-desc" id="defectTypeDesc_external">Skin, colour, bruising, cuts, mould</div>
+</div>
+<div class="type-btn" onclick="DefectDetector.selectType('internal')">
+<div class="type-btn-title">🔬 Internal Defects</div>
+<div class="type-btn-desc" id="defectTypeDesc_internal">Flesh, rot, discolouration, flavour</div>
+</div>
+</div>
+<button class="btn-main btn-back" onclick="DefectDetector.showDefectView('defect-hub')">← Back</button>
+</div>
+
+<!-- Defect Scan View — Camera + Checklist -->
+<div id="defect-scan-view" class="nav-view hidden">
+<div class="hub-title" id="defectScanTitle">Banana — External</div>
+<div style="max-width:400px; margin:0 auto;">
+<div class="camera-wrapper">
+<video id="defectVideo" autoplay playsinline muted></video>
+<canvas id="defectCanvas"></canvas>
+<div id="cameraPlaceholder">
+<i class="bi bi-camera"></i>
+<span>Camera not available</span>
+</div>
+<button class="capture-btn" id="captureBtn" onclick="DefectDetector.capturePhoto()">Capture</button>
+</div>
+<div class="checklist-section">
+<div class="checklist-header" id="defectChecklistTitle">External Defects</div>
+<div class="checklist-scroll" id="defectChecklist"></div>
+</div>
+<button class="btn-main" style="margin-top:16px;" onclick="DefectDetector.generateReport()">
+<i class="bi bi-file-earmark-text"></i> Generate Report
 </button>
-<button class="btn-main btn-back" onclick="DefectDetector.close(); showHub();" style="flex:1; margin-top:0;">
-<i class="bi bi-stop-circle"></i> Stop
+<button class="btn-main btn-back" onclick="DefectDetector.showDefectView('defect-type-view'); DefectDetector.stopCamera();">← Back</button>
+</div>
+</div>
+
+<!-- Defect Report View -->
+<div id="defect-report-view" class="nav-view hidden">
+<div class="hub-title">Defect Report</div>
+<div style="max-width:400px; margin:0 auto;">
+<div class="report-card">
+<div class="grade-circle" id="reportGradeCircle">
+<div class="grade-letter" id="reportGradeLetter">A</div>
+<div class="grade-sub">Grade</div>
+</div>
+<div class="report-row"><span class="report-key">Fruit</span><span class="report-val" id="reportFruit">—</span></div>
+<div class="report-row"><span class="report-key">Date</span><span class="report-val" id="reportTimestamp">—</span></div>
+<div class="report-row"><span class="report-key">Defects Found</span><span class="report-val" id="reportDefectCount">—</span></div>
+<div class="report-row"><span class="report-key">Severity</span><span class="report-val" id="reportSeverity">—</span></div>
+<div class="report-row"><span class="report-key">Status</span><span class="report-val" id="reportStatus">—</span></div>
+</div>
+<div class="report-defects-title">Defect Breakdown</div>
+<div class="report-defects-scroll" id="reportDefectList"></div>
+<button id="copyReportBtn" onclick="DefectDetector.copyReport()">
+<i class="bi bi-clipboard"></i> Copy Report
 </button>
+<button class="btn-main btn-back" onclick="DefectDetector.showDefectView('defect-hub')">← New Scan</button>
 </div>
-<div id="defectResults" style="margin-top:20px; min-height:80px; border-radius:20px; border:1px solid var(--border-glass); background:var(--input-bg);">
-<div style="padding:20px; text-align:center; opacity:0.4; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:2px;">
-Point camera at fruit to scan
-</div>
-</div>
-</div>
-<button class="btn-main btn-back" style="max-width:400px; margin:20px auto 0; display:block;" onclick="DefectDetector.close(); document.getElementById('defect-hub').classList.remove('hidden'); document.getElementById('defectDetectorView').classList.add('hidden');">← Back</button>
 </div>
 
 <!-- App Interface (Calculator) -->
@@ -148,6 +189,7 @@ navigator.serviceWorker.register('sw.js').catch(err => console.log('SW failed', 
 <script src="js/brands.js"></script>
 <script src="js/navigation.js"></script>
 <script src="js/calculator.js"></script>
+<script src="js/defects-data.js"></script>
 <script src="js/defect-detector.js"></script>
 
 </body>

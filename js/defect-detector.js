@@ -2,159 +2,143 @@
 const DefectDetector = (() => {
     let activeModel = null;
     let cameraStream = null;
+    let videoElement = null;
+    let canvasElement = null;
     let isDetecting = false;
-    let lastDetectionTime = 0;
-    const DETECTION_INTERVAL = 2000;
+    let detectionInterval = null;
+
+    const API_KEY = '9xIqfcEBoTfMaxCPncH5';
 
     const models = {
         banana: {
             name: 'Banana Defects',
             projectName: 'banana-defects',
-            version: 1,
-            apiKey: '9xIqfcEBoTfMaxCPncH5'
+            version: 1
         },
         mango: {
             name: 'Mango Defect',
             projectName: 'mango-defect',
-            version: 1,
-            apiKey: '9xIqfcEBoTfMaxCPncH5'
+            version: 1
         },
         avocado: {
             name: 'Avocado Defect Detection',
             projectName: 'avocado-defect-detection',
-            version: 1,
-            apiKey: '9xIqfcEBoTfMaxCPncH5'
+            version: 1
         }
     };
 
     function init() {
-        console.log('Defect Detector ready');
+        videoElement = document.getElementById('defectCameraFeed');
+        canvasElement = document.getElementById('defectCanvas');
     }
 
     async function open(fruitType) {
-        activeModel = models[fruitType] || null;
-        if (!activeModel) {
-            showError('Invalid fruit type.');
-            return;
+        if (!models[fruitType]) return;
+        activeModel = models[fruitType];
+        showStatus('Starting camera...');
+        const started = await startCamera();
+        if (started) {
+            showStatus('Point camera at fruit and press Scan.');
         }
-        isDetecting = false;
-        clearResults();
-        setStatus('');
-        await startCamera();
-    }
-
-    function close() {
-        stopCamera();
-        hideScanOverlay();
-        clearResults();
-        setStatus('');
     }
 
     async function startCamera() {
         try {
-            const video = getVideo();
-            if (!video) { showError('Camera element not found.'); return false; }
-            if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(t => t.stop());
+            }
             cameraStream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
             });
-            video.srcObject = cameraStream;
-            await video.play();
+            videoElement.srcObject = cameraStream;
+            await videoElement.play();
             return true;
         } catch (err) {
-            console.error('Camera error:', err);
             showError('Camera access denied. Please enable camera permissions.');
             return false;
         }
     }
 
     function stopCamera() {
-        isDetecting = false;
         if (cameraStream) {
             cameraStream.getTracks().forEach(t => t.stop());
             cameraStream = null;
         }
-        const video = getVideo();
-        if (video) video.srcObject = null;
+        if (detectionInterval) {
+            clearInterval(detectionInterval);
+            detectionInterval = null;
+        }
+        isDetecting = false;
     }
-
-    function getVideo()  { return document.getElementById('defectCameraFeed'); }
-    function getCanvas() { return document.getElementById('defectCanvas'); }
 
     function captureFrame() {
-        const video = getVideo();
-        const canvas = getCanvas();
-        if (!video || !canvas || video.videoWidth === 0) return null;
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
-        return canvas.toDataURL('image/jpeg');
+        if (!videoElement || !canvasElement) return null;
+        canvasElement.width = videoElement.videoWidth;
+        canvasElement.height = videoElement.videoHeight;
+        canvasElement.getContext('2d').drawImage(videoElement, 0, 0);
+        return canvasElement.toDataURL('image/jpeg', 0.8);
     }
 
-    async function detectDefect(frameData) {
-        if (!activeModel) return null;
+    async function runScan() {
+        if (!activeModel) return;
+        showStatus('Scanning...');
+
+        const frameData = captureFrame();
+        if (!frameData) {
+            showError('Could not capture frame. Try again.');
+            return;
+        }
+
         try {
-            const url = `https://detect.roboflow.com/${activeModel.projectName}/${activeModel.version}`;
-            const formData = new FormData();
-            formData.append('image', frameData.split(',')[1]);
-            formData.append('api_key', activeModel.apiKey);
-            formData.append('confidence', 40);
-            formData.append('overlap', 30);
-            const response = await fetch(url, { method: 'POST', body: formData });
-            if (!response.ok) throw new Error(`API error: ${response.status}`);
-            return await response.json();
+            const base64Image = frameData.split(',')[1];
+            const url = `https://detect.roboflow.com/${activeModel.projectName}/${activeModel.version}?api_key=${API_KEY}&confidence=40&overlap=30`;
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: base64Image
+            });
+
+            if (!response.ok) throw new Error('API error: ' + response.status);
+
+            const result = await response.json();
+            displayResults(result);
         } catch (err) {
-            console.error('Detection failed:', err);
-            showError('Detection failed. Please try again.');
-            return null;
+            showError('Scan failed: ' + err.message);
         }
     }
 
-    function showScanOverlay() {
-        const overlay = document.getElementById('scanOverlay');
-        if (overlay) overlay.style.display = 'block';
+    function startDetection() {
+        if (detectionInterval) clearInterval(detectionInterval);
+        runScan();
+        detectionInterval = setInterval(runScan, 4000);
     }
 
-    function hideScanOverlay() {
-        const overlay = document.getElementById('scanOverlay');
-        if (overlay) overlay.style.display = 'none';
-    }
-
-    function setStatus(msg) {
-        const el = document.getElementById('scanStatus');
-        if (el) el.innerText = msg;
-    }
-
-    function clearResults() {
-        const el = document.getElementById('defectResults');
-        if (el) el.innerHTML = '';
-    }
-
-    function displayResults(detectionResult) {
+    function displayResults(result) {
         const resultsBox = document.getElementById('defectResults');
-        if (!resultsBox) return;
 
-        if (!detectionResult.predictions || detectionResult.predictions.length === 0) {
+        if (!result.predictions || result.predictions.length === 0) {
             resultsBox.innerHTML = `
-                <div style="padding:20px; text-align:center; background:rgba(166,226,46,0.05); border:1px solid var(--border-glass); border-radius:16px;">
-                    <div style="font-size:1.5rem; margin-bottom:8px;">✅</div>
-                    <div style="font-weight:900; color:var(--pulp-lime); letter-spacing:2px;">NO DEFECTS DETECTED</div>
+                <div style="padding:20px; text-align:center; color:var(--pulp-lime); font-weight:900; text-transform:uppercase; letter-spacing:2px;">
+                    ✅ No Defects Detected
                 </div>`;
             return;
         }
 
-        let html = `<div style="padding:15px; background:rgba(255,77,77,0.05); border:1px solid rgba(255,77,77,0.2); border-radius:16px;">`;
-        html += `<div style="font-weight:900; color:var(--pulp-red); margin-bottom:15px; letter-spacing:2px;">⚠️ DEFECTS FOUND: ${detectionResult.predictions.length}</div>`;
+        let html = `<div style="padding:15px;">
+            <div style="font-weight:900; color:var(--pulp-red); margin-bottom:15px; text-transform:uppercase; letter-spacing:2px;">
+                ⚠️ ${result.predictions.length} Defect(s) Found
+            </div>`;
 
-        detectionResult.predictions.forEach((prediction, index) => {
-            const confidence = Math.round(prediction.confidence * 100);
+        result.predictions.forEach((p, i) => {
+            const confidence = Math.round(p.confidence * 100);
             html += `
-                <div style="margin-bottom:12px; padding:12px; background:rgba(255,77,77,0.08); border-radius:10px; border-left:3px solid var(--pulp-red);">
-                    <div style="font-weight:900; color:var(--text-main); font-size:0.85rem; letter-spacing:1px;">DEFECT ${index + 1}</div>
-                    <div style="font-size:0.8rem; color:var(--text-dim); margin-top:6px;">
-                        Type: <span style="color:var(--pulp-amber); font-weight:700;">${prediction.class}</span>
+                <div style="margin-bottom:12px; padding:12px; background:rgba(255,77,77,0.1); border-radius:12px; border-left:3px solid var(--pulp-red);">
+                    <div style="font-weight:800; color:var(--text-main); text-transform:uppercase;">Defect ${i + 1}</div>
+                    <div style="font-size:0.85rem; color:var(--text-dim); margin-top:4px;">
+                        Type: <span style="color:var(--pulp-amber); font-weight:700;">${p.class}</span>
                     </div>
-                    <div style="font-size:0.8rem; color:var(--text-dim);">
+                    <div style="font-size:0.85rem; color:var(--text-dim);">
                         Confidence: <span style="color:var(--pulp-lime); font-weight:700;">${confidence}%</span>
                     </div>
                 </div>`;
@@ -164,93 +148,28 @@ const DefectDetector = (() => {
         resultsBox.innerHTML = html;
     }
 
-    function showError(message) {
-        const resultsBox = document.getElementById('defectResults');
-        if (resultsBox) {
-            resultsBox.innerHTML = `<div style="padding:20px; color:var(--pulp-red); text-align:center; border:1px solid rgba(255,77,77,0.2); border-radius:16px;">${message}</div>`;
-        }
+    function showStatus(msg) {
+        document.getElementById('defectResults').innerHTML = `
+            <div style="padding:20px; text-align:center; opacity:0.6; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:2px;">
+                ${msg}
+            </div>`;
     }
 
-    return { init, open, close };
+    function showError(msg) {
+        document.getElementById('defectResults').innerHTML = `
+            <div style="padding:20px; text-align:center; color:var(--pulp-red); font-weight:700; text-transform:uppercase; letter-spacing:1px;">
+                ⚠️ ${msg}
+            </div>`;
+    }
+
+    function close() {
+        stopCamera();
+        const view = document.getElementById('defectDetectorView');
+        if (view) view.classList.add('hidden');
+    }
+
+    return { init, open, close, startCamera, stopCamera, startDetection, runScan };
 })();
-
-// Triggered by SCAN button
-async function triggerScan() {
-    const btn = document.getElementById('scanBtn');
-    const overlay = document.getElementById('scanOverlay');
-
-    // Show scanning state
-    btn.disabled = true;
-    btn.innerHTML = '<i class="bi bi-camera"></i> SCANNING...';
-    btn.style.opacity = '0.6';
-    if (overlay) overlay.style.display = 'block';
-    document.getElementById('scanStatus').innerText = 'ANALYSING...';
-    document.getElementById('defectResults').innerHTML = '';
-
-    // Capture and detect
-    const video = document.getElementById('defectCameraFeed');
-    const canvas = document.getElementById('defectCanvas');
-
-    await new Promise(r => setTimeout(r, 1800)); // let scan animation play
-
-    if (video && canvas && video.videoWidth > 0) {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
-        const frameData = canvas.toDataURL('image/jpeg');
-
-        const activeModel = DefectDetector._activeModel;
-
-        // Call API directly
-        try {
-            const url = `https://detect.roboflow.com/${window._defectModel.projectName}/${window._defectModel.version}`;
-            const formData = new FormData();
-            formData.append('image', frameData.split(',')[1]);
-            formData.append('api_key', window._defectModel.apiKey);
-            formData.append('confidence', 40);
-            formData.append('overlap', 30);
-
-            const response = await fetch(url, { method: 'POST', body: formData });
-            const result = await response.json();
-
-            if (overlay) overlay.style.display = 'none';
-            document.getElementById('scanStatus').innerText = 'SCAN COMPLETE';
-
-            // Display results
-            const resultsBox = document.getElementById('defectResults');
-            if (!result.predictions || result.predictions.length === 0) {
-                resultsBox.innerHTML = `
-                    <div style="padding:20px; text-align:center; background:rgba(166,226,46,0.05); border:1px solid var(--border-glass); border-radius:16px;">
-                        <div style="font-size:1.5rem; margin-bottom:8px;">✅</div>
-                        <div style="font-weight:900; color:var(--pulp-lime); letter-spacing:2px;">NO DEFECTS DETECTED</div>
-                    </div>`;
-            } else {
-                let html = `<div style="padding:15px; background:rgba(255,77,77,0.05); border:1px solid rgba(255,77,77,0.2); border-radius:16px;">`;
-                html += `<div style="font-weight:900; color:var(--pulp-red); margin-bottom:15px; letter-spacing:2px;">⚠️ DEFECTS FOUND: ${result.predictions.length}</div>`;
-                result.predictions.forEach((p, i) => {
-                    const conf = Math.round(p.confidence * 100);
-                    html += `
-                        <div style="margin-bottom:12px; padding:12px; background:rgba(255,77,77,0.08); border-radius:10px; border-left:3px solid var(--pulp-red);">
-                            <div style="font-weight:900; color:var(--text-main); font-size:0.85rem; letter-spacing:1px;">DEFECT ${i + 1}</div>
-                            <div style="font-size:0.8rem; color:var(--text-dim); margin-top:6px;">Type: <span style="color:var(--pulp-amber); font-weight:700;">${p.class}</span></div>
-                            <div style="font-size:0.8rem; color:var(--text-dim);">Confidence: <span style="color:var(--pulp-lime); font-weight:700;">${conf}%</span></div>
-                        </div>`;
-                });
-                html += '</div>';
-                resultsBox.innerHTML = html;
-            }
-        } catch (err) {
-            if (overlay) overlay.style.display = 'none';
-            document.getElementById('scanStatus').innerText = 'SCAN FAILED';
-            document.getElementById('defectResults').innerHTML = `<div style="padding:20px; color:var(--pulp-red); text-align:center; border:1px solid rgba(255,77,77,0.2); border-radius:16px;">Detection failed. Please try again.</div>`;
-        }
-    }
-
-    // Reset button
-    btn.disabled = false;
-    btn.innerHTML = '<i class="bi bi-camera"></i> SCAN AGAIN';
-    btn.style.opacity = '1';
-}
 
 document.addEventListener('DOMContentLoaded', () => {
     DefectDetector.init();

@@ -13,6 +13,7 @@ function hideAllViews() {
     document.getElementById('defect-report-view').classList.add('hidden');
     document.getElementById('defect-info-view').classList.add('hidden');
     document.getElementById('colour-scanner-view').classList.add('hidden');
+    document.getElementById('news-view').classList.add('hidden');
     document.getElementById('appInterface').classList.add('hidden');
 }
 
@@ -84,6 +85,13 @@ function openColourScanner() {
     updateColourFavoriteUI();
     ColourScanner.init();
     ColourScanner.setScanMode('single');
+}
+
+// Open News
+function openNews() {
+    hideAllViews();
+    document.getElementById('news-view').classList.remove('hidden');
+    NewsManager.init();
 }
 
 // Toggle Menu Drawer

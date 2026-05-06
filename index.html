@@ -17,13 +17,16 @@
 </head>
 <body>
 
+<!-- Splash Screen -->
 <div id="splash-screen">
 <img src="edited-image.png" class="splash-logo">
 <div class="splash-text">PULP PRO</div>
 </div>
 
+<!-- Menu Trigger -->
 <div id="menu-trigger" onclick="toggleMenu()"><span></span></div>
 
+<!-- Side Drawer -->
 <div id="menu-drawer">
 <div style="text-align:center; margin-bottom:40px;">
 <img src="edited-image.png" style="width:50px; margin-bottom:10px;">
@@ -39,7 +42,6 @@
 <div id="menu-fav-list"></div>
 </div>
 </div>
-
 <div id="menu-overlay" onclick="toggleMenu()"></div>
 
 <!-- Fruit Hub -->
@@ -77,15 +79,38 @@
 <button class="btn-main btn-back" onclick="openMiddleHub(activeFruit)">← Back</button>
 </div>
 
-<!-- Defect Hub -->
+<!-- Defect Hub (Fruit Selection) -->
 <div id="defect-hub" class="nav-view hidden">
 <div class="hub-title">Defect Detector</div>
 <div class="list-container">
-<div class="list-btn" onclick="startDefectScan('banana')">Scan Banana</div>
-<div class="list-btn" onclick="startDefectScan('mango')">Scan Mango</div>
-<div class="list-btn" onclick="startDefectScan('avocado')">Scan Avocado</div>
+<div class="list-btn" onclick="startDefectScan('banana')">🍌 Scan Banana</div>
+<div class="list-btn" onclick="startDefectScan('mango')">🥭 Scan Mango</div>
+<div class="list-btn" onclick="startDefectScan('avocado')">🥑 Scan Avocado</div>
 </div>
 <button class="btn-main btn-back" onclick="showHub()">← Back</button>
+</div>
+
+<!-- Defect Detector View (Camera + Results) -->
+<div id="defectDetectorView" class="nav-view hidden">
+<div class="hub-title" id="defectScannerTitle">Scan Banana</div>
+<div class="app-card" style="max-width:400px; margin:0 auto;">
+<video id="defectCameraFeed" style="width:100%; border-radius:25px; background:#000;" autoplay playsinline muted></video>
+<canvas id="defectCanvas" style="display:none;"></canvas>
+<div style="display:flex; gap:10px; margin-top:20px;">
+<button class="btn-main" onclick="DefectDetector.startCamera(); DefectDetector.startDetection();" style="flex:1;">
+<i class="bi bi-camera"></i> Start Scan
+</button>
+<button class="btn-main btn-back" onclick="DefectDetector.close(); showHub();" style="flex:1; margin-top:0;">
+<i class="bi bi-stop-circle"></i> Stop
+</button>
+</div>
+<div id="defectResults" style="margin-top:20px; min-height:80px; border-radius:20px; border:1px solid var(--border-glass); background:var(--input-bg);">
+<div style="padding:20px; text-align:center; opacity:0.4; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:2px;">
+Point camera at fruit to scan
+</div>
+</div>
+</div>
+<button class="btn-main btn-back" style="max-width:400px; margin:20px auto 0;" onclick="DefectDetector.close(); document.getElementById('defect-hub').classList.remove('hidden'); document.getElementById('defectDetectorView').classList.add('hidden');">← Back</button>
 </div>
 
 <!-- App Interface (Calculator) -->

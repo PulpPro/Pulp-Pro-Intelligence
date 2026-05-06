@@ -1,6 +1,5 @@
 const TRANSLATIONS = {
     en: {
-        // General
         appName: 'PULP PRO',
         home: '🏠 Home',
         appSettings: 'App Settings',
@@ -15,27 +14,17 @@ const TRANSLATIONS = {
         backToScan: '← Back to Scan',
         newScan: '← New Scan',
         language: '🌐 Language',
-
-        // Hub
         selectCommodity: 'Select Commodity',
         savedFavorites: 'Saved Favorites',
         soon: '(SOON)',
-
-        // Fruit names
         banana: 'Banana',
         mango: 'Mango',
         avocado: 'Avocado',
-
-        // Middle Hub
         menu: 'Menu',
         brands: 'Brands',
         defectsSoon: 'Defects (Soon)',
         ripeningSoon: 'Ripening (Soon)',
-
-        // Brand Hub
         selectBrand: 'Select Brand',
-
-        // Calculator
         bananaAgeChecker: 'BANANA AGE CHECKER',
         calculate: 'Calculate',
         ready: 'READY',
@@ -46,8 +35,6 @@ const TRANSLATIONS = {
         copied: '✓ COPIED',
         archive: 'ARCHIVE',
         wipeLogsConfirm: 'Wipe logs?',
-
-        // Defect Detector
         defectDetector: 'Defect Detector',
         selectType: 'Select Type',
         externalDefects: '🔍 External Defects',
@@ -63,7 +50,7 @@ const TRANSLATIONS = {
         scanning: 'Scanning...',
         confidence: 'Confidence',
         otherPossibilities: 'Other Possibilities',
-        moreInfo: 'More Info',
+        moreInfo: '🔎 More Info',
         defectInfo: 'Defect Info',
         description: 'Description',
         severityLevel: 'Severity Level',
@@ -71,16 +58,12 @@ const TRANSLATIONS = {
         disclaimer: '⚠️ Camera detection is colour-based. Accuracy may vary. Always verify results manually.',
         external: 'External',
         internal: 'Internal',
-
-        // Severity
         minor: 'Minor',
         major: 'Major',
         critical: 'Critical',
         minorExplain: 'Cosmetic issue, does not significantly affect quality or safety',
         majorExplain: 'Significant quality issue, affects marketability and shelf life',
         criticalExplain: 'Critical quality or safety issue, requires immediate action',
-
-        // Colour Scanner
         bananaColourScanner: 'Banana Colour Scanner',
         singleScan: 'Single Scan',
         multiScan: 'Multi Scan',
@@ -101,31 +84,23 @@ const TRANSLATIONS = {
         awaitingScan: 'Awaiting scan',
         worksOffline: 'Works offline — no internet needed',
         pointCamera: 'Point camera at banana',
-
-        // Colour stages
         fullGreen: 'Full Green',
         greenPlus: 'Green+',
         moreGreen: 'More Green',
         greenYellow: 'Green-Yellow',
         moreYellow: 'More Yellow',
         yellowGreen: 'Yellow-Green',
-        moreYellow2: 'More Yellow',
         fullYellow: 'Full Yellow',
         yellowFlecks: 'Yellow + Flecks',
         yellowBrown: 'Yellow-Brown',
         fullBrown: 'Full Brown',
-
-        // Colour status
         unripe: 'Unripe',
         early: 'Early',
         turning: 'Turning',
         ripening: 'Ripening',
-        ready: 'Ready',
         peak: 'Peak',
         overripe: 'Overripe',
         sellNow: 'Sell Now',
-
-        // Copy report text
         bananaColourScan: 'BANANA COLOUR SCAN',
         bananaBatchColourScan: 'BANANA BATCH COLOUR SCAN',
         pulpProReport: 'Pulp Pro Report',
@@ -133,10 +108,13 @@ const TRANSLATIONS = {
         age: 'Age',
         days: 'Days',
         harvestDate: 'Harvest Date',
+        colourScanner: 'Colour Scanner',
+        defectDetectorFruit: 'Defect Detector',
+        awaitingResult: 'Point camera at fruit and tap Scan',
+        box: 'Box',
     },
 
     nl: {
-        // General
         appName: 'PULP PRO',
         home: '🏠 Thuis',
         appSettings: 'App Instellingen',
@@ -151,27 +129,17 @@ const TRANSLATIONS = {
         backToScan: '← Terug naar Scan',
         newScan: '← Nieuwe Scan',
         language: '🌐 Taal',
-
-        // Hub
         selectCommodity: 'Selecteer Product',
         savedFavorites: 'Opgeslagen Favorieten',
         soon: '(BINNENKORT)',
-
-        // Fruit names
         banana: 'Banaan',
         mango: 'Mango',
         avocado: 'Avocado',
-
-        // Middle Hub
         menu: 'Menu',
         brands: 'Merken',
         defectsSoon: 'Gebreken (Binnenkort)',
         ripeningSoon: 'Rijping (Binnenkort)',
-
-        // Brand Hub
         selectBrand: 'Selecteer Merk',
-
-        // Calculator
         bananaAgeChecker: 'BANAAN LEEFTIJDCHECKER',
         calculate: 'Berekenen',
         ready: 'KLAAR',
@@ -182,8 +150,6 @@ const TRANSLATIONS = {
         copied: '✓ GEKOPIEERD',
         archive: 'ARCHIEF',
         wipeLogsConfirm: 'Logs wissen?',
-
-        // Defect Detector
         defectDetector: 'Gebrek Detector',
         selectType: 'Selecteer Type',
         externalDefects: '🔍 Externe Gebreken',
@@ -193,13 +159,13 @@ const TRANSLATIONS = {
         mangoExtDesc: 'Huidvlekken, zachte plekken, anthracnose, stengelrot, sneden',
         mangoIntDesc: 'Zaadschade, vruchtvleesbruinkleuring, interne afbraak, smaak',
         avocadoExtDesc: 'Huidkneuzing, scheuren, schimmel, steelafwezigheid, schurft',
-        avocadoIntDesc: 'Vruchtvleesbruinkleuring, vasculaire bruinkleuring, zaadholtesch immel, grijs vruchtvlees',
+        avocadoIntDesc: 'Vruchtvleesbruinkleuring, vasculaire bruinkleuring, zaadholte schimmel, grijs vruchtvlees',
         scan: 'Scannen',
         scanAgain: 'Opnieuw Scannen',
         scanning: 'Scannen...',
         confidence: 'Betrouwbaarheid',
         otherPossibilities: 'Andere Mogelijkheden',
-        moreInfo: 'Meer Info',
+        moreInfo: '🔎 Meer Info',
         defectInfo: 'Gebrek Info',
         description: 'Beschrijving',
         severityLevel: 'Ernst Niveau',
@@ -207,16 +173,12 @@ const TRANSLATIONS = {
         disclaimer: '⚠️ Cameradetectie is kleurgebaseerd. Nauwkeurigheid kan variëren. Controleer resultaten altijd handmatig.',
         external: 'Extern',
         internal: 'Intern',
-
-        // Severity
         minor: 'Klein',
         major: 'Groot',
         critical: 'Kritiek',
         minorExplain: 'Cosmetisch probleem, heeft geen significante invloed op kwaliteit of veiligheid',
         majorExplain: 'Significant kwaliteitsprobleem, beïnvloedt verkoopbaarheid en houdbaarheid',
         criticalExplain: 'Kritiek kwaliteits- of veiligheidsprobleem, vereist onmiddellijke actie',
-
-        // Colour Scanner
         bananaColourScanner: 'Banaan Kleurscanner',
         singleScan: 'Enkele Scan',
         multiScan: 'Meerdere Scans',
@@ -237,31 +199,23 @@ const TRANSLATIONS = {
         awaitingScan: 'Wacht op scan',
         worksOffline: 'Werkt offline — geen internet nodig',
         pointCamera: 'Richt camera op banaan',
-
-        // Colour stages
         fullGreen: 'Volledig Groen',
         greenPlus: 'Groen+',
         moreGreen: 'Meer Groen',
         greenYellow: 'Groen-Geel',
         moreYellow: 'Meer Geel',
         yellowGreen: 'Geel-Groen',
-        moreYellow2: 'Meer Geel',
         fullYellow: 'Volledig Geel',
         yellowFlecks: 'Geel + Vlekken',
         yellowBrown: 'Geel-Bruin',
         fullBrown: 'Volledig Bruin',
-
-        // Colour status
         unripe: 'Onrijp',
         early: 'Vroeg',
         turning: 'Verkleurend',
         ripening: 'Rijpend',
-        ready: 'Klaar',
         peak: 'Piek',
         overripe: 'Overrijp',
         sellNow: 'Nu Verkopen',
-
-        // Copy report text
         bananaColourScan: 'BANAAN KLEURSCAN',
         bananaBatchColourScan: 'BANAAN BATCH KLEURSCAN',
         pulpProReport: 'Pulp Pro Rapport',
@@ -269,6 +223,10 @@ const TRANSLATIONS = {
         age: 'Leeftijd',
         days: 'Dagen',
         harvestDate: 'Oogstdatum',
+        colourScanner: 'Kleurscanner',
+        defectDetectorFruit: 'Gebrek Detector',
+        awaitingResult: 'Richt camera op fruit en tik op Scannen',
+        box: 'Doos',
     }
 };
 
@@ -287,33 +245,104 @@ function setLanguage(lang) {
 
 function applyTranslations() {
     // Menu
-    document.getElementById('themeText').innerText = document.body.classList.contains('light-theme') ? t('lightMode') : t('darkMode');
-    document.getElementById('langText').innerText = currentLang === 'en' ? '🇳🇱 Nederlands' : '🇬🇧 English';
+    const themeText = document.getElementById('themeText');
+    if (themeText) themeText.innerText = document.body.classList.contains('light-theme') ? t('lightMode') : t('darkMode');
+    const langText = document.getElementById('langText');
+    if (langText) langText.innerText = currentLang === 'en' ? '🇳🇱 Nederlands' : '🇬🇧 English';
 
-    // Hub
-    document.querySelectorAll('.hub-title')[0].innerText = t('selectCommodity');
+    // Fruit Hub
+    const hubTitles = document.querySelectorAll('.hub-title');
+    if (hubTitles[0]) hubTitles[0].innerText = t('selectCommodity');
 
-    // Fruit cards
+    // Fruit card names
     const cards = document.querySelectorAll('.commodity-name-section span:first-child');
     if (cards[0]) cards[0].innerText = t('banana');
     if (cards[1]) cards[1].innerText = t('mango');
     if (cards[2]) cards[2].innerText = t('avocado');
+    if (cards[3]) cards[3].innerText = t('defectDetectorFruit');
+    if (cards[4]) cards[4].innerText = t('colourScanner');
 
-    // Defect detector hub
-    const defectTitle = document.querySelector('#defect-hub .hub-title');
-    if (defectTitle) defectTitle.innerText = t('defectDetector');
+    // Defect Hub fruit buttons
+    const defectBtns = document.querySelectorAll('#defect-hub .list-btn');
+    if (defectBtns[0]) defectBtns[0].innerText = '🍌 ' + t('banana');
+    if (defectBtns[1]) defectBtns[1].innerText = '🥭 ' + t('mango');
+    if (defectBtns[2]) defectBtns[2].innerText = '🥑 ' + t('avocado');
+
+    // Defect hub title
+    const defectHubTitle = document.querySelector('#defect-hub .hub-title');
+    if (defectHubTitle) defectHubTitle.innerText = t('defectDetector');
+
+    // Defect type view
+    const extBtn = document.getElementById('extDefectsBtn');
+    if (extBtn) extBtn.innerText = t('externalDefects');
+    const intBtn = document.getElementById('intDefectsBtn');
+    if (intBtn) intBtn.innerText = t('internalDefects');
+
+    // Defect scan view disclaimer
+    const disclaimer = document.getElementById('defectDisclaimer');
+    if (disclaimer) disclaimer.innerText = t('disclaimer');
+
+    // Defect scan button
+    const scanBtn = document.getElementById('defectScanActionBtn');
+    if (scanBtn && !scanBtn.disabled) scanBtn.innerHTML = '<i class="bi bi-camera-fill"></i> ' + t('scan');
+
+    // Defect info title
+    const defectInfoTitle = document.getElementById('defectInfoTitle');
+    if (defectInfoTitle) defectInfoTitle.innerText = t('defectInfo');
+
+    // Back to scan button
+    const backToScanBtn = document.getElementById('backToScanBtn');
+    if (backToScanBtn) backToScanBtn.innerText = t('backToScan');
 
     // Colour scanner
-    const csTitle = document.querySelector('#colour-scanner-view .hub-title');
+    const csTitle = document.getElementById('csScannerTitle');
     if (csTitle) csTitle.innerText = t('bananaColourScanner');
     const singleBtn = document.getElementById('csSingleBtn');
     if (singleBtn) singleBtn.innerText = t('singleScan');
     const multiBtn = document.getElementById('csMultiBtn');
     if (multiBtn) multiBtn.innerText = t('multiScan');
-
-    // Offline label
-    const offlineLabel = document.querySelector('#cs-scanner div[style*="opacity:0.4"]');
+    const offlineLabel = document.getElementById('csOfflineLabel');
     if (offlineLabel) offlineLabel.innerText = t('worksOffline');
+    const batchBtn = document.getElementById('csBatchBtn');
+    if (batchBtn) batchBtn.innerText = t('getBatchResult');
+
+    // Colour scanner result labels
+    const shelfLifeLabel = document.getElementById('shelfLifeLabel');
+    if (shelfLifeLabel) shelfLifeLabel.innerText = t('shelfLife');
+    const statusLabel2 = document.getElementById('statusLabel2');
+    if (statusLabel2) statusLabel2.innerText = t('status');
+    const batchAvgLabel = document.getElementById('batchAvgLabel');
+    if (batchAvgLabel) batchAvgLabel.innerText = t('batchAverage');
+    const boxesScannedLabel = document.getElementById('boxesScannedLabel');
+    if (boxesScannedLabel) boxesScannedLabel.innerText = t('boxesScanned');
+    const shelfLifeEstLabel = document.getElementById('shelfLifeEstLabel');
+    if (shelfLifeEstLabel) shelfLifeEstLabel.innerText = t('shelfLifeEst');
+    const batchStatusLabel = document.getElementById('batchStatusLabel');
+    if (batchStatusLabel) batchStatusLabel.innerText = t('batchStatus');
+
+    // Copy buttons
+    const copySingle = document.getElementById('csCopySingle');
+    if (copySingle) copySingle.innerHTML = '<i class="bi bi-clipboard"></i> ' + t('copyResult');
+    const copyBatch = document.getElementById('csCopyBatch');
+    if (copyBatch) copyBatch.innerHTML = '<i class="bi bi-clipboard"></i> ' + t('copyBatchReport');
+
+    // New scan buttons
+    const csNewScan = document.getElementById('csNewScanBtn');
+    if (csNewScan) csNewScan.innerText = t('newScan');
+    const csNewBatch = document.getElementById('csNewBatchScanBtn');
+    if (csNewBatch) csNewBatch.innerText = t('newScan');
+    const csBack = document.getElementById('csBackBtn');
+    if (csBack) csBack.innerText = t('back');
+
+    // Calculator
+    const commodityLabel = document.getElementById('commodityLabel');
+    if (commodityLabel && commodityLabel.innerText.includes('AGE') || commodityLabel && commodityLabel.innerText.includes('LEEFTIJD')) {
+        commodityLabel.innerText = t('bananaAgeChecker');
+    }
+    const calcBtn = document.getElementById('calcBtn');
+    if (calcBtn) calcBtn.innerText = t('calculate');
+    const backToBrandsBtn = document.getElementById('backToBrandsBtn');
+    if (backToBrandsBtn) backToBrandsBtn.innerText = t('backToBrands');
 }
 
 function updateLanguageUI() {

@@ -1,16 +1,38 @@
-// Register Service Worker
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-            .catch(err => console.log('SW failed', err));
+        navigator.serviceWorker.register('sw.js').then((reg) => {
+            reg.addEventListener('updatefound', () => {
+                const newWorker = reg.installing;
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        showUpdateBanner();
+                    }
+                });
+            });
+        }).catch(err => console.log('SW failed', err));
+
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            window.location.reload();
+        });
     });
 }
 
-// Global State
+function showUpdateBanner() {
+    const banner = document.getElementById('updateBanner');
+    if (banner) banner.classList.remove('hidden');
+}
+
+function applyUpdate() {
+    navigator.serviceWorker.getRegistration().then(reg => {
+        if (reg && reg.waiting) {
+            reg.waiting.postMessage('skipWaiting');
+        }
+    });
+}
+
 let scanHistory = JSON.parse(localStorage.getItem('pulpProHistory')) || [];
 let favorites = JSON.parse(localStorage.getItem('pulpProFavorites')) || [];
 
-// App Init
 window.addEventListener('load', () => {
     const savedTheme = localStorage.getItem('pulpTheme');
     if (savedTheme === 'light') {
@@ -24,7 +46,6 @@ window.addEventListener('load', () => {
     }, 2600);
 });
 
-// Theme Toggle
 function toggleTheme() {
     document.body.classList.toggle('light-theme');
     const isLight = document.body.classList.contains('light-theme');
@@ -32,13 +53,11 @@ function toggleTheme() {
     document.getElementById('themeText').innerText = isLight ? 'Light Mode' : 'Dark Mode';
 }
 
-// Menu Toggle
 function toggleMenu() {
     document.getElementById('menu-drawer').classList.toggle('open');
     document.getElementById('menu-overlay').classList.toggle('open');
 }
 
-// Favorites Menu Dropdown
 function toggleMenuFavs() {
     const list = document.getElementById('menu-fav-list');
     const icon = document.getElementById('favChevron');
@@ -47,7 +66,6 @@ function toggleMenuFavs() {
     icon.classList.toggle('bi-chevron-down');
 }
 
-// Send Feedback
 function sendFeedback() {
     const theme = document.body.classList.contains('light-theme') ? 'Light' : 'Dark';
     const historyCount = scanHistory.length;

@@ -92,7 +92,7 @@
 <button class="btn-main btn-back" onclick="openMiddleHub(activeFruit)">← Back</button>
 </div>
 
-<!-- Defect Hub -->
+<!-- Defect Hub — Fruit Selection -->
 <div id="defect-hub" class="nav-view hidden">
 <div class="hub-title">Defect Detector</div>
 <div class="list-container">
@@ -119,31 +119,46 @@
 <button class="btn-main btn-back" onclick="DefectDetector.showDefectView('defect-hub')">← Back</button>
 </div>
 
-<!-- Defect Scan View -->
+<!-- Defect Scan View — Camera + Results -->
 <div id="defect-scan-view" class="nav-view hidden">
 <div class="hub-title" id="defectScanTitle">Banana — External</div>
 <div style="max-width:400px; margin:0 auto;">
 <div class="camera-wrapper">
-<video id="defectVideo" autoplay playsinline muted></video>
-<canvas id="defectCanvas"></canvas>
-<div id="cameraPlaceholder">
-<i class="bi bi-camera"></i>
-<span>Camera not available</span>
+<video id="defectVideo" autoplay playsinline muted style="display:none;"></video>
+<canvas id="defectCanvas" style="display:none;"></canvas>
+<div id="cameraPlaceholder" style="display:flex; flex-direction:column; align-items:center; gap:8px; padding:30px; min-height:200px;">
+<i class="bi bi-camera" style="font-size:2rem; opacity:0.25; color:var(--text-main);"></i>
+<span style="font-size:0.55rem; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:var(--text-dim);">Camera not available</span>
 </div>
-<button class="capture-btn" id="captureBtn" onclick="DefectDetector.capturePhoto()">Capture</button>
-</div>
-<div class="checklist-section">
-<div class="checklist-header" id="defectChecklistTitle">External Defects</div>
-<div class="checklist-scroll" id="defectChecklist"></div>
-</div>
-<button class="btn-main" style="margin-top:16px;" onclick="DefectDetector.generateReport()">
-<i class="bi bi-file-earmark-text"></i> Generate Report
+<button class="capture-btn" id="defectScanActionBtn" onclick="DefectDetector.doScan()">
+<i class="bi bi-camera-fill"></i> Scan
 </button>
-<button class="btn-main btn-back" onclick="DefectDetector.showDefectView('defect-type-view'); DefectDetector.stopCamera();">← Back</button>
+</div>
+
+<!-- Disclaimer -->
+<div style="margin:10px 0 14px; text-align:center;">
+<span style="font-size:0.55rem; font-weight:700; color:var(--pulp-red); text-transform:uppercase; letter-spacing:1px; opacity:0.8;">
+⚠️ Camera detection is colour-based. Accuracy may vary. Always verify results manually.
+</span>
+</div>
+
+<!-- Results -->
+<div id="defectScanResults" class="hidden"></div>
+
+<button class="btn-main btn-back" style="margin-top:10px;" onclick="DefectDetector.showDefectView('defect-type-view'); DefectDetector.stopCamera();">← Back</button>
 </div>
 </div>
 
-<!-- Defect Report View -->
+<!-- Defect Info View — Full Detail Page -->
+<div id="defect-info-view" class="nav-view hidden">
+<div class="hub-title">Defect Info</div>
+<div style="max-width:400px; margin:0 auto;">
+<div id="defectInfoContent"></div>
+<button class="btn-main btn-back" onclick="DefectDetector.showDefectView('defect-scan-view')">← Back to Scan</button>
+</div>
+</div>
+
+<!-- Defect Report View — kept for backwards compatibility -->
 <div id="defect-report-view" class="nav-view hidden">
 <div class="hub-title">Defect Report</div>
 <div style="max-width:400px; margin:0 auto;">
@@ -160,7 +175,7 @@
 </div>
 <div class="report-defects-title">Defect Breakdown</div>
 <div class="report-defects-scroll" id="reportDefectList"></div>
-<button id="copyReportBtn" onclick="DefectDetector.copyReport()">
+<button id="copyReportBtn" onclick="DefectDetector.copyReport ? DefectDetector.copyReport() : null">
 <i class="bi bi-clipboard"></i> Copy Report
 </button>
 <button class="btn-main btn-back" onclick="DefectDetector.showDefectView('defect-hub')">← New Scan</button>
@@ -170,27 +185,20 @@
 <!-- Colour Scanner View -->
 <div id="colour-scanner-view" class="nav-view hidden">
 <div style="max-width:400px; margin:0 auto;">
-
-<!-- Logo -->
 <div style="text-align:center; margin-bottom:14px;">
 <img src="edited-image.png" style="width:46px; border-radius:14px; margin-bottom:6px;">
 <div style="font-size:0.6rem; font-weight:900; color:var(--pulp-lime); letter-spacing:3px; text-transform:uppercase;">Pulp Pro</div>
 </div>
-
 <div class="hub-title">Banana Colour Scanner</div>
-
-<!-- Single / Multi Toggle -->
 <div style="display:flex; gap:8px; margin-bottom:14px;">
 <div class="cs-toggle-btn active" id="csSingleBtn" onclick="ColourScanner.setScanMode('single')">Single Scan</div>
 <div class="cs-toggle-btn" id="csMultiBtn" onclick="ColourScanner.setScanMode('multi')">Multi Scan</div>
 </div>
-
-<!-- Scanner -->
 <div id="cs-scanner">
 <div class="camera-wrapper">
 <video id="csVideo" autoplay playsinline muted style="display:none;"></video>
 <canvas id="csCanvas" style="display:none;"></canvas>
-<div id="csPlaceholder" style="display:flex; flex-direction:column; align-items:center; gap:8px; padding:30px;">
+<div id="csPlaceholder" style="display:flex; flex-direction:column; align-items:center; gap:8px; padding:30px; min-height:200px;">
 <i class="bi bi-camera" style="font-size:2rem; opacity:0.25; color:var(--text-main);"></i>
 <span style="font-size:0.55rem; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:var(--text-dim);">Point camera at banana</span>
 </div>

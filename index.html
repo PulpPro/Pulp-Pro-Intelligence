@@ -47,6 +47,7 @@
 <div class="menu-item" onclick="showHub(); toggleMenu();"><span>🏠 Home</span></div>
 <div class="settings-label">App Settings</div>
 <div class="menu-item" onclick="toggleTheme()"><span>🌓 <span id="themeText">Dark Mode</span></span></div>
+<div class="menu-item" onclick="toggleLanguage()"><span>🌐 <span id="langText">🇳🇱 Nederlands</span></span></div>
 <div class="menu-item" onclick="clearHistory()" style="color:var(--pulp-red);"><span>⚠️ Clear Logs</span></div>
 <div class="menu-item" onclick="sendFeedback()"><span>💬 Send Feedback</span></div>
 <div id="menu-fav-container">
@@ -79,10 +80,10 @@
 <div class="hub-title" id="middleHubTitle">Banana Menu</div>
 <div class="list-container">
 <div class="list-btn" id="brandsBtn" onclick="openBrands(activeFruit)">Banana Brands</div>
-<div class="list-btn disabled">Defects (Soon)</div>
-<div class="list-btn disabled">Ripening (Soon)</div>
+<div class="list-btn disabled" id="defectsSoonBtn">Defects (Soon)</div>
+<div class="list-btn disabled" id="ripeningSoonBtn">Ripening (Soon)</div>
 </div>
-<button class="btn-main btn-back" onclick="showHub()">← Back</button>
+<button class="btn-main btn-back" onclick="showHub()" id="backToHubBtn">← Back</button>
 </div>
 
 <!-- Brand Hub -->
@@ -92,7 +93,7 @@
 <button class="btn-main btn-back" onclick="openMiddleHub(activeFruit)">← Back</button>
 </div>
 
-<!-- Defect Hub — Fruit Selection -->
+<!-- Defect Hub -->
 <div id="defect-hub" class="nav-view hidden">
 <div class="hub-title">Defect Detector</div>
 <div class="list-container">
@@ -108,18 +109,18 @@
 <div class="hub-title" id="defectTypeTitle">Banana — Select Type</div>
 <div style="max-width:400px; margin:0 auto;">
 <div class="type-btn" onclick="DefectDetector.selectType('external')">
-<div class="type-btn-title">🔍 External Defects</div>
+<div class="type-btn-title" id="extDefectsBtn">🔍 External Defects</div>
 <div class="type-btn-desc" id="defectTypeDesc_external">Skin, colour, bruising, cuts, mould</div>
 </div>
 <div class="type-btn" onclick="DefectDetector.selectType('internal')">
-<div class="type-btn-title">🔬 Internal Defects</div>
+<div class="type-btn-title" id="intDefectsBtn">🔬 Internal Defects</div>
 <div class="type-btn-desc" id="defectTypeDesc_internal">Flesh, rot, discolouration, flavour</div>
 </div>
 </div>
 <button class="btn-main btn-back" onclick="DefectDetector.showDefectView('defect-hub')">← Back</button>
 </div>
 
-<!-- Defect Scan View — Camera + Results -->
+<!-- Defect Scan View -->
 <div id="defect-scan-view" class="nav-view hidden">
 <div class="hub-title" id="defectScanTitle">Banana — External</div>
 <div style="max-width:400px; margin:0 auto;">
@@ -134,31 +135,26 @@
 <i class="bi bi-camera-fill"></i> Scan
 </button>
 </div>
-
-<!-- Disclaimer -->
 <div style="margin:10px 0 14px; text-align:center;">
-<span style="font-size:0.55rem; font-weight:700; color:var(--pulp-red); text-transform:uppercase; letter-spacing:1px; opacity:0.8;">
+<span id="defectDisclaimer" style="font-size:0.55rem; font-weight:700; color:var(--pulp-red); text-transform:uppercase; letter-spacing:1px; opacity:0.8;">
 ⚠️ Camera detection is colour-based. Accuracy may vary. Always verify results manually.
 </span>
 </div>
-
-<!-- Results -->
 <div id="defectScanResults" class="hidden"></div>
-
 <button class="btn-main btn-back" style="margin-top:10px;" onclick="DefectDetector.showDefectView('defect-type-view'); DefectDetector.stopCamera();">← Back</button>
 </div>
 </div>
 
-<!-- Defect Info View — Full Detail Page -->
+<!-- Defect Info View -->
 <div id="defect-info-view" class="nav-view hidden">
-<div class="hub-title">Defect Info</div>
+<div class="hub-title" id="defectInfoTitle">Defect Info</div>
 <div style="max-width:400px; margin:0 auto;">
 <div id="defectInfoContent"></div>
-<button class="btn-main btn-back" onclick="DefectDetector.showDefectView('defect-scan-view')">← Back to Scan</button>
+<button class="btn-main btn-back" onclick="DefectDetector.showDefectView('defect-scan-view')" id="backToScanBtn">← Back to Scan</button>
 </div>
 </div>
 
-<!-- Defect Report View — kept for backwards compatibility -->
+<!-- Defect Report View -->
 <div id="defect-report-view" class="nav-view hidden">
 <div class="hub-title">Defect Report</div>
 <div style="max-width:400px; margin:0 auto;">
@@ -189,7 +185,7 @@
 <img src="edited-image.png" style="width:46px; border-radius:14px; margin-bottom:6px;">
 <div style="font-size:0.6rem; font-weight:900; color:var(--pulp-lime); letter-spacing:3px; text-transform:uppercase;">Pulp Pro</div>
 </div>
-<div class="hub-title">Banana Colour Scanner</div>
+<div class="hub-title" id="csScannerTitle">Banana Colour Scanner</div>
 <div style="display:flex; gap:8px; margin-bottom:14px;">
 <div class="cs-toggle-btn active" id="csSingleBtn" onclick="ColourScanner.setScanMode('single')">Single Scan</div>
 <div class="cs-toggle-btn" id="csMultiBtn" onclick="ColourScanner.setScanMode('multi')">Multi Scan</div>
@@ -200,12 +196,12 @@
 <canvas id="csCanvas" style="display:none;"></canvas>
 <div id="csPlaceholder" style="display:flex; flex-direction:column; align-items:center; gap:8px; padding:30px; min-height:200px;">
 <i class="bi bi-camera" style="font-size:2rem; opacity:0.25; color:var(--text-main);"></i>
-<span style="font-size:0.55rem; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:var(--text-dim);">Point camera at banana</span>
+<span id="csPointCamera" style="font-size:0.55rem; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:var(--text-dim);">Point camera at banana</span>
 </div>
 <div class="cs-crosshair"></div>
 <button class="capture-btn" id="csScanBtn" onclick="ColourScanner.doScan()">Scan</button>
 </div>
-<div style="font-size:0.55rem; color:var(--text-dim); text-align:center; text-transform:uppercase; letter-spacing:2px; margin:10px 0; opacity:0.4;">Works offline — no internet needed</div>
+<div id="csOfflineLabel" style="font-size:0.55rem; color:var(--text-dim); text-align:center; text-transform:uppercase; letter-spacing:2px; margin:10px 0; opacity:0.4;">Works offline — no internet needed</div>
 <div id="csMultiList" style="margin-bottom:10px;"></div>
 <button id="csBatchBtn" class="btn-main" style="display:none; margin-bottom:8px;" onclick="ColourScanner.getBatchResult()">Get Batch Result →</button>
 </div>
@@ -221,13 +217,13 @@
 <div class="color-bar-wrap" style="margin-top:8px;"><div id="csSingleBar" class="color-bar" style="width:65%; background:#f5b800;"></div></div>
 </div>
 </div>
-<div class="report-row"><span class="report-key">Shelf Life</span><span class="report-val" id="csSingleShelf">—</span></div>
-<div class="report-row"><span class="report-key">Status</span><span class="report-val" id="csSingleStatus">—</span></div>
+<div class="report-row"><span class="report-key" id="shelfLifeLabel">Shelf Life</span><span class="report-val" id="csSingleShelf">—</span></div>
+<div class="report-row"><span class="report-key" id="statusLabel2">Status</span><span class="report-val" id="csSingleStatus">—</span></div>
 </div>
 <button id="csCopySingle" class="btn-copy" style="width:100%; justify-content:center; margin-bottom:10px;" onclick="ColourScanner.copySingleResult()">
 <i class="bi bi-clipboard"></i> Copy Result
 </button>
-<button class="btn-main btn-back" onclick="ColourScanner.resetScanner()">← New Scan</button>
+<button class="btn-main btn-back" onclick="ColourScanner.resetScanner()" id="csNewScanBtn">← New Scan</button>
 </div>
 
 <!-- Batch Result -->
@@ -235,23 +231,23 @@
 <div style="background:rgba(166,226,46,0.06); border:1px solid rgba(166,226,46,0.2); border-radius:16px; padding:14px; margin-bottom:12px; display:flex; align-items:center; gap:12px;">
 <div id="csBatchSwatch" style="width:48px; height:48px; border-radius:12px; flex-shrink:0; background:#f5b000;"></div>
 <div>
-<div style="font-size:0.55rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:2px; margin-bottom:3px;">Batch Average</div>
+<div id="batchAvgLabel" style="font-size:0.55rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:2px; margin-bottom:3px;">Batch Average</div>
 <div id="csBatchLabel" style="font-size:0.95rem; font-weight:900; color:var(--text-main);">Color 4.5</div>
 </div>
 </div>
 <div class="report-card" style="margin-bottom:12px;">
 <div id="csBatchBreakdown" style="margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--border-glass);"></div>
-<div class="report-row"><span class="report-key">Boxes Scanned</span><span class="report-val" id="csBatchCount">—</span></div>
-<div class="report-row"><span class="report-key">Shelf Life Est.</span><span class="report-val" id="csBatchShelf">—</span></div>
-<div class="report-row"><span class="report-key">Batch Status</span><span class="report-val" id="csBatchStatus">—</span></div>
+<div class="report-row"><span class="report-key" id="boxesScannedLabel">Boxes Scanned</span><span class="report-val" id="csBatchCount">—</span></div>
+<div class="report-row"><span class="report-key" id="shelfLifeEstLabel">Shelf Life Est.</span><span class="report-val" id="csBatchShelf">—</span></div>
+<div class="report-row"><span class="report-key" id="batchStatusLabel">Batch Status</span><span class="report-val" id="csBatchStatus">—</span></div>
 </div>
 <button id="csCopyBatch" class="btn-copy" style="width:100%; justify-content:center; margin-bottom:10px;" onclick="ColourScanner.copyBatchResult()">
 <i class="bi bi-clipboard"></i> Copy Batch Report
 </button>
-<button class="btn-main btn-back" onclick="ColourScanner.resetScanner()">← New Scan</button>
+<button class="btn-main btn-back" onclick="ColourScanner.resetScanner()" id="csNewBatchScanBtn">← New Scan</button>
 </div>
 
-<button class="btn-main btn-back" style="margin-top:10px;" onclick="ColourScanner.close()">← Back</button>
+<button class="btn-main btn-back" style="margin-top:10px;" onclick="ColourScanner.close()" id="csBackBtn">← Back</button>
 </div>
 </div>
 
@@ -270,7 +266,7 @@
 <div id="dateText" style="font-size:1.3rem; font-weight:900; margin-top:10px;">-- -- ----</div>
 <button class="btn btn-copy" onclick="copyResult()" id="copyBtn"><i class="bi bi-clipboard"></i> COPY</button>
 </div>
-<button class="btn-main btn-back" style="margin-top:25px;" onclick="openBrands(activeFruit)">← Back to Brands</button>
+<button class="btn-main btn-back" style="margin-top:25px;" onclick="openBrands(activeFruit)" id="backToBrandsBtn">← Back to Brands</button>
 </div>
 <div id="historySection" class="history-section"><div id="historyList"></div></div>
 </div>
@@ -284,6 +280,7 @@ navigator.serviceWorker.register('sw.js').catch(err => console.log('SW failed', 
 </script>
 
 <!-- Scripts in correct order -->
+<script src="js/translations.js"></script>
 <script src="js/app.js"></script>
 <script src="js/favorites.js"></script>
 <script src="js/history.js"></script>

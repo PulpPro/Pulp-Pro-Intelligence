@@ -8,46 +8,28 @@ const DefectDetector = (() => {
         console.log('Defect Detector ready');
     }
 
-    // Step 1 — select fruit
     function selectFruit(fruit) {
         currentFruit = fruit;
         const fruitNames = { banana: 'Banana', mango: 'Mango', avocado: 'Avocado' };
-        document.getElementById('defectTypeTitle').innerText = fruitNames[fruit] + ' — Select Type';
-        document.getElementById('defectTypeDesc_external').innerText = getTypeDesc(fruit, 'external');
-        document.getElementById('defectTypeDesc_internal').innerText = getTypeDesc(fruit, 'internal');
+        document.getElementById('defectTypeTitle').innerText = fruitNames[fruit] + ' — ' + t('selectType');
+        document.getElementById('defectTypeDesc_external').innerText = t(fruit + 'ExtDesc');
+        document.getElementById('defectTypeDesc_internal').innerText = t(fruit + 'IntDesc');
         showDefectView('defect-type-view');
     }
 
-    function getTypeDesc(fruit, type) {
-        const desc = {
-            banana: {
-                external: 'Skin colour, bruising, splits, mould, scarring, tip & crown rot',
-                internal: 'Flesh colour, internal rot, vascular browning, overripeness'
-            },
-            mango: {
-                external: 'Skin blemishes, soft spots, anthracnose, stem rot, cuts',
-                internal: 'Seed damage, flesh browning, internal breakdown, flavour'
-            },
-            avocado: {
-                external: 'Skin bruising, cracking, mould, stem absence, scab',
-                internal: 'Flesh browning, vascular browning, seed cavity mould, grey pulp'
-            }
-        };
-        return desc[fruit][type];
-    }
-
-    // Step 2 — select type, open camera
     async function selectType(type) {
         currentType = type;
+        window.defectActiveFruit = currentFruit;
+        window.defectActiveType = type;
         const fruitNames = { banana: 'Banana', mango: 'Mango', avocado: 'Avocado' };
-        const typeLabel = type === 'external' ? 'External' : 'Internal';
+        const typeLabel = type === 'external' ? t('external') : t('internal');
         document.getElementById('defectScanTitle').innerText = fruitNames[currentFruit] + ' — ' + typeLabel;
         showDefectView('defect-scan-view');
+        updateDefectFavoriteUI();
         resetScanUI();
         await startCamera();
     }
 
-    // Camera
     async function startCamera() {
         try {
             if (cameraStream) stopCamera();
@@ -78,7 +60,6 @@ const DefectDetector = (() => {
         isScanning = false;
     }
 
-    // Capture frame from camera
     function captureFrame() {
         const video = document.getElementById('defectVideo');
         const canvas = document.getElementById('defectCanvas');
@@ -89,7 +70,6 @@ const DefectDetector = (() => {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(video, 0, 0);
 
-        // Sample multiple regions for better analysis
         const regions = [
             { x: canvas.width * 0.25, y: canvas.height * 0.25, size: 60 },
             { x: canvas.width * 0.5,  y: canvas.height * 0.5,  size: 80 },
@@ -115,7 +95,6 @@ const DefectDetector = (() => {
             };
         });
 
-        // Analyse variance across regions for texture detection
         const avgR = samples.reduce((s, c) => s + c.r, 0) / samples.length;
         const avgG = samples.reduce((s, c) => s + c.g, 0) / samples.length;
         const avgB = samples.reduce((s, c) => s + c.b, 0) / samples.length;
@@ -133,14 +112,13 @@ const DefectDetector = (() => {
         };
     }
 
-    // Main scan logic
     function doScan() {
         if (isScanning) return;
         isScanning = true;
 
         const btn = document.getElementById('defectScanActionBtn');
         if (btn) {
-            btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Scanning...';
+            btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> ' + t('scanning');
             btn.disabled = true;
         }
 
@@ -155,7 +133,7 @@ const DefectDetector = (() => {
             }
 
             if (btn) {
-                btn.innerHTML = '<i class="bi bi-camera-fill"></i> Scan Again';
+                btn.innerHTML = '<i class="bi bi-camera-fill"></i> ' + t('scanAgain');
                 btn.disabled = false;
             }
 
@@ -164,7 +142,6 @@ const DefectDetector = (() => {
         }, 800);
     }
 
-    // Analyse frame against current fruit + type defects
     function analyseFrame(frameData) {
         const defects = DEFECTS_DATA[currentFruit][currentType];
         const { r, g, b, variance } = frameData;
@@ -179,7 +156,6 @@ const DefectDetector = (() => {
                 const maxDist = 441;
                 const match = 1 - (dist / maxDist);
                 score += match * sig.weight;
-
                 if (sig.requiresVariance && variance > sig.varianceThreshold) {
                     score += 0.2;
                 }
@@ -198,70 +174,58 @@ const DefectDetector = (() => {
         return { primary: top.defect, confidence, possibilities };
     }
 
-    // Colour signatures per defect — tuned for rijp cell white light
     function getDefectSignature(defectId) {
         const signatures = {
-            // Banana External
-            'ban_ext_01': [{ rgb: { r: 60,  g: 40,  b: 20  }, weight: 0.8, requiresVariance: true,  varianceThreshold: 800  }], // Bruising — dark brown patch
-            'ban_ext_02': [{ rgb: { r: 80,  g: 70,  b: 30  }, weight: 0.7, requiresVariance: true,  varianceThreshold: 1200 }], // Skin splitting — dark crack
-            'ban_ext_03': [{ rgb: { r: 70,  g: 80,  b: 60  }, weight: 0.9, requiresVariance: false, varianceThreshold: 0    }], // Mould — grey-green
-            'ban_ext_04': [{ rgb: { r: 130, g: 140, b: 60  }, weight: 0.7, requiresVariance: false, varianceThreshold: 0    }], // Colour deviation — uneven yellow-green
-            'ban_ext_05': [{ rgb: { r: 50,  g: 40,  b: 20  }, weight: 0.8, requiresVariance: true,  varianceThreshold: 1500 }], // Mechanical damage — dark cut
-            'ban_ext_06': [{ rgb: { r: 80,  g: 60,  b: 20  }, weight: 0.6, requiresVariance: false, varianceThreshold: 0    }], // Latex staining — dark sticky mark
-            'ban_ext_07': [{ rgb: { r: 100, g: 90,  b: 60  }, weight: 0.6, requiresVariance: true,  varianceThreshold: 600  }], // Scarring — rough surface
-            'ban_ext_08': [{ rgb: { r: 180, g: 170, b: 80  }, weight: 0.5, requiresVariance: false, varianceThreshold: 0    }], // Deformity — shape anomaly
-            'ban_ext_09': [{ rgb: { r: 50,  g: 30,  b: 10  }, weight: 0.9, requiresVariance: false, varianceThreshold: 0    }], // Tip rot — very dark tip
-            'ban_ext_10': [{ rgb: { r: 60,  g: 50,  b: 30  }, weight: 0.9, requiresVariance: true,  varianceThreshold: 1000 }], // Crown rot — dark crown
-
-            // Banana Internal
-            'ban_int_01': [{ rgb: { r: 140, g: 100, b: 60  }, weight: 0.8, requiresVariance: false, varianceThreshold: 0    }], // Flesh discolouration — brown streaks
-            'ban_int_02': [{ rgb: { r: 80,  g: 50,  b: 20  }, weight: 0.9, requiresVariance: true,  varianceThreshold: 800  }], // Internal rot — dark mushy
-            'ban_int_03': [{ rgb: { r: 220, g: 210, b: 150 }, weight: 0.6, requiresVariance: false, varianceThreshold: 0    }], // Hard core — pale centre
-            'ban_int_04': [{ rgb: { r: 120, g: 80,  b: 40  }, weight: 0.8, requiresVariance: false, varianceThreshold: 0    }], // Vascular browning — brown lines
-            'ban_int_05': [{ rgb: { r: 160, g: 120, b: 40  }, weight: 0.7, requiresVariance: false, varianceThreshold: 0    }], // Overripeness — deep yellow brown
-            'ban_int_06': [{ rgb: { r: 40,  g: 30,  b: 20  }, weight: 0.9, requiresVariance: true,  varianceThreshold: 2000 }], // Insect damage — dark tunnels
-            'ban_int_07': [{ rgb: { r: 200, g: 180, b: 100 }, weight: 0.5, requiresVariance: false, varianceThreshold: 0    }], // Abnormal flavour — pale flesh
-
-            // Mango External
-            'man_ext_01': [{ rgb: { r: 60,  g: 40,  b: 20  }, weight: 0.7, requiresVariance: true,  varianceThreshold: 600  }], // Skin blemishes
-            'man_ext_02': [{ rgb: { r: 80,  g: 60,  b: 40  }, weight: 0.8, requiresVariance: true,  varianceThreshold: 1000 }], // Soft spots
-            'man_ext_03': [{ rgb: { r: 30,  g: 30,  b: 30  }, weight: 0.9, requiresVariance: true,  varianceThreshold: 800  }], // Anthracnose — black lesions
-            'man_ext_04': [{ rgb: { r: 40,  g: 20,  b: 10  }, weight: 0.9, requiresVariance: false, varianceThreshold: 0    }], // Stem end rot
-            'man_ext_05': [{ rgb: { r: 150, g: 130, b: 60  }, weight: 0.5, requiresVariance: false, varianceThreshold: 0    }], // Colour unevenness
-            'man_ext_06': [{ rgb: { r: 50,  g: 35,  b: 15  }, weight: 0.8, requiresVariance: true,  varianceThreshold: 1200 }], // Cuts and abrasions
-            'man_ext_07': [{ rgb: { r: 180, g: 140, b: 60  }, weight: 0.5, requiresVariance: false, varianceThreshold: 0    }], // Resin tapping marks
-            'man_ext_08': [{ rgb: { r: 70,  g: 50,  b: 30  }, weight: 0.7, requiresVariance: true,  varianceThreshold: 500  }], // Insect stings
-            'man_ext_09': [{ rgb: { r: 220, g: 200, b: 140 }, weight: 0.6, requiresVariance: false, varianceThreshold: 0    }], // Sunburn — pale patches
-            'man_ext_10': [{ rgb: { r: 160, g: 120, b: 60  }, weight: 0.7, requiresVariance: true,  varianceThreshold: 700  }], // Shrivel
-
-            // Mango Internal
-            'man_int_01': [{ rgb: { r: 30,  g: 20,  b: 10  }, weight: 0.9, requiresVariance: true,  varianceThreshold: 2000 }], // Seed weevil
-            'man_int_02': [{ rgb: { r: 120, g: 80,  b: 30  }, weight: 0.8, requiresVariance: false, varianceThreshold: 0    }], // Flesh browning
-            'man_int_03': [{ rgb: { r: 200, g: 180, b: 100 }, weight: 0.6, requiresVariance: false, varianceThreshold: 0    }], // Jelly seed
-            'man_int_04': [{ rgb: { r: 80,  g: 50,  b: 20  }, weight: 0.9, requiresVariance: true,  varianceThreshold: 1000 }], // Internal breakdown
-            'man_int_05': [{ rgb: { r: 210, g: 170, b: 80  }, weight: 0.5, requiresVariance: false, varianceThreshold: 0    }], // Fibre excess
-            'man_int_06': [{ rgb: { r: 230, g: 190, b: 90  }, weight: 0.5, requiresVariance: false, varianceThreshold: 0    }], // Turpentine flavour
-            'man_int_07': [{ rgb: { r: 200, g: 180, b: 90  }, weight: 0.6, requiresVariance: false, varianceThreshold: 0    }], // Uneven ripening
-
-            // Avocado External
-            'avo_ext_01': [{ rgb: { r: 30,  g: 25,  b: 15  }, weight: 0.8, requiresVariance: true,  varianceThreshold: 800  }], // Skin bruising
-            'avo_ext_02': [{ rgb: { r: 60,  g: 40,  b: 20  }, weight: 0.7, requiresVariance: false, varianceThreshold: 0    }], // Stem absence
-            'avo_ext_03': [{ rgb: { r: 40,  g: 30,  b: 15  }, weight: 0.8, requiresVariance: true,  varianceThreshold: 1500 }], // Skin cracking
-            'avo_ext_04': [{ rgb: { r: 70,  g: 80,  b: 60  }, weight: 0.9, requiresVariance: false, varianceThreshold: 0    }], // Mould
-            'avo_ext_05': [{ rgb: { r: 50,  g: 40,  b: 20  }, weight: 0.6, requiresVariance: true,  varianceThreshold: 400  }], // Lenticel damage
-            'avo_ext_06': [{ rgb: { r: 90,  g: 70,  b: 40  }, weight: 0.6, requiresVariance: true,  varianceThreshold: 600  }], // Scab
-            'avo_ext_07': [{ rgb: { r: 180, g: 140, b: 60  }, weight: 0.7, requiresVariance: false, varianceThreshold: 0    }], // Sunblotch
-            'avo_ext_08': [{ rgb: { r: 40,  g: 30,  b: 15  }, weight: 0.8, requiresVariance: true,  varianceThreshold: 1200 }], // Mechanical damage
-
-            // Avocado Internal
-            'avo_int_01': [{ rgb: { r: 100, g: 70,  b: 30  }, weight: 0.8, requiresVariance: false, varianceThreshold: 0    }], // Flesh browning
-            'avo_int_02': [{ rgb: { r: 110, g: 75,  b: 35  }, weight: 0.8, requiresVariance: false, varianceThreshold: 0    }], // Vascular browning
-            'avo_int_03': [{ rgb: { r: 70,  g: 80,  b: 60  }, weight: 0.9, requiresVariance: false, varianceThreshold: 0    }], // Seed cavity mould
-            'avo_int_04': [{ rgb: { r: 120, g: 120, b: 100 }, weight: 0.9, requiresVariance: false, varianceThreshold: 0    }], // Grey pulp
-            'avo_int_05': [{ rgb: { r: 80,  g: 55,  b: 25  }, weight: 0.8, requiresVariance: true,  varianceThreshold: 700  }], // Internal bruising
-            'avo_int_06': [{ rgb: { r: 160, g: 130, b: 80  }, weight: 0.6, requiresVariance: false, varianceThreshold: 0    }], // Seed cracking
-            'avo_int_07': [{ rgb: { r: 180, g: 160, b: 100 }, weight: 0.5, requiresVariance: false, varianceThreshold: 0    }], // Off flavour
-            'avo_int_08': [{ rgb: { r: 140, g: 160, b: 80  }, weight: 0.6, requiresVariance: false, varianceThreshold: 0    }]  // Uneven ripening
+            'ban_ext_01': [{ rgb: { r: 60,  g: 40,  b: 20  }, weight: 0.8, requiresVariance: true,  varianceThreshold: 800  }],
+            'ban_ext_02': [{ rgb: { r: 80,  g: 70,  b: 30  }, weight: 0.7, requiresVariance: true,  varianceThreshold: 1200 }],
+            'ban_ext_03': [{ rgb: { r: 70,  g: 80,  b: 60  }, weight: 0.9, requiresVariance: false, varianceThreshold: 0    }],
+            'ban_ext_04': [{ rgb: { r: 130, g: 140, b: 60  }, weight: 0.7, requiresVariance: false, varianceThreshold: 0    }],
+            'ban_ext_05': [{ rgb: { r: 50,  g: 40,  b: 20  }, weight: 0.8, requiresVariance: true,  varianceThreshold: 1500 }],
+            'ban_ext_06': [{ rgb: { r: 80,  g: 60,  b: 20  }, weight: 0.6, requiresVariance: false, varianceThreshold: 0    }],
+            'ban_ext_07': [{ rgb: { r: 100, g: 90,  b: 60  }, weight: 0.6, requiresVariance: true,  varianceThreshold: 600  }],
+            'ban_ext_08': [{ rgb: { r: 180, g: 170, b: 80  }, weight: 0.5, requiresVariance: false, varianceThreshold: 0    }],
+            'ban_ext_09': [{ rgb: { r: 50,  g: 30,  b: 10  }, weight: 0.9, requiresVariance: false, varianceThreshold: 0    }],
+            'ban_ext_10': [{ rgb: { r: 60,  g: 50,  b: 30  }, weight: 0.9, requiresVariance: true,  varianceThreshold: 1000 }],
+            'ban_int_01': [{ rgb: { r: 140, g: 100, b: 60  }, weight: 0.8, requiresVariance: false, varianceThreshold: 0    }],
+            'ban_int_02': [{ rgb: { r: 80,  g: 50,  b: 20  }, weight: 0.9, requiresVariance: true,  varianceThreshold: 800  }],
+            'ban_int_03': [{ rgb: { r: 220, g: 210, b: 150 }, weight: 0.6, requiresVariance: false, varianceThreshold: 0    }],
+            'ban_int_04': [{ rgb: { r: 120, g: 80,  b: 40  }, weight: 0.8, requiresVariance: false, varianceThreshold: 0    }],
+            'ban_int_05': [{ rgb: { r: 160, g: 120, b: 40  }, weight: 0.7, requiresVariance: false, varianceThreshold: 0    }],
+            'ban_int_06': [{ rgb: { r: 40,  g: 30,  b: 20  }, weight: 0.9, requiresVariance: true,  varianceThreshold: 2000 }],
+            'ban_int_07': [{ rgb: { r: 200, g: 180, b: 100 }, weight: 0.5, requiresVariance: false, varianceThreshold: 0    }],
+            'man_ext_01': [{ rgb: { r: 60,  g: 40,  b: 20  }, weight: 0.7, requiresVariance: true,  varianceThreshold: 600  }],
+            'man_ext_02': [{ rgb: { r: 80,  g: 60,  b: 40  }, weight: 0.8, requiresVariance: true,  varianceThreshold: 1000 }],
+            'man_ext_03': [{ rgb: { r: 30,  g: 30,  b: 30  }, weight: 0.9, requiresVariance: true,  varianceThreshold: 800  }],
+            'man_ext_04': [{ rgb: { r: 40,  g: 20,  b: 10  }, weight: 0.9, requiresVariance: false, varianceThreshold: 0    }],
+            'man_ext_05': [{ rgb: { r: 150, g: 130, b: 60  }, weight: 0.5, requiresVariance: false, varianceThreshold: 0    }],
+            'man_ext_06': [{ rgb: { r: 50,  g: 35,  b: 15  }, weight: 0.8, requiresVariance: true,  varianceThreshold: 1200 }],
+            'man_ext_07': [{ rgb: { r: 180, g: 140, b: 60  }, weight: 0.5, requiresVariance: false, varianceThreshold: 0    }],
+            'man_ext_08': [{ rgb: { r: 70,  g: 50,  b: 30  }, weight: 0.7, requiresVariance: true,  varianceThreshold: 500  }],
+            'man_ext_09': [{ rgb: { r: 220, g: 200, b: 140 }, weight: 0.6, requiresVariance: false, varianceThreshold: 0    }],
+            'man_ext_10': [{ rgb: { r: 160, g: 120, b: 60  }, weight: 0.7, requiresVariance: true,  varianceThreshold: 700  }],
+            'man_int_01': [{ rgb: { r: 30,  g: 20,  b: 10  }, weight: 0.9, requiresVariance: true,  varianceThreshold: 2000 }],
+            'man_int_02': [{ rgb: { r: 120, g: 80,  b: 30  }, weight: 0.8, requiresVariance: false, varianceThreshold: 0    }],
+            'man_int_03': [{ rgb: { r: 200, g: 180, b: 100 }, weight: 0.6, requiresVariance: false, varianceThreshold: 0    }],
+            'man_int_04': [{ rgb: { r: 80,  g: 50,  b: 20  }, weight: 0.9, requiresVariance: true,  varianceThreshold: 1000 }],
+            'man_int_05': [{ rgb: { r: 210, g: 170, b: 80  }, weight: 0.5, requiresVariance: false, varianceThreshold: 0    }],
+            'man_int_06': [{ rgb: { r: 230, g: 190, b: 90  }, weight: 0.5, requiresVariance: false, varianceThreshold: 0    }],
+            'man_int_07': [{ rgb: { r: 200, g: 180, b: 90  }, weight: 0.6, requiresVariance: false, varianceThreshold: 0    }],
+            'avo_ext_01': [{ rgb: { r: 30,  g: 25,  b: 15  }, weight: 0.8, requiresVariance: true,  varianceThreshold: 800  }],
+            'avo_ext_02': [{ rgb: { r: 60,  g: 40,  b: 20  }, weight: 0.7, requiresVariance: false, varianceThreshold: 0    }],
+            'avo_ext_03': [{ rgb: { r: 40,  g: 30,  b: 15  }, weight: 0.8, requiresVariance: true,  varianceThreshold: 1500 }],
+            'avo_ext_04': [{ rgb: { r: 70,  g: 80,  b: 60  }, weight: 0.9, requiresVariance: false, varianceThreshold: 0    }],
+            'avo_ext_05': [{ rgb: { r: 50,  g: 40,  b: 20  }, weight: 0.6, requiresVariance: true,  varianceThreshold: 400  }],
+            'avo_ext_06': [{ rgb: { r: 90,  g: 70,  b: 40  }, weight: 0.6, requiresVariance: true,  varianceThreshold: 600  }],
+            'avo_ext_07': [{ rgb: { r: 180, g: 140, b: 60  }, weight: 0.7, requiresVariance: false, varianceThreshold: 0    }],
+            'avo_ext_08': [{ rgb: { r: 40,  g: 30,  b: 15  }, weight: 0.8, requiresVariance: true,  varianceThreshold: 1200 }],
+            'avo_int_01': [{ rgb: { r: 100, g: 70,  b: 30  }, weight: 0.8, requiresVariance: false, varianceThreshold: 0    }],
+            'avo_int_02': [{ rgb: { r: 110, g: 75,  b: 35  }, weight: 0.8, requiresVariance: false, varianceThreshold: 0    }],
+            'avo_int_03': [{ rgb: { r: 70,  g: 80,  b: 60  }, weight: 0.9, requiresVariance: false, varianceThreshold: 0    }],
+            'avo_int_04': [{ rgb: { r: 120, g: 120, b: 100 }, weight: 0.9, requiresVariance: false, varianceThreshold: 0    }],
+            'avo_int_05': [{ rgb: { r: 80,  g: 55,  b: 25  }, weight: 0.8, requiresVariance: true,  varianceThreshold: 700  }],
+            'avo_int_06': [{ rgb: { r: 160, g: 130, b: 80  }, weight: 0.6, requiresVariance: false, varianceThreshold: 0    }],
+            'avo_int_07': [{ rgb: { r: 180, g: 160, b: 100 }, weight: 0.5, requiresVariance: false, varianceThreshold: 0    }],
+            'avo_int_08': [{ rgb: { r: 140, g: 160, b: 80  }, weight: 0.6, requiresVariance: false, varianceThreshold: 0    }]
         };
         return signatures[defectId] || null;
     }
@@ -297,16 +261,17 @@ const DefectDetector = (() => {
 
         const { primary, confidence, possibilities } = results;
         const severityColor = getSeverityColor(primary.severity);
+        const severityLabel = t(primary.severity);
 
         let possibilitiesHtml = '';
         if (possibilities && possibilities.length > 0) {
             possibilitiesHtml = `
             <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border-glass);">
-                <div style="font-size:0.55rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">Other Possibilities</div>
+                <div style="font-size:0.55rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">${t('otherPossibilities')}</div>
                 ${possibilities.map(p => `
                     <div style="display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:1px solid rgba(255,255,255,0.04);">
                         <span style="font-size:0.7rem; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px;">${p.defect.name}</span>
-                        <span class="severity-badge ${p.defect.severity}">${p.defect.severity}</span>
+                        <span class="severity-badge ${p.defect.severity}">${t(p.defect.severity)}</span>
                     </div>
                 `).join('')}
             </div>`;
@@ -316,11 +281,11 @@ const DefectDetector = (() => {
         <div style="background:var(--glass-card); border:1px solid ${severityColor}40; border-radius:24px; padding:18px; margin-bottom:12px;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
                 <div style="font-size:1.1rem; font-weight:900; color:var(--text-main); text-transform:uppercase; letter-spacing:1px; flex:1;">${primary.name}</div>
-                <span class="severity-badge ${primary.severity}" style="margin-left:10px; flex-shrink:0;">${primary.severity}</span>
+                <span class="severity-badge ${primary.severity}" style="margin-left:10px; flex-shrink:0;">${severityLabel}</span>
             </div>
             <div style="font-size:0.68rem; color:var(--text-dim); line-height:1.5; margin-bottom:12px;">${primary.description}</div>
             <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-top:1px solid var(--border-glass);">
-                <span style="font-size:0.55rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px;">Confidence</span>
+                <span style="font-size:0.55rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px;">${t('confidence')}</span>
                 <span style="font-size:0.85rem; font-weight:900; color:${severityColor};">${confidence}%</span>
             </div>
             ${possibilitiesHtml}
@@ -331,13 +296,12 @@ const DefectDetector = (() => {
             font-weight:900; width:100%; text-transform:uppercase;
             cursor:pointer; letter-spacing:1px; font-size:0.82rem;
             margin-bottom:10px;">
-            <i class="bi bi-info-circle"></i> More Info
+            <i class="bi bi-info-circle"></i> ${t('moreInfo')}
         </button>`;
 
         container.classList.remove('hidden');
     }
 
-    // Show full detail page for a defect
     function showMoreInfo(defectId) {
         const allDefects = DEFECTS_DATA[currentFruit][currentType];
         const defect = allDefects.find(d => d.id === defectId);
@@ -349,40 +313,31 @@ const DefectDetector = (() => {
         <div style="margin-bottom:20px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                 <div style="font-size:1.2rem; font-weight:900; color:var(--text-main); text-transform:uppercase; letter-spacing:1px;">${defect.name}</div>
-                <span class="severity-badge ${defect.severity}">${defect.severity}</span>
+                <span class="severity-badge ${defect.severity}">${t(defect.severity)}</span>
             </div>
-            <div style="font-size:0.6rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:2px;">${currentFruit.toUpperCase()} — ${currentType.toUpperCase()}</div>
+            <div style="font-size:0.6rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:2px;">${currentFruit.toUpperCase()} — ${t(currentType)}</div>
         </div>
-
         <div style="background:var(--glass-card); border:1px solid var(--border-glass); border-radius:20px; padding:16px; margin-bottom:12px;">
-            <div style="font-size:0.55rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">Description</div>
+            <div style="font-size:0.55rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">${t('description')}</div>
             <div style="font-size:0.78rem; color:var(--text-main); line-height:1.6;">${defect.description}</div>
         </div>
-
         <div style="background:rgba(255,77,77,0.06); border:1px solid rgba(255,77,77,0.2); border-radius:20px; padding:16px; margin-bottom:12px;">
-            <div style="font-size:0.55rem; font-weight:900; color:var(--pulp-red); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">Severity Level</div>
-            <div style="font-size:0.78rem; color:var(--text-main); line-height:1.6; text-transform:capitalize;">${defect.severity} — ${getSeverityExplanation(defect.severity)}</div>
+            <div style="font-size:0.55rem; font-weight:900; color:var(--pulp-red); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">${t('severityLevel')}</div>
+            <div style="font-size:0.78rem; color:var(--text-main); line-height:1.6; text-transform:capitalize;">${t(defect.severity)} — ${t(defect.severity + 'Explain')}</div>
         </div>
-
         <div style="background:rgba(166,226,46,0.06); border:1px solid rgba(166,226,46,0.2); border-radius:20px; padding:16px; margin-bottom:12px;">
-            <div style="font-size:0.55rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">Recommended Action</div>
+            <div style="font-size:0.55rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">${t('recommendedAction')}</div>
             <div style="font-size:0.78rem; color:var(--text-main); line-height:1.6;">${defect.action}</div>
         </div>`;
 
         showDefectView('defect-info-view');
     }
 
-    function getSeverityExplanation(severity) {
-        if (severity === 'minor') return 'Cosmetic issue, does not significantly affect quality or safety';
-        if (severity === 'major') return 'Significant quality issue, affects marketability and shelf life';
-        return 'Critical quality or safety issue, requires immediate action';
-    }
-
     function resetScanUI() {
         const container = document.getElementById('defectScanResults');
         if (container) container.classList.add('hidden');
         const btn = document.getElementById('defectScanActionBtn');
-        if (btn) btn.innerHTML = '<i class="bi bi-camera-fill"></i> Scan';
+        if (btn) btn.innerHTML = '<i class="bi bi-camera-fill"></i> ' + t('scan');
     }
 
     function showDefectView(viewId) {

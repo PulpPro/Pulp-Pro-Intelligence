@@ -5,24 +5,25 @@ const ColourScanner = (() => {
     const MAX_SCANS = 3;
 
     const COLOUR_STAGES = [
-        { value: 1,   hex: '#1a5c0a', name: 'Full Green',    shelfLife: '7+ Days',  status: 'Unripe',      statusColor: '#4caf50' },
-        { value: 1.5, hex: '#2e7d0e', name: 'Green+',        shelfLife: '6–7 Days', status: 'Unripe',      statusColor: '#4caf50' },
-        { value: 2,   hex: '#5a9e10', name: 'More Green',     shelfLife: '5–6 Days', status: 'Early',       statusColor: '#8bc34a' },
-        { value: 2.5, hex: '#8db81a', name: 'Green-Yellow',   shelfLife: '4–5 Days', status: 'Turning',     statusColor: '#cddc39' },
-        { value: 3,   hex: '#c8c81a', name: 'More Yellow',    shelfLife: '3–4 Days', status: 'Turning',     statusColor: '#ffeb3b' },
-        { value: 3.5, hex: '#d4b800', name: 'Yellow-Green',   shelfLife: '3 Days',   status: 'Ripening',    statusColor: '#ffc107' },
-        { value: 4,   hex: '#f5c518', name: 'More Yellow',    shelfLife: '2–3 Days', status: 'Ripening',    statusColor: '#ffd740' },
-        { value: 4.5, hex: '#f5b800', name: 'Full Yellow',    shelfLife: '2 Days',   status: 'Ready',       statusColor: '#ffb300' },
-        { value: 5,   hex: '#f5a000', name: 'Yellow + Flecks',shelfLife: '1–2 Days', status: 'Peak',        statusColor: '#ff8f00' },
-        { value: 5.5, hex: '#c87800', name: 'Yellow-Brown',   shelfLife: '1 Day',    status: 'Overripe',    statusColor: '#ff6f00' },
-        { value: 6,   hex: '#7a4500', name: 'Full Brown',     shelfLife: 'Sell Now', status: 'Overripe',    statusColor: '#ff5722' }
+        { value: 1,   hex: '#1a5c0a', name: 'Full Green',     shelfLife: '7+ Days',  status: 'Unripe',   statusColor: '#4caf50' },
+        { value: 1.5, hex: '#2e7d0e', name: 'Green+',         shelfLife: '6–7 Days', status: 'Unripe',   statusColor: '#4caf50' },
+        { value: 2,   hex: '#5a9e10', name: 'More Green',      shelfLife: '5–6 Days', status: 'Early',    statusColor: '#8bc34a' },
+        { value: 2.5, hex: '#8db81a', name: 'Green-Yellow',    shelfLife: '4–5 Days', status: 'Turning',  statusColor: '#cddc39' },
+        { value: 3,   hex: '#c8c81a', name: 'More Yellow',     shelfLife: '3–4 Days', status: 'Turning',  statusColor: '#ffeb3b' },
+        { value: 3.5, hex: '#d4b800', name: 'Yellow-Green',    shelfLife: '3 Days',   status: 'Ripening', statusColor: '#ffc107' },
+        { value: 4,   hex: '#f5c518', name: 'More Yellow',     shelfLife: '2–3 Days', status: 'Ripening', statusColor: '#ffd740' },
+        { value: 4.5, hex: '#f5b800', name: 'Full Yellow',     shelfLife: '2 Days',   status: 'Ready',    statusColor: '#ffb300' },
+        { value: 5,   hex: '#f5a000', name: 'Yellow + Flecks', shelfLife: '1–2 Days', status: 'Peak',     statusColor: '#ff8f00' },
+        { value: 5.5, hex: '#c87800', name: 'Yellow-Brown',    shelfLife: '1 Day',    status: 'Overripe', statusColor: '#ff6f00' },
+        { value: 6,   hex: '#7a4500', name: 'Full Brown',      shelfLife: 'Sell Now', status: 'Overripe', statusColor: '#ff5722' }
     ];
 
     function hexToRgb(hex) {
-        const r = parseInt(hex.slice(1, 3), 16);
-        const g = parseInt(hex.slice(3, 5), 16);
-        const b = parseInt(hex.slice(5, 7), 16);
-        return { r, g, b };
+        return {
+            r: parseInt(hex.slice(1, 3), 16),
+            g: parseInt(hex.slice(3, 5), 16),
+            b: parseInt(hex.slice(5, 7), 16)
+        };
     }
 
     function colourDistance(rgb1, rgb2) {
@@ -35,7 +36,7 @@ const ColourScanner = (() => {
 
     function detectStage(r, g, b) {
         const input = { r, g, b };
-        let distances = COLOUR_STAGES.map(stage => ({
+        const distances = COLOUR_STAGES.map(stage => ({
             stage,
             dist: colourDistance(input, hexToRgb(stage.hex))
         }));
@@ -43,10 +44,11 @@ const ColourScanner = (() => {
 
         const best = distances[0];
         const second = distances[1];
-        const threshold = 40;
 
-        if (second.dist - best.dist < threshold) {
-            return { type: 'range', lower: best.stage, upper: second.stage };
+        if (second.dist - best.dist < 20) {
+            const lo = best.stage.value < second.stage.value ? best.stage : second.stage;
+            const hi = best.stage.value < second.stage.value ? second.stage : best.stage;
+            return { type: 'range', lower: lo, upper: hi };
         }
         return { type: 'single', stage: best.stage };
     }
@@ -63,14 +65,18 @@ const ColourScanner = (() => {
 
         const cx = Math.floor(canvas.width / 2);
         const cy = Math.floor(canvas.height / 2);
-        const size = 40;
+        const size = 60;
         const data = ctx.getImageData(cx - size / 2, cy - size / 2, size, size).data;
 
         let r = 0, g = 0, b = 0, count = 0;
         for (let i = 0; i < data.length; i += 4) {
             r += data[i]; g += data[i + 1]; b += data[i + 2]; count++;
         }
-        return { r: Math.round(r / count), g: Math.round(g / count), b: Math.round(b / count) };
+        return {
+            r: Math.round(r / count),
+            g: Math.round(g / count),
+            b: Math.round(b / count)
+        };
     }
 
     async function startCamera() {
@@ -82,12 +88,15 @@ const ColourScanner = (() => {
             const video = document.getElementById('csVideo');
             video.srcObject = cameraStream;
             await video.play();
-            document.getElementById('csPlaceholder').style.display = 'none';
+            const placeholder = document.getElementById('csPlaceholder');
+            if (placeholder) placeholder.style.display = 'none';
             video.style.display = 'block';
         } catch (err) {
             console.warn('Camera unavailable:', err);
-            document.getElementById('csPlaceholder').style.display = 'flex';
-            document.getElementById('csVideo').style.display = 'none';
+            const placeholder = document.getElementById('csPlaceholder');
+            if (placeholder) placeholder.style.display = 'flex';
+            const video = document.getElementById('csVideo');
+            if (video) video.style.display = 'none';
         }
     }
 
@@ -98,15 +107,30 @@ const ColourScanner = (() => {
         }
     }
 
+    function showView(viewId) {
+        ['cs-scanner', 'cs-single-result', 'cs-batch-result'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
+        });
+        const target = document.getElementById(viewId);
+        if (target) target.classList.remove('hidden');
+    }
+
     function init() {
+        multiScans = [];
         setScanMode('single');
     }
 
     function setScanMode(mode) {
         scanMode = mode;
         multiScans = [];
-        document.getElementById('csSingleBtn').classList.toggle('active', mode === 'single');
-        document.getElementById('csMultiBtn').classList.toggle('active', mode === 'multi');
+        const singleBtn = document.getElementById('csSingleBtn');
+        const multiBtn = document.getElementById('csMultiBtn');
+        if (singleBtn) singleBtn.classList.toggle('active', mode === 'single');
+        if (multiBtn) multiBtn.classList.toggle('active', mode === 'multi');
+        const batchBtn = document.getElementById('csBatchBtn');
+        if (batchBtn) batchBtn.style.display = 'none';
+        showView('cs-scanner');
         updateScanButton();
         renderMultiScans();
         startCamera();
@@ -114,70 +138,71 @@ const ColourScanner = (() => {
 
     function updateScanButton() {
         const btn = document.getElementById('csScanBtn');
+        if (!btn) return;
         if (scanMode === 'single') {
-            btn.innerText = 'Scan';
+            btn.innerHTML = '<i class="bi bi-camera-fill"></i> Scan';
         } else {
             const next = multiScans.length + 1;
-            btn.innerText = next <= MAX_SCANS ? `Scan Box ${next}` : 'Done';
+            btn.innerHTML = next <= MAX_SCANS
+                ? `<i class="bi bi-camera-fill"></i> Scan Box ${next}`
+                : '<i class="bi bi-check-lg"></i> All Scanned';
         }
     }
 
     function doScan() {
-        const rgb = sampleCameraColour();
-        let result;
+        if (scanMode === 'multi' && multiScans.length >= MAX_SCANS) return;
 
-        if (rgb) {
-            result = detectStage(rgb.r, rgb.g, rgb.b);
-        } else {
-            // Fallback for demo/no camera — pick a random stage
-            const idx = Math.floor(Math.random() * COLOUR_STAGES.length);
-            result = { type: 'single', stage: COLOUR_STAGES[idx] };
+        const btn = document.getElementById('csScanBtn');
+        if (btn) {
+            btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Scanning...';
+            btn.disabled = true;
         }
 
-        if (scanMode === 'single') {
-            showSingleResult(result);
-        } else {
-            if (multiScans.length < MAX_SCANS) {
+        setTimeout(() => {
+            const rgb = sampleCameraColour();
+            let result;
+
+            if (rgb) {
+                result = detectStage(rgb.r, rgb.g, rgb.b);
+            } else {
+                const idx = Math.floor(Math.random() * COLOUR_STAGES.length);
+                result = { type: 'single', stage: COLOUR_STAGES[idx] };
+            }
+
+            if (btn) btn.disabled = false;
+
+            if (scanMode === 'single') {
+                showSingleResult(result);
+            } else {
                 multiScans.push(result);
                 renderMultiScans();
                 updateScanButton();
-                if (multiScans.length === MAX_SCANS) {
-                    document.getElementById('csBatchBtn').style.display = 'block';
+                if (multiScans.length >= 1) {
+                    const batchBtn = document.getElementById('csBatchBtn');
+                    if (batchBtn) batchBtn.style.display = 'block';
                 }
             }
-        }
+        }, 600);
     }
 
     function getResultColour(result) {
         if (result.type === 'single') return result.stage.hex;
-        // For range, blend the two colours
         const c1 = hexToRgb(result.lower.hex);
         const c2 = hexToRgb(result.upper.hex);
-        const blended = {
-            r: Math.round((c1.r + c2.r) / 2),
-            g: Math.round((c1.g + c2.g) / 2),
-            b: Math.round((c1.b + c2.b) / 2)
-        };
-        return `rgb(${blended.r},${blended.g},${blended.b})`;
+        return `rgb(${Math.round((c1.r + c2.r) / 2)},${Math.round((c1.g + c2.g) / 2)},${Math.round((c1.b + c2.b) / 2)})`;
     }
 
     function getResultLabel(result) {
-        if (result.type === 'single') {
-            return `Color ${result.stage.value} — ${result.stage.name}`;
-        }
-        const a = result.lower.value;
-        const b = result.upper.value;
-        const lo = Math.min(a, b);
-        const hi = Math.max(a, b);
+        if (result.type === 'single') return `Color ${result.stage.value} — ${result.stage.name}`;
+        const lo = Math.min(result.lower.value, result.upper.value);
+        const hi = Math.max(result.lower.value, result.upper.value);
         return `Color ${lo}/${hi}`;
     }
 
     function getResultName(result) {
         if (result.type === 'single') return result.stage.name;
-        const a = result.lower.value;
-        const b = result.upper.value;
-        const lo = Math.min(a, b);
-        const hi = Math.max(a, b);
+        const lo = Math.min(result.lower.value, result.upper.value);
+        const hi = Math.max(result.lower.value, result.upper.value);
         const loStage = COLOUR_STAGES.find(s => s.value === lo);
         const hiStage = COLOUR_STAGES.find(s => s.value === hi);
         return `${loStage.name} / ${hiStage.name}`;
@@ -185,17 +210,13 @@ const ColourScanner = (() => {
 
     function getResultShelfLife(result) {
         if (result.type === 'single') return result.stage.shelfLife;
-        const a = result.lower;
-        const b = result.upper;
-        const riper = a.value > b.value ? a : b;
+        const riper = result.lower.value > result.upper.value ? result.lower : result.upper;
         return riper.shelfLife;
     }
 
     function getResultStatus(result) {
         if (result.type === 'single') return { label: result.stage.status, color: result.stage.statusColor };
-        const a = result.lower;
-        const b = result.upper;
-        const riper = a.value > b.value ? a : b;
+        const riper = result.lower.value > result.upper.value ? result.lower : result.upper;
         return { label: riper.status, color: riper.statusColor };
     }
 
@@ -206,48 +227,58 @@ const ColourScanner = (() => {
         const name = getResultName(result);
         const shelfLife = getResultShelfLife(result);
         const status = getResultStatus(result);
-        const stageVal = result.type === 'single' ? result.stage.value : (result.lower.value + result.upper.value) / 2;
+        const stageVal = result.type === 'single'
+            ? result.stage.value
+            : (result.lower.value + result.upper.value) / 2;
         const barWidth = Math.round((stageVal / 6) * 100);
 
-        document.getElementById('csSingleSwatch').style.background = colour;
-        document.getElementById('csSingleLabel').innerText = label;
-        document.getElementById('csSingleName').innerText = name;
-        document.getElementById('csSingleBar').style.width = barWidth + '%';
-        document.getElementById('csSingleBar').style.background = colour;
-        document.getElementById('csSingleShelf').innerText = shelfLife;
-        document.getElementById('csSingleStatus').innerText = status.label;
-        document.getElementById('csSingleStatus').style.color = status.color;
+        const swatch = document.getElementById('csSingleSwatch');
+        if (swatch) {
+            swatch.style.background = colour;
+            swatch.style.boxShadow = `0 8px 30px ${colour}60`;
+        }
+        const labelEl = document.getElementById('csSingleLabel');
+        if (labelEl) labelEl.innerText = label;
+        const nameEl = document.getElementById('csSingleName');
+        if (nameEl) nameEl.innerText = name;
+        const bar = document.getElementById('csSingleBar');
+        if (bar) { bar.style.width = barWidth + '%'; bar.style.background = colour; }
+        const shelfEl = document.getElementById('csSingleShelf');
+        if (shelfEl) shelfEl.innerText = shelfLife;
+        const statusEl = document.getElementById('csSingleStatus');
+        if (statusEl) { statusEl.innerText = status.label; statusEl.style.color = status.color; }
 
-        document.getElementById('cs-scanner').classList.add('hidden');
-        document.getElementById('cs-single-result').classList.remove('hidden');
+        showView('cs-single-result');
     }
 
     function renderMultiScans() {
         const container = document.getElementById('csMultiList');
+        if (!container) return;
         let html = '';
-
         for (let i = 0; i < MAX_SCANS; i++) {
             const scan = multiScans[i];
             if (scan) {
                 const colour = getResultColour(scan);
                 const label = getResultLabel(scan);
                 html += `
-                    <div class="cs-scan-row">
-                        <div class="cs-scan-dot" style="background:${colour};"></div>
-                        <div class="cs-scan-info">
-                            <div class="cs-scan-lbl">Box ${i + 1}</div>
-                            <div class="cs-scan-val">${label}</div>
-                        </div>
-                    </div>`;
+                <div class="cs-scan-row">
+                    <div class="cs-scan-dot" style="background:${colour}; box-shadow:0 4px 12px ${colour}60;"></div>
+                    <div class="cs-scan-info">
+                        <div class="cs-scan-lbl">Box ${i + 1}</div>
+                        <div class="cs-scan-val">${label}</div>
+                    </div>
+                    <i class="bi bi-check-circle-fill" style="color:var(--pulp-lime); font-size:1rem; flex-shrink:0;"></i>
+                </div>`;
             } else {
                 html += `
-                    <div class="cs-scan-row cs-scan-empty">
-                        <div class="cs-scan-dot" style="background:rgba(255,255,255,0.05); border:1px dashed rgba(255,255,255,0.15);"></div>
-                        <div class="cs-scan-info">
-                            <div class="cs-scan-lbl" style="color:rgba(255,255,255,0.2);">Box ${i + 1}</div>
-                            <div class="cs-scan-val" style="color:rgba(255,255,255,0.2); font-size:0.68rem;">Tap scan to add</div>
-                        </div>
-                    </div>`;
+                <div class="cs-scan-row" style="border:1px dashed rgba(255,255,255,0.1); background:transparent;">
+                    <div class="cs-scan-dot" style="background:rgba(255,255,255,0.04); border:1px dashed rgba(255,255,255,0.15);"></div>
+                    <div class="cs-scan-info">
+                        <div class="cs-scan-lbl" style="color:rgba(255,255,255,0.2);">Box ${i + 1}</div>
+                        <div class="cs-scan-val" style="color:rgba(255,255,255,0.18); font-size:0.68rem; font-weight:600;">Awaiting scan</div>
+                    </div>
+                    <i class="bi bi-circle" style="color:rgba(255,255,255,0.1); font-size:1rem; flex-shrink:0;"></i>
+                </div>`;
             }
         }
         container.innerHTML = html;
@@ -258,7 +289,9 @@ const ColourScanner = (() => {
         stopCamera();
 
         const avgValue = multiScans.reduce((sum, r) => {
-            const val = r.type === 'single' ? r.stage.value : (r.lower.value + r.upper.value) / 2;
+            const val = r.type === 'single'
+                ? r.stage.value
+                : (r.lower.value + r.upper.value) / 2;
             return sum + val;
         }, 0) / multiScans.length;
 
@@ -279,49 +312,55 @@ const ColourScanner = (() => {
         const shelfLife = getResultShelfLife(batchResult);
         const status = getResultStatus(batchResult);
 
-        document.getElementById('csBatchSwatch').style.background = colour;
-        document.getElementById('csBatchLabel').innerText = label;
-        document.getElementById('csBatchShelf').innerText = shelfLife;
-        document.getElementById('csBatchStatus').innerText = status.label;
-        document.getElementById('csBatchStatus').style.color = status.color;
-        document.getElementById('csBatchCount').innerText = multiScans.length + ' of ' + MAX_SCANS;
+        const batchSwatch = document.getElementById('csBatchSwatch');
+        if (batchSwatch) {
+            batchSwatch.style.background = colour;
+            batchSwatch.style.boxShadow = `0 8px 30px ${colour}60`;
+        }
+        const batchLabel = document.getElementById('csBatchLabel');
+        if (batchLabel) batchLabel.innerText = label;
+        const batchShelf = document.getElementById('csBatchShelf');
+        if (batchShelf) batchShelf.innerText = shelfLife;
+        const batchStatus = document.getElementById('csBatchStatus');
+        if (batchStatus) { batchStatus.innerText = status.label; batchStatus.style.color = status.color; }
+        const batchCount = document.getElementById('csBatchCount');
+        if (batchCount) batchCount.innerText = multiScans.length + ' of ' + MAX_SCANS;
 
         renderBatchBreakdown();
-
-        document.getElementById('cs-scanner').classList.add('hidden');
-        document.getElementById('cs-batch-result').classList.remove('hidden');
+        showView('cs-batch-result');
     }
 
     function renderBatchBreakdown() {
         const container = document.getElementById('csBatchBreakdown');
+        if (!container) return;
         container.innerHTML = multiScans.map((scan, i) => {
             const colour = getResultColour(scan);
             const label = getResultLabel(scan);
             return `
-                <div class="cs-scan-row">
-                    <div class="cs-scan-dot" style="background:${colour};"></div>
-                    <div class="cs-scan-info">
-                        <div class="cs-scan-lbl">Box ${i + 1}</div>
-                        <div class="cs-scan-val">${label}</div>
-                    </div>
-                </div>`;
+            <div class="cs-scan-row">
+                <div class="cs-scan-dot" style="background:${colour}; box-shadow:0 4px 12px ${colour}60;"></div>
+                <div class="cs-scan-info">
+                    <div class="cs-scan-lbl">Box ${i + 1}</div>
+                    <div class="cs-scan-val">${label}</div>
+                </div>
+            </div>`;
         }).join('');
     }
 
     function copySingleResult() {
-        const label = document.getElementById('csSingleLabel').innerText;
-        const shelf = document.getElementById('csSingleShelf').innerText;
-        const status = document.getElementById('csSingleStatus').innerText;
+        const label = document.getElementById('csSingleLabel')?.innerText || '';
+        const shelf = document.getElementById('csSingleShelf')?.innerText || '';
+        const status = document.getElementById('csSingleStatus')?.innerText || '';
         const appUrl = 'https://pulppro.github.io/Pulp-Pro-Intelligence/';
         const text = `Pulp Pro Intelligence: ${appUrl}\n━━━━━━━━━━━━━━━━━━━━\nBANANA COLOUR SCAN\n${label}\nShelf Life: ${shelf}\nStatus: ${status}`;
         navigator.clipboard.writeText(text).then(() => showCopyFeedback('csCopySingle'));
     }
 
     function copyBatchResult() {
-        const label = document.getElementById('csBatchLabel').innerText;
-        const shelf = document.getElementById('csBatchShelf').innerText;
-        const status = document.getElementById('csBatchStatus').innerText;
-        const count = document.getElementById('csBatchCount').innerText;
+        const label = document.getElementById('csBatchLabel')?.innerText || '';
+        const shelf = document.getElementById('csBatchShelf')?.innerText || '';
+        const status = document.getElementById('csBatchStatus')?.innerText || '';
+        const count = document.getElementById('csBatchCount')?.innerText || '';
         const appUrl = 'https://pulppro.github.io/Pulp-Pro-Intelligence/';
         const breakdownItems = multiScans.map((s, i) => `Box ${i + 1}: ${getResultLabel(s)}`).join('\n');
         const text = `Pulp Pro Intelligence: ${appUrl}\n━━━━━━━━━━━━━━━━━━━━\nBANANA BATCH COLOUR SCAN\nBatch Average: ${label}\nBoxes Scanned: ${count}\nShelf Life: ${shelf}\nStatus: ${status}\n━━━━━━━━━━━━━━━━━━━━\n${breakdownItems}`;
@@ -330,12 +369,13 @@ const ColourScanner = (() => {
 
     function showCopyFeedback(btnId) {
         const btn = document.getElementById(btnId);
-        const orig = btn.innerText;
-        btn.innerText = '✓ Copied!';
-        btn.style.background = '#a6e22e';
+        if (!btn) return;
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check-lg"></i> Copied!';
+        btn.style.background = 'var(--pulp-lime)';
         btn.style.color = '#000';
         setTimeout(() => {
-            btn.innerText = orig;
+            btn.innerHTML = orig;
             btn.style.background = '';
             btn.style.color = '';
         }, 2000);
@@ -343,10 +383,9 @@ const ColourScanner = (() => {
 
     function resetScanner() {
         multiScans = [];
-        document.getElementById('cs-single-result').classList.add('hidden');
-        document.getElementById('cs-batch-result').classList.add('hidden');
-        document.getElementById('cs-scanner').classList.remove('hidden');
-        document.getElementById('csBatchBtn').style.display = 'none';
+        const batchBtn = document.getElementById('csBatchBtn');
+        if (batchBtn) batchBtn.style.display = 'none';
+        showView('cs-scanner');
         renderMultiScans();
         updateScanButton();
         startCamera();

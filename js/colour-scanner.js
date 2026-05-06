@@ -90,8 +90,7 @@ const ColourScanner = (() => {
                 video: {
                     facingMode: 'environment',
                     width: { ideal: 640 },
-                    height: { ideal: 480 },
-                    zoom: 1.0
+                    height: { ideal: 480 }
                 }
             });
             const video = document.getElementById('csVideo');
@@ -136,7 +135,16 @@ const ColourScanner = (() => {
 
     function init() {
         multiScans = [];
-        setScanMode('single');
+        scanMode = 'single';
+        const singleBtn = document.getElementById('csSingleBtn');
+        const multiBtn = document.getElementById('csMultiBtn');
+        if (singleBtn) singleBtn.classList.add('active');
+        if (multiBtn) multiBtn.classList.remove('active');
+        const batchBtn = document.getElementById('csBatchBtn');
+        if (batchBtn) batchBtn.style.display = 'none';
+        showView('cs-scanner');
+        updateScanButton();
+        renderMultiScans();
     }
 
     function setScanMode(mode) {
@@ -425,7 +433,3 @@ const ColourScanner = (() => {
         close
     };
 })();
-
-document.addEventListener('DOMContentLoaded', () => {
-    ColourScanner.init();
-});

@@ -37,12 +37,19 @@ window.addEventListener('load', () => {
     const savedTheme = localStorage.getItem('pulpTheme');
     if (savedTheme === 'light') {
         document.body.classList.add('light-theme');
-        document.getElementById('themeText').innerText = 'Light Mode';
     }
+
+    // Apply saved language
+    const savedLang = localStorage.getItem('pulpLang') || 'en';
+    currentLang = savedLang;
+
     renderHistory();
     renderFavorites();
+
     setTimeout(() => {
         document.body.classList.add('loaded');
+        applyTranslations();
+        updateLanguageUI();
     }, 2600);
 });
 
@@ -50,7 +57,7 @@ function toggleTheme() {
     document.body.classList.toggle('light-theme');
     const isLight = document.body.classList.contains('light-theme');
     localStorage.setItem('pulpTheme', isLight ? 'light' : 'dark');
-    document.getElementById('themeText').innerText = isLight ? 'Light Mode' : 'Dark Mode';
+    document.getElementById('themeText').innerText = isLight ? t('lightMode') : t('darkMode');
 }
 
 function toggleMenu() {

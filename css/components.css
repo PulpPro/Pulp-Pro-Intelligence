@@ -156,7 +156,6 @@ input {
    DEFECT DETECTOR STYLES
    ============================================= */
 
-/* Type Selection Buttons */
 .type-btn {
     background: var(--glass-card);
     border: 1px solid var(--border-glass);
@@ -209,9 +208,7 @@ input {
 #defectCanvas { display: none; }
 
 /* Checklist */
-.checklist-section {
-    margin-top: 16px;
-}
+.checklist-section { margin-top: 16px; }
 .checklist-header {
     font-size: 0.6rem; font-weight: 900;
     color: var(--pulp-lime); text-transform: uppercase;
@@ -219,10 +216,7 @@ input {
     padding-bottom: 8px;
     border-bottom: 1px solid var(--border-glass);
 }
-.checklist-scroll {
-    max-height: 220px; overflow-y: auto;
-    padding-right: 4px;
-}
+.checklist-scroll { max-height: 220px; overflow-y: auto; padding-right: 4px; }
 .check-item {
     display: flex; align-items: center; gap: 10px;
     padding: 10px 12px; border-radius: 14px;
@@ -305,9 +299,7 @@ input {
     padding-bottom: 8px;
     border-bottom: 1px solid var(--border-glass);
 }
-.report-defects-scroll {
-    max-height: 200px; overflow-y: auto;
-}
+.report-defects-scroll { max-height: 200px; overflow-y: auto; }
 
 /* Copy Report Button */
 #copyReportBtn {
@@ -320,3 +312,68 @@ input {
     transition: 0.2s; margin-bottom: 10px;
 }
 #copyReportBtn:hover { background: var(--pulp-lime); color: #000; }
+
+/* =============================================
+   COLOUR SCANNER STYLES
+   ============================================= */
+
+.cs-toggle-btn {
+    flex: 1; padding: 12px 8px; border-radius: 16px;
+    border: 1px solid var(--border-glass);
+    background: var(--glass-card);
+    color: var(--text-dim); font-weight: 900;
+    font-size: 0.7rem; text-transform: uppercase;
+    letter-spacing: 1px; cursor: pointer;
+    transition: 0.2s; text-align: center;
+}
+.cs-toggle-btn.active {
+    border-color: var(--pulp-lime);
+    color: var(--pulp-lime);
+    background: rgba(166, 226, 46, 0.08);
+}
+
+/* Colour scanner camera crosshair */
+.cs-crosshair {
+    position: absolute; width: 64px; height: 64px;
+    border: 2px solid rgba(166, 226, 46, 0.6);
+    border-radius: 10px; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+/* Colour scanner video */
+#csVideo {
+    width: 100%; border-radius: 25px;
+    display: block; max-height: 220px;
+    object-fit: cover;
+}
+
+/* Multi scan rows */
+.cs-scan-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 14px;
+    margin-bottom: 7px; background: var(--glass-card);
+    border: 1px solid var(--border-glass);
+}
+.cs-scan-dot {
+    width: 24px; height: 24px;
+    border-radius: 8px; flex-shrink: 0;
+}
+.cs-scan-info { flex: 1; }
+.cs-scan-lbl {
+    font-size: 0.55rem; font-weight: 900;
+    color: var(--text-dim); text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.cs-scan-val {
+    font-size: 0.78rem; font-weight: 900;
+    color: var(--text-main); margin-top: 1px;
+}
+
+/* Colour bar */
+.color-bar-wrap {
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px; height: 5px;
+    margin-top: 8px; overflow: hidden;
+}
+.color-bar { height: 100%; border-radius: 8px; }

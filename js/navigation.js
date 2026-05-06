@@ -63,21 +63,12 @@ function openDefectDetector() {
     document.getElementById('defect-hub').classList.remove('hidden');
 }
 
-// Start Defect Scan for specific fruit
-function startDefectScan(fruit) {
-    activeFruit = fruit;
-    const fruitNames = { banana:'Banana', mango:'Mango', avocado:'Avocado' };
-    document.getElementById('defectScannerTitle').innerText = 'Scan ' + (fruitNames[fruit] || fruit);
-    hideAllViews();
-    document.getElementById('defectDetectorView').classList.remove('hidden');
-    DefectDetector.open(fruit);
-}
-
-// Open Colour Scanner
+// Open Colour Scanner — camera only starts here
 function openColourScanner() {
     hideAllViews();
     document.getElementById('colour-scanner-view').classList.remove('hidden');
     ColourScanner.init();
+    ColourScanner.setScanMode('single');
 }
 
 // Toggle Menu Drawer

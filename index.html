@@ -45,6 +45,7 @@
 <div style="font-weight:900; color:var(--pulp-lime);">PULP PRO</div>
 </div>
 <div class="menu-item" onclick="showHub(); toggleMenu();"><span>🏠 Home</span></div>
+<div class="menu-item" onclick="openNews(); toggleMenu();"><span>📰 News</span></div>
 <div class="settings-label">App Settings</div>
 <div class="menu-item" onclick="toggleTheme()"><span>🌓 <span id="themeText">Dark Mode</span></span></div>
 <div class="menu-item" onclick="toggleLanguage()"><span>🌐 <span id="langText">🇳🇱 Nederlands</span></span></div>
@@ -67,6 +68,7 @@
 <div class="selection-card" onclick="openMiddleHub('avocado')"><img src="avocado.png" alt="avocado"><div class="commodity-name-section"><span>Avocado</span><span style="color:var(--pulp-amber); font-size:0.6rem; letter-spacing:1px;">(SOON)</span></div></div>
 <div class="selection-card" onclick="openDefectDetector()"><img src="rotten.png" alt="defect"><div class="commodity-name-section"><span>Defect Detector</span></div></div>
 <div class="selection-card" onclick="openColourScanner()"><img src="colour.png" alt="colour"><div class="commodity-name-section"><span>Colour Scanner</span></div></div>
+<div class="selection-card" onclick="openNews()"><img src="news.png" alt="news"><div class="commodity-name-section"><span>News</span></div></div>
 </div>
 </div>
 <div id="favorites-section" class="hidden">
@@ -182,22 +184,16 @@
 <!-- Colour Scanner View -->
 <div id="colour-scanner-view" class="nav-view hidden">
 <div style="max-width:400px; margin:0 auto; position:relative;">
-
 <i class="bi bi-star-fill fav-toggle" id="colourFavStar" onclick="toggleFavorite('colour')" style="position:absolute; top:0; right:0; z-index:10;"></i>
-
 <div style="text-align:center; margin-bottom:14px;">
 <img src="edited-image.png" style="width:46px; border-radius:14px; margin-bottom:6px;">
 <div style="font-size:0.6rem; font-weight:900; color:var(--pulp-lime); letter-spacing:3px; text-transform:uppercase;">Pulp Pro</div>
 </div>
-
 <div class="hub-title" id="csScannerTitle">Banana Colour Scanner</div>
-
 <div style="display:flex; gap:8px; margin-bottom:14px;">
 <div class="cs-toggle-btn active" id="csSingleBtn" onclick="ColourScanner.setScanMode('single')">Single Scan</div>
 <div class="cs-toggle-btn" id="csMultiBtn" onclick="ColourScanner.setScanMode('multi')">Multi Scan</div>
 </div>
-
-<!-- Scanner -->
 <div id="cs-scanner">
 <div class="camera-wrapper">
 <video id="csVideo" autoplay playsinline muted style="display:none;"></video>
@@ -213,114 +209,122 @@
 <div id="csMultiList" style="margin-bottom:10px;"></div>
 <button id="csBatchBtn" class="btn-main" style="display:none; margin-bottom:8px;" onclick="ColourScanner.getBatchResult()">Get Batch Result →</button>
 </div>
-
-<!-- Single Result -->
 <div id="cs-single-result" class="hidden">
-
-    <!-- Photo preview -->
-    <div class="camera-wrapper" style="margin-bottom:14px; height:180px;">
-        <img id="csSinglePhoto" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:25px;">
-        <div id="csSinglePhotoPlaceholder" style="display:flex; flex-direction:column; align-items:center; gap:8px; padding:30px;">
-            <i class="bi bi-image" style="font-size:2rem; opacity:0.2; color:var(--text-main);"></i>
-            <span style="font-size:0.55rem; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:var(--text-dim);">No photo</span>
-        </div>
-    </div>
-
-    <div class="report-card" style="margin-bottom:12px;">
-        <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
-            <div id="csSingleSwatch" style="width:54px; height:54px; border-radius:14px; flex-shrink:0; background:#78c830;"></div>
-            <div style="flex:1;">
-                <div id="csSingleLabel" style="font-size:1.4rem; font-weight:900; color:var(--text-main); line-height:1;">Color 1</div>
-                <div id="csSingleName" style="font-size:0.65rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-top:3px;">Full Green</div>
-                <div class="color-bar-wrap" style="margin-top:8px;"><div id="csSingleBar" class="color-bar" style="width:16%; background:#78c830;"></div></div>
-            </div>
-        </div>
-        <div class="report-row"><span class="report-key" id="shelfLifeLabel">Shelf Life</span><span class="report-val" id="csSingleShelf">—</span></div>
-        <div class="report-row"><span class="report-key" id="statusLabel2">Status</span><span class="report-val" id="csSingleStatus">—</span></div>
-
-        <!-- Note preview on card -->
-        <div id="csNotePreview" class="hidden" style="background:rgba(166,226,46,0.06); border:1px solid rgba(166,226,46,0.15); border-radius:12px; padding:8px 12px; margin-top:10px;">
-            <div style="font-size:0.45rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:2px; margin-bottom:4px;">📝 Note</div>
-            <div id="csNotePreviewText" style="font-size:0.68rem; color:var(--text-dim); font-weight:600; line-height:1.4;"></div>
-        </div>
-    </div>
-
-    <!-- Note input -->
-    <div style="background:var(--glass-card); border:1px solid var(--border-glass); border-radius:20px; padding:14px; margin-bottom:12px;">
-        <div style="font-size:0.5rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">
-            📝 Add a note <span style="color:rgba(255,255,255,0.15); font-size:0.45rem;">(optional)</span>
-        </div>
-        <textarea
-            id="csNoteInput"
-            placeholder="e.g. Supplier X, Pallet 4, Cell 3..."
-            maxlength="120"
-            oninput="ColourScanner.updateNotePreview(this.value)"
-            style="width:100%; background:var(--input-bg); border:1px solid var(--border-glass); border-radius:12px; padding:10px 12px; color:var(--text-main); font-size:0.7rem; font-family:-apple-system,sans-serif; font-weight:600; resize:none; outline:none; min-height:60px;"
-        ></textarea>
-        <div id="csNoteCharCount" style="font-size:0.45rem; color:rgba(255,255,255,0.2); text-align:right; margin-top:4px; font-weight:700;">0 / 120</div>
-    </div>
-
-    <button class="btn-main" style="margin-bottom:8px;" onclick="ColourScanner.shareReport()">
-        <i class="bi bi-share-fill"></i> Share Report Card
-    </button>
-    <button id="csCopySingle" class="btn-copy" style="width:100%; justify-content:center; margin-bottom:10px;" onclick="ColourScanner.copySingleResult()">
-        <i class="bi bi-clipboard"></i> Copy Text Report
-    </button>
-    <button class="btn-main btn-back" onclick="ColourScanner.resetScanner()" id="csNewScanBtn">← New Scan</button>
+<div class="camera-wrapper" style="margin-bottom:14px; height:180px;">
+<img id="csSinglePhoto" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:25px;">
+<div id="csSinglePhotoPlaceholder" style="display:flex; flex-direction:column; align-items:center; gap:8px; padding:30px;">
+<i class="bi bi-image" style="font-size:2rem; opacity:0.2; color:var(--text-main);"></i>
+<span style="font-size:0.55rem; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:var(--text-dim);">No photo</span>
 </div>
-
-<!-- Batch Result -->
+</div>
+<div class="report-card" style="margin-bottom:12px;">
+<div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+<div id="csSingleSwatch" style="width:54px; height:54px; border-radius:14px; flex-shrink:0; background:#78c830;"></div>
+<div style="flex:1;">
+<div id="csSingleLabel" style="font-size:1.4rem; font-weight:900; color:var(--text-main); line-height:1;">Color 1</div>
+<div id="csSingleName" style="font-size:0.65rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-top:3px;">Full Green</div>
+<div class="color-bar-wrap" style="margin-top:8px;"><div id="csSingleBar" class="color-bar" style="width:16%; background:#78c830;"></div></div>
+</div>
+</div>
+<div class="report-row"><span class="report-key" id="shelfLifeLabel">Shelf Life</span><span class="report-val" id="csSingleShelf">—</span></div>
+<div class="report-row"><span class="report-key" id="statusLabel2">Status</span><span class="report-val" id="csSingleStatus">—</span></div>
+<div id="csNotePreview" class="hidden" style="background:rgba(166,226,46,0.06); border:1px solid rgba(166,226,46,0.15); border-radius:12px; padding:8px 12px; margin-top:10px;">
+<div style="font-size:0.45rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:2px; margin-bottom:4px;">📝 Note</div>
+<div id="csNotePreviewText" style="font-size:0.68rem; color:var(--text-dim); font-weight:600; line-height:1.4;"></div>
+</div>
+</div>
+<div style="background:var(--glass-card); border:1px solid var(--border-glass); border-radius:20px; padding:14px; margin-bottom:12px;">
+<div style="font-size:0.5rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">📝 Add a note <span style="color:rgba(255,255,255,0.15); font-size:0.45rem;">(optional)</span></div>
+<textarea id="csNoteInput" placeholder="e.g. Supplier X, Pallet 4, Cell 3..." maxlength="120" oninput="ColourScanner.updateNotePreview(this.value)" style="width:100%; background:var(--input-bg); border:1px solid var(--border-glass); border-radius:12px; padding:10px 12px; color:var(--text-main); font-size:0.7rem; font-family:-apple-system,sans-serif; font-weight:600; resize:none; outline:none; min-height:60px;"></textarea>
+<div id="csNoteCharCount" style="font-size:0.45rem; color:rgba(255,255,255,0.2); text-align:right; margin-top:4px; font-weight:700;">0 / 120</div>
+</div>
+<button class="btn-main" style="margin-bottom:8px;" onclick="ColourScanner.shareReport()"><i class="bi bi-share-fill"></i> Share Report Card</button>
+<button id="csCopySingle" class="btn-copy" style="width:100%; justify-content:center; margin-bottom:10px;" onclick="ColourScanner.copySingleResult()"><i class="bi bi-clipboard"></i> Copy Text Report</button>
+<button class="btn-main btn-back" onclick="ColourScanner.resetScanner()" id="csNewScanBtn">← New Scan</button>
+</div>
 <div id="cs-batch-result" class="hidden">
-
-    <!-- Batch photo grid -->
-    <div id="csBatchPhotoGrid" style="display:flex; gap:8px; margin-bottom:12px;"></div>
-
-    <div style="background:rgba(166,226,46,0.06); border:1px solid rgba(166,226,46,0.2); border-radius:16px; padding:14px; margin-bottom:12px; display:flex; align-items:center; gap:12px;">
-        <div id="csBatchSwatch" style="width:48px; height:48px; border-radius:12px; flex-shrink:0; background:#98c428;"></div>
-        <div>
-            <div id="batchAvgLabel" style="font-size:0.55rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:2px; margin-bottom:3px;">Batch Average</div>
-            <div id="csBatchLabel" style="font-size:0.95rem; font-weight:900; color:var(--text-main);">Color 1.5</div>
-        </div>
-    </div>
-
-    <div class="report-card" style="margin-bottom:12px;">
-        <div id="csBatchBreakdown" style="margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--border-glass);"></div>
-        <div class="report-row"><span class="report-key" id="boxesScannedLabel">Boxes Scanned</span><span class="report-val" id="csBatchCount">—</span></div>
-        <div class="report-row"><span class="report-key" id="shelfLifeEstLabel">Shelf Life Est.</span><span class="report-val" id="csBatchShelf">—</span></div>
-        <div class="report-row"><span class="report-key" id="batchStatusLabel">Batch Status</span><span class="report-val" id="csBatchStatus">—</span></div>
-
-        <!-- Batch note preview on card -->
-        <div id="csBatchNotePreview" class="hidden" style="background:rgba(166,226,46,0.06); border:1px solid rgba(166,226,46,0.15); border-radius:12px; padding:8px 12px; margin-top:10px;">
-            <div style="font-size:0.45rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:2px; margin-bottom:4px;">📝 Note</div>
-            <div id="csBatchNotePreviewText" style="font-size:0.68rem; color:var(--text-dim); font-weight:600; line-height:1.4;"></div>
-        </div>
-    </div>
-
-    <!-- Batch note input -->
-    <div style="background:var(--glass-card); border:1px solid var(--border-glass); border-radius:20px; padding:14px; margin-bottom:12px;">
-        <div style="font-size:0.5rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">
-            📝 Add a note <span style="color:rgba(255,255,255,0.15); font-size:0.45rem;">(optional)</span>
-        </div>
-        <textarea
-            id="csBatchNoteInput"
-            placeholder="e.g. Supplier X, Pallet 4, Cell 3..."
-            maxlength="120"
-            oninput="ColourScanner.updateBatchNotePreview(this.value)"
-            style="width:100%; background:var(--input-bg); border:1px solid var(--border-glass); border-radius:12px; padding:10px 12px; color:var(--text-main); font-size:0.7rem; font-family:-apple-system,sans-serif; font-weight:600; resize:none; outline:none; min-height:60px;"
-        ></textarea>
-        <div id="csBatchNoteCharCount" style="font-size:0.45rem; color:rgba(255,255,255,0.2); text-align:right; margin-top:4px; font-weight:700;">0 / 120</div>
-    </div>
-
-    <button class="btn-main" style="margin-bottom:8px;" onclick="ColourScanner.shareBatchReport()">
-        <i class="bi bi-share-fill"></i> Share Batch Report
-    </button>
-    <button id="csCopyBatch" class="btn-copy" style="width:100%; justify-content:center; margin-bottom:10px;" onclick="ColourScanner.copyBatchResult()">
-        <i class="bi bi-clipboard"></i> Copy Text Report
-    </button>
-    <button class="btn-main btn-back" onclick="ColourScanner.resetScanner()" id="csNewBatchScanBtn">← New Scan</button>
+<div id="csBatchPhotoGrid" style="display:flex; gap:8px; margin-bottom:12px;"></div>
+<div style="background:rgba(166,226,46,0.06); border:1px solid rgba(166,226,46,0.2); border-radius:16px; padding:14px; margin-bottom:12px; display:flex; align-items:center; gap:12px;">
+<div id="csBatchSwatch" style="width:48px; height:48px; border-radius:12px; flex-shrink:0; background:#98c428;"></div>
+<div>
+<div id="batchAvgLabel" style="font-size:0.55rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:2px; margin-bottom:3px;">Batch Average</div>
+<div id="csBatchLabel" style="font-size:0.95rem; font-weight:900; color:var(--text-main);">Color 1.5</div>
+</div>
+</div>
+<div class="report-card" style="margin-bottom:12px;">
+<div id="csBatchBreakdown" style="margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--border-glass);"></div>
+<div class="report-row"><span class="report-key" id="boxesScannedLabel">Boxes Scanned</span><span class="report-val" id="csBatchCount">—</span></div>
+<div class="report-row"><span class="report-key" id="shelfLifeEstLabel">Shelf Life Est.</span><span class="report-val" id="csBatchShelf">—</span></div>
+<div class="report-row"><span class="report-key" id="batchStatusLabel">Batch Status</span><span class="report-val" id="csBatchStatus">—</span></div>
+<div id="csBatchNotePreview" class="hidden" style="background:rgba(166,226,46,0.06); border:1px solid rgba(166,226,46,0.15); border-radius:12px; padding:8px 12px; margin-top:10px;">
+<div style="font-size:0.45rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:2px; margin-bottom:4px;">📝 Note</div>
+<div id="csBatchNotePreviewText" style="font-size:0.68rem; color:var(--text-dim); font-weight:600; line-height:1.4;"></div>
+</div>
+</div>
+<div style="background:var(--glass-card); border:1px solid var(--border-glass); border-radius:20px; padding:14px; margin-bottom:12px;">
+<div style="font-size:0.5rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">📝 Add a note <span style="color:rgba(255,255,255,0.15); font-size:0.45rem;">(optional)</span></div>
+<textarea id="csBatchNoteInput" placeholder="e.g. Supplier X, Pallet 4, Cell 3..." maxlength="120" oninput="ColourScanner.updateBatchNotePreview(this.value)" style="width:100%; background:var(--input-bg); border:1px solid var(--border-glass); border-radius:12px; padding:10px 12px; color:var(--text-main); font-size:0.7rem; font-family:-apple-system,sans-serif; font-weight:600; resize:none; outline:none; min-height:60px;"></textarea>
+<div id="csBatchNoteCharCount" style="font-size:0.45rem; color:rgba(255,255,255,0.2); text-align:right; margin-top:4px; font-weight:700;">0 / 120</div>
+</div>
+<button class="btn-main" style="margin-bottom:8px;" onclick="ColourScanner.shareBatchReport()"><i class="bi bi-share-fill"></i> Share Batch Report</button>
+<button id="csCopyBatch" class="btn-copy" style="width:100%; justify-content:center; margin-bottom:10px;" onclick="ColourScanner.copyBatchResult()"><i class="bi bi-clipboard"></i> Copy Text Report</button>
+<button class="btn-main btn-back" onclick="ColourScanner.resetScanner()" id="csNewBatchScanBtn">← New Scan</button>
+</div>
+<button class="btn-main btn-back" style="margin-top:10px;" onclick="ColourScanner.close()" id="csBackBtn">← Back</button>
+</div>
 </div>
 
-<button class="btn-main btn-back" style="margin-top:10px;" onclick="ColourScanner.close()" id="csBackBtn">← Back</button>
+<!-- News View -->
+<div id="news-view" class="nav-view hidden">
+<div style="max-width:400px; margin:0 auto;">
+
+<!-- News List -->
+<div id="news-list-view">
+<div class="hub-title">📰 Fruit Industry News</div>
+<div id="newsCacheStatus"></div>
+<div class="news-filter-row">
+<div class="news-filter-tab active" data-filter="all" onclick="NewsManager.setFilter('all')">All</div>
+<div class="news-filter-tab" data-filter="banana" onclick="NewsManager.setFilter('banana')">🍌 Banana</div>
+<div class="news-filter-tab" data-filter="mango" onclick="NewsManager.setFilter('mango')">🥭 Mango</div>
+<div class="news-filter-tab" data-filter="avocado" onclick="NewsManager.setFilter('avocado')">🥑 Avocado</div>
+</div>
+<div id="newsArticleList"></div>
+<button class="btn-main btn-back" style="margin-top:10px;" onclick="showHub()">← Back</button>
+</div>
+
+<!-- Article Detail -->
+<div id="news-article-view" class="hidden">
+<div id="articleHero" style="width:100%; height:200px; display:flex; align-items:center; justify-content:center; position:relative; background:rgba(22,22,24,0.98); border-radius:0 0 30px 30px; overflow:hidden; margin-bottom:0;">
+<div id="articleEmoji" style="font-size:4rem;"></div>
+<div class="article-hero-overlay"></div>
+<div class="article-back-btn" onclick="NewsManager.closeArticle()">← Back</div>
+<div id="articleCatBadge" class="news-cat-badge"></div>
+</div>
+<div class="article-body">
+<div class="article-title" id="articleTitle"></div>
+<div class="article-meta">
+<span class="article-source" id="articleSource"></span>
+<div class="news-dot"></div>
+<span class="news-time" id="articleTime"></span>
+<div class="news-dot"></div>
+<span class="news-time" id="articleDate"></span>
+<span class="article-country" id="articleCountry"></span>
+</div>
+<div class="article-summary-label">Summary</div>
+<div class="article-summary-text" id="articleSummary"></div>
+<button class="article-read-btn" id="articleReadBtn">
+<i class="bi bi-box-arrow-up-right"></i> Read Full Article
+</button>
+<button class="article-share-btn" id="articleShareBtn">
+<i class="bi bi-share-fill"></i> Share Article
+</button>
+<div class="article-disclaimer">
+Full article content is available on the publisher's website.<br>
+Pulp Pro is not affiliated with any news source.
+</div>
+</div>
+</div>
+
 </div>
 </div>
 
@@ -363,6 +367,7 @@ navigator.serviceWorker.register('sw.js').catch(err => console.log('SW failed', 
 <script src="js/defects-data.js"></script>
 <script src="js/defect-detector.js"></script>
 <script src="js/colour-scanner.js"></script>
+<script src="js/news.js"></script>
 
 </body>
 </html>

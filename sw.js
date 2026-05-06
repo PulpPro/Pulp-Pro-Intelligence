@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const CACHE_NAME = 'pulp-pro-' + CACHE_VERSION;
 const ASSETS = [
     '/Pulp-Pro-Intelligence/',
@@ -13,6 +13,7 @@ const ASSETS = [
     '/Pulp-Pro-Intelligence/css/theme.css',
     '/Pulp-Pro-Intelligence/css/layout.css',
     '/Pulp-Pro-Intelligence/css/components.css',
+    '/Pulp-Pro-Intelligence/js/translations.js',
     '/Pulp-Pro-Intelligence/js/app.js',
     '/Pulp-Pro-Intelligence/js/navigation.js',
     '/Pulp-Pro-Intelligence/js/brands.js',

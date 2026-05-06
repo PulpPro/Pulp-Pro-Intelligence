@@ -63,6 +63,7 @@
     color: #fff; border-radius: 100px; padding: 15px;
     font-weight: 900; width: 100%; border: none;
     text-transform: uppercase; cursor: pointer;
+    letter-spacing: 1px; font-size: 0.85rem;
 }
 .btn-back {
     margin-top: 40px;
@@ -150,3 +151,172 @@ input {
 }
 .log-code { font-weight: 900; font-family: monospace; }
 .log-timestamp { display: block; opacity: 0.6; font-size: 0.55rem; font-weight: 800; }
+
+/* =============================================
+   DEFECT DETECTOR STYLES
+   ============================================= */
+
+/* Type Selection Buttons */
+.type-btn {
+    background: var(--glass-card);
+    border: 1px solid var(--border-glass);
+    padding: 20px; border-radius: 20px;
+    cursor: pointer; transition: 0.3s;
+    text-align: center; box-shadow: var(--shadow);
+    margin-bottom: 12px;
+}
+.type-btn:hover { border-color: var(--pulp-lime); background: rgba(166, 226, 46, 0.05); }
+.type-btn-title {
+    font-weight: 900; text-transform: uppercase;
+    letter-spacing: 2px; font-size: 0.9rem;
+    color: var(--text-main); margin-bottom: 6px;
+}
+.type-btn-desc {
+    font-size: 0.65rem; color: var(--text-dim);
+    font-weight: 600; letter-spacing: 0.5px;
+    line-height: 1.4;
+}
+
+/* Camera */
+.camera-wrapper {
+    position: relative; border-radius: 25px;
+    overflow: hidden; background: #000;
+    margin-bottom: 14px; min-height: 200px;
+    display: flex; align-items: center; justify-content: center;
+}
+#defectVideo {
+    width: 100%; border-radius: 25px;
+    display: block; max-height: 220px;
+    object-fit: cover;
+}
+#cameraPlaceholder {
+    display: none; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 30px; color: var(--text-dim);
+    font-size: 0.75rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 2px;
+    gap: 10px; min-height: 200px;
+}
+#cameraPlaceholder i { font-size: 2rem; opacity: 0.3; }
+.capture-btn {
+    position: absolute; bottom: 12px; right: 12px;
+    background: var(--pulp-lime); color: #000;
+    border: none; border-radius: 12px;
+    padding: 8px 16px; font-weight: 900;
+    font-size: 0.65rem; text-transform: uppercase;
+    cursor: pointer; letter-spacing: 1px; transition: 0.2s;
+}
+#defectCanvas { display: none; }
+
+/* Checklist */
+.checklist-section {
+    margin-top: 16px;
+}
+.checklist-header {
+    font-size: 0.6rem; font-weight: 900;
+    color: var(--pulp-lime); text-transform: uppercase;
+    letter-spacing: 2px; margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-glass);
+}
+.checklist-scroll {
+    max-height: 220px; overflow-y: auto;
+    padding-right: 4px;
+}
+.check-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 14px;
+    margin-bottom: 7px; background: var(--glass-card);
+    border: 1px solid var(--border-glass);
+    cursor: pointer; transition: 0.2s;
+}
+.check-item:hover { border-color: rgba(166, 226, 46, 0.3); }
+.check-item.checked {
+    border-color: var(--pulp-lime);
+    background: rgba(166, 226, 46, 0.05);
+}
+.check-box {
+    width: 20px; height: 20px; border-radius: 7px;
+    border: 1.5px solid var(--border-glass);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 0.75rem;
+    color: #000; font-weight: 900; transition: 0.2s;
+}
+.check-item.checked .check-box {
+    background: var(--pulp-lime);
+    border-color: var(--pulp-lime);
+}
+.check-label {
+    font-size: 0.72rem; font-weight: 800;
+    color: var(--text-main); text-transform: uppercase;
+    letter-spacing: 0.5px; flex: 1;
+}
+
+/* Severity Badges */
+.severity-badge {
+    font-size: 0.5rem; font-weight: 900;
+    text-transform: uppercase; letter-spacing: 1px;
+    padding: 3px 9px; border-radius: 8px; flex-shrink: 0;
+}
+.minor  { background: rgba(166, 226, 46, 0.15); color: var(--pulp-lime); }
+.major  { background: rgba(255, 140,   0, 0.15); color: var(--pulp-amber); }
+.critical { background: rgba(255,  77,  77, 0.15); color: var(--pulp-red); }
+
+/* Report */
+.report-card {
+    background: var(--glass-card);
+    border: 1px solid var(--border-glass);
+    border-radius: 30px; padding: 20px;
+    margin-bottom: 14px; box-shadow: var(--shadow);
+}
+.grade-circle {
+    width: 70px; height: 70px; border-radius: 50%;
+    border: 3px solid var(--pulp-lime);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+}
+.grade-letter {
+    font-size: 1.8rem; font-weight: 900;
+    color: var(--pulp-lime); line-height: 1;
+}
+.grade-sub {
+    font-size: 0.45rem; color: var(--text-dim);
+    text-transform: uppercase; letter-spacing: 1px;
+}
+.report-row {
+    display: flex; justify-content: space-between;
+    align-items: center; padding: 8px 0;
+    border-bottom: 1px solid var(--border-glass);
+    font-size: 0.7rem;
+}
+.report-row:last-child { border-bottom: none; }
+.report-key {
+    color: var(--text-dim); text-transform: uppercase;
+    letter-spacing: 1px; font-weight: 700;
+}
+.report-val { color: var(--text-main); font-weight: 900; text-align: right; }
+
+/* Report Defect List */
+.report-defects-title {
+    font-size: 0.6rem; font-weight: 900;
+    color: var(--pulp-lime); text-transform: uppercase;
+    letter-spacing: 2px; margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-glass);
+}
+.report-defects-scroll {
+    max-height: 200px; overflow-y: auto;
+}
+
+/* Copy Report Button */
+#copyReportBtn {
+    background: rgba(166, 226, 46, 0.1);
+    border: 1px solid var(--pulp-lime);
+    color: var(--pulp-lime); border-radius: 100px;
+    padding: 15px; font-weight: 900; width: 100%;
+    text-transform: uppercase; cursor: pointer;
+    letter-spacing: 1px; font-size: 0.85rem;
+    transition: 0.2s; margin-bottom: 10px;
+}
+#copyReportBtn:hover { background: var(--pulp-lime); color: #000; }

@@ -3,7 +3,7 @@ const NewsManager = (() => {
     const CACHE_TIME_KEY = 'pulpProNewsTime';
     const CACHE_DURATION = 6 * 60 * 60 * 1000;
 
-    const PROXY = 'https://api.allorigins.win/get?url=';
+    const PROXY = 'https://corsproxy.io/?url=';
 
     const RSS_FEEDS = [
         { url: 'https://www.agf.nl/rss.xml/', fruit: 'all', source: 'AGF.nl' },
@@ -46,8 +46,8 @@ const NewsManager = (() => {
             const results = await Promise.allSettled(
                 RSS_FEEDS.map(feed =>
                     fetch(PROXY + encodeURIComponent(feed.url))
-                        .then(r => r.json())
-                        .then(data => ({ xml: data.contents, feed }))
+                        .then(r => r.text())
+                        .then(xml => ({ xml, feed }))
                 )
             );
 

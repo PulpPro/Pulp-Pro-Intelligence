@@ -7,10 +7,7 @@ const NewsManager = (() => {
     const PROXY = 'https://corsproxy.io/?url=';
 
     const RSS_FEEDS = [
-        // AGF.nl direct — shows ALL articles, no keyword filter
         { url: 'https://www.agf.nl/rss.xml/', fruit: 'all', source: 'AGF.nl', hasImages: true, showAll: true },
-
-        // Google News — excluding AGF.nl to prevent duplicates
         { url: 'https://news.google.com/rss/search?q=banaan+bananen+fruit+handel+-site:agf.nl&hl=nl&gl=NL&ceid=NL:nl', fruit: 'banana', source: 'Google Nieuws', hasImages: false },
         { url: 'https://news.google.com/rss/search?q=mango+fruit+import+export+europa+-site:agf.nl&hl=nl&gl=NL&ceid=NL:nl', fruit: 'mango', source: 'Google Nieuws', hasImages: false },
         { url: 'https://news.google.com/rss/search?q=avocado+fruit+import+export+europa+-site:agf.nl&hl=nl&gl=NL&ceid=NL:nl', fruit: 'avocado', source: 'Google Nieuws', hasImages: false },
@@ -57,11 +54,8 @@ const NewsManager = (() => {
         try {
             const freshArticles = await fetchArticles();
             if (!freshArticles || freshArticles.length === 0) return;
-
-            // Check if there are new articles
             const currentLinks = new Set(allArticles.map(a => a.link));
             const hasNew = freshArticles.some(a => !currentLinks.has(a.link));
-
             if (hasNew) {
                 allArticles = freshArticles;
                 const now = Date.now();
@@ -70,9 +64,7 @@ const NewsManager = (() => {
                 renderNews();
                 updateCacheStatus(now);
             }
-        } catch (e) {
-            console.log('Silent refresh failed silently');
-        }
+        } catch (e) {}
     }
 
     async function loadNews() {
@@ -122,11 +114,10 @@ const NewsManager = (() => {
                     let fruit = null;
 
                     if (feed.showAll) {
-                        // AGF.nl — tag all articles, general ones go to 'general'
                         if (KEYWORDS.banana.some(k => text.includes(k))) fruit = 'banana';
                         else if (KEYWORDS.mango.some(k => text.includes(k))) fruit = 'mango';
                         else if (KEYWORDS.avocado.some(k => text.includes(k))) fruit = 'avocado';
-                        else fruit = 'general'; // Shows only under All tab
+                        else fruit = 'general';
                     } else if (feed.fruit === 'banana') {
                         fruit = 'banana';
                     } else if (feed.fruit === 'mango') {
@@ -144,12 +135,14 @@ const NewsManager = (() => {
                         .replace(/<[^>]*>/g, '')
                         .substring(0, 300);
 
+                    const fruitForImage = fruit === 'general' ? 'banana' : fruit;
+
                     articles.push({
                         title: item.title,
                         description: cleanDesc,
                         link: item.link,
                         image_url: feed.hasImages ? (item.image || null) : null,
-                        fruit_image: feed.hasImages ? null : getFruitImage(fruit === 'general' ? 'banana' : fruit),
+                        fruit_image: feed.hasImages ? null : getFruitImage(fruitForImage),
                         pubDate: item.pubDate,
                         source_id: feed.source,
                         fruit
@@ -157,7 +150,6 @@ const NewsManager = (() => {
                 });
             });
 
-            // Remove duplicates by title
             const seen = new Set();
             const deduped = articles.filter(a => {
                 const key = (a.title || '').toLowerCase().substring(0, 50);
@@ -171,20 +163,6 @@ const NewsManager = (() => {
         } catch (err) {
             console.error('News fetch failed:', err);
             return null;
-        }
-    }
-
-    async function fetchNews() {
-        const articles = await fetchArticles();
-        if (articles) {
-            allArticles = articles;
-            const now = Date.now();
-            localStorage.setItem(CACHE_KEY, JSON.stringify(allArticles));
-            localStorage.setItem(CACHE_TIME_KEY, now.toString());
-            renderNews();
-            updateCacheStatus(now);
-        } else {
-            showError();
         }
     }
 
@@ -281,7 +259,7 @@ const NewsManager = (() => {
         return id;
     }
 
-    function getCardImage(article) {
+    function getBgStyle(article) {
         if (article.image_url) {
             return `background-image:url('${article.image_url}'); background-size:cover; background-position:center;`;
         }
@@ -289,7 +267,7 @@ const NewsManager = (() => {
             return `background-image:url('${article.fruit_image}'); background-size:contain; background-position:center; background-repeat:no-repeat; background-color:rgba(22,22,24,0.98);`;
         }
         const colour = getFruitColor(article.fruit);
-        return `background:${colour}10;`;
+        return `background:linear-gradient(135deg, ${colour}18, ${colour}08);`;
     }
 
     function renderNews() {
@@ -304,137 +282,30 @@ const NewsManager = (() => {
             </div>`;
             return;
         }
-        const isDesktop = window.innerWidth >= 900;
-        if (isDesktop) {
-            renderDesktop(articles);
-        } else {
-            renderMobile(articles);
-        }
+        // Same masonry layout for both mobile and desktop — CSS handles columns
+        list.innerHTML = `<div class="news-masonry-grid">${articles.map((a, i) => renderMasonryTile(a, i)).join('')}</div>`;
     }
 
-    function renderDesktop(articles) {
-        const list = document.getElementById('newsArticleList');
-        const hero = articles[0];
-        const top = articles.slice(1, 5);
-        const rest = articles.slice(5);
-        let html = `<div class="news-desktop-grid">`;
-        html += renderDesktopHero(hero);
-        html += `<div class="news-desktop-right">`;
-        top.forEach(a => { html += renderDesktopCard(a); });
-        html += `</div></div>`;
-        if (rest.length > 0) {
-            html += `<div class="news-bottom-row">`;
-            rest.slice(0, 9).forEach(a => { html += renderHorizontalCard(a); });
-            html += `</div>`;
-        }
-        list.innerHTML = html;
-    }
-
-    function renderMobile(articles) {
-        const list = document.getElementById('newsArticleList');
-        const hero = articles[0];
-        const rest = articles.slice(1);
-        let html = renderMobileHero(hero);
-        html += `<div class="news-masonry">`;
-        rest.forEach((a, i) => { html += renderMasonryCard(a, i); });
-        html += `</div>`;
-        list.innerHTML = html;
-    }
-
-    function renderDesktopHero(article) {
+    function renderMasonryTile(article, index) {
         const id = storeArticle(article);
         const colour = getFruitColor(article.fruit);
         const emoji = getFruitEmoji(article.fruit);
         const time = timeAgo(article.pubDate);
-        const bgStyle = getCardImage(article);
-        return `
-        <div class="news-desktop-hero" onclick="NewsManager.openArticleById('${id}')">
-            <div class="news-desktop-hero-img" style="${bgStyle}">
-                <div class="news-desktop-hero-overlay"></div>
-                <div class="news-cat-badge" style="background:${colour}20; border:1px solid ${colour}50; color:${colour};">${emoji} ${article.source_id}</div>
-            </div>
-            <div class="news-desktop-hero-body">
-                <div class="news-desktop-hero-title">${article.title || ''}</div>
-                <div class="news-desktop-hero-desc">${article.description || ''}</div>
-                <div class="news-desktop-hero-meta">
-                    <span style="color:var(--pulp-lime);">${article.source_id}</span>
-                    <span>${time}</span>
-                </div>
-            </div>
-        </div>`;
-    }
+        const bgStyle = getBgStyle(article);
 
-    function renderDesktopCard(article) {
-        const id = storeArticle(article);
-        const colour = getFruitColor(article.fruit);
-        const emoji = getFruitEmoji(article.fruit);
-        const time = timeAgo(article.pubDate);
-        const bgStyle = getCardImage(article);
-        return `
-        <div class="news-desktop-card" onclick="NewsManager.openArticleById('${id}')">
-            <div class="news-desktop-card-img" style="${bgStyle}"></div>
-            <div class="news-desktop-card-body">
-                <div class="news-cat" style="color:${colour};">${emoji} ${article.source_id}</div>
-                <div class="news-desktop-card-title">${article.title || ''}</div>
-                <div class="news-desktop-card-meta">${time}</div>
-            </div>
-        </div>`;
-    }
+        // Vary tile heights — every 5th tile is tall, every 3rd is medium, rest normal
+        let sizeClass = 'tile-normal';
+        if (index % 7 === 0) sizeClass = 'tile-tall';
+        else if (index % 3 === 0) sizeClass = 'tile-medium';
 
-    function renderHorizontalCard(article) {
-        const id = storeArticle(article);
-        const colour = getFruitColor(article.fruit);
-        const emoji = getFruitEmoji(article.fruit);
-        const time = timeAgo(article.pubDate);
-        const bgStyle = getCardImage(article);
         return `
-        <div class="news-h-card" onclick="NewsManager.openArticleById('${id}')">
-            <div class="news-h-thumb" style="${bgStyle}"></div>
-            <div class="news-h-content">
-                <div class="news-cat" style="color:${colour};">${emoji} ${article.source_id}</div>
-                <div class="news-h-title">${article.title || ''}</div>
-                <div class="news-h-meta">${time}</div>
-            </div>
-        </div>`;
-    }
-
-    function renderMobileHero(article) {
-        const id = storeArticle(article);
-        const colour = getFruitColor(article.fruit);
-        const emoji = getFruitEmoji(article.fruit);
-        const time = timeAgo(article.pubDate);
-        const bgStyle = getCardImage(article);
-        return `
-        <div class="news-featured-card" onclick="NewsManager.openArticleById('${id}')">
-            <div class="news-featured-img" style="${bgStyle}">
-                <div class="news-featured-overlay"></div>
-                <div class="news-cat-badge" style="background:${colour}20; border:1px solid ${colour}50; color:${colour};">${emoji} ${article.source_id}</div>
-            </div>
-            <div class="news-featured-body">
-                <div class="news-featured-title">${article.title || ''}</div>
-                <div class="news-meta-row">
-                    <span class="news-source" style="color:${colour};">${article.source_id}</span>
-                    <span class="news-dot"></span>
-                    <span class="news-time">${time}</span>
-                </div>
-            </div>
-        </div>`;
-    }
-
-    function renderMasonryCard(article, index) {
-        const id = storeArticle(article);
-        const colour = getFruitColor(article.fruit);
-        const emoji = getFruitEmoji(article.fruit);
-        const time = timeAgo(article.pubDate);
-        const tall = article.image_url && index % 3 === 0;
-        const bgStyle = getCardImage(article);
-        return `
-        <div class="news-masonry-card" onclick="NewsManager.openArticleById('${id}')">
-            <div class="news-masonry-img ${tall ? 'tall' : 'short'}" style="${bgStyle}"></div>
-            <div class="news-masonry-body">
-                <div class="news-cat" style="color:${colour};">${emoji} ${article.source_id}</div>
-                <div class="news-masonry-title">${article.title || ''}</div>
-                <div class="news-masonry-meta">${time}</div>
+        <div class="news-tile ${sizeClass}" onclick="NewsManager.openArticleById('${id}')">
+            <div class="news-tile-bg" style="${bgStyle}"></div>
+            <div class="news-tile-overlay"></div>
+            <div class="news-tile-content">
+                <div class="news-tile-badge" style="background:${colour}30; border:1px solid ${colour}60; color:${colour};">${emoji} ${article.source_id}</div>
+                <div class="news-tile-title">${article.title || ''}</div>
+                <div class="news-tile-meta">${time}</div>
             </div>
         </div>`;
     }
@@ -464,6 +335,7 @@ const NewsManager = (() => {
                 hero.style.backgroundSize = 'cover';
                 hero.style.backgroundPosition = 'center';
                 hero.style.backgroundColor = '';
+                hero.style.backgroundRepeat = '';
             } else if (fruitImg) {
                 hero.style.backgroundImage = `url('${fruitImg}')`;
                 hero.style.backgroundSize = 'contain';
@@ -499,11 +371,7 @@ const NewsManager = (() => {
         setField('articleSummary', article.description || 'Geen samenvatting beschikbaar.');
 
         const readBtn = document.getElementById('articleReadBtn');
-        if (readBtn) {
-            readBtn.onclick = () => {
-                if (article.link) window.open(article.link, '_blank');
-            };
-        }
+        if (readBtn) readBtn.onclick = () => { if (article.link) window.open(article.link, '_blank'); };
 
         const shareBtn = document.getElementById('articleShareBtn');
         if (shareBtn) {
@@ -513,9 +381,7 @@ const NewsManager = (() => {
                 } else {
                     navigator.clipboard.writeText(article.link);
                     shareBtn.innerText = '✓ Link gekopieerd!';
-                    setTimeout(() => {
-                        shareBtn.innerHTML = '<i class="bi bi-share-fill"></i> Artikel Delen';
-                    }, 2000);
+                    setTimeout(() => { shareBtn.innerHTML = '<i class="bi bi-share-fill"></i> Artikel Delen'; }, 2000);
                 }
             };
         }

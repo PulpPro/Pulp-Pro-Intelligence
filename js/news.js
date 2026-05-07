@@ -2,17 +2,21 @@ const NewsManager = (() => {
     const CACHE_KEY = 'pulpProNews';
     const CACHE_TIME_KEY = 'pulpProNewsTime';
     const CACHE_DURATION = 6 * 60 * 60 * 1000;
+    const AUTO_REFRESH_INTERVAL = 30 * 60 * 1000;
 
     const PROXY = 'https://corsproxy.io/?url=';
 
     const RSS_FEEDS = [
-        { url: 'https://www.agf.nl/rss.xml/', fruit: 'all', source: 'AGF.nl', hasImages: true },
-        { url: 'https://news.google.com/rss/search?q=banaan+bananen+fruit+handel&hl=nl&gl=NL&ceid=NL:nl', fruit: 'banana', source: 'Google Nieuws', hasImages: false },
-        { url: 'https://news.google.com/rss/search?q=mango+fruit+import+export+europa&hl=nl&gl=NL&ceid=NL:nl', fruit: 'mango', source: 'Google Nieuws', hasImages: false },
-        { url: 'https://news.google.com/rss/search?q=avocado+fruit+import+export+europa&hl=nl&gl=NL&ceid=NL:nl', fruit: 'avocado', source: 'Google Nieuws', hasImages: false },
-        { url: 'https://news.google.com/rss/search?q=banana+fresh+produce+europe+fruitnet&hl=en&gl=NL&ceid=NL:en', fruit: 'banana', source: 'Google News', hasImages: false },
-        { url: 'https://news.google.com/rss/search?q=mango+fresh+produce+europe+fruitnet&hl=en&gl=NL&ceid=NL:en', fruit: 'mango', source: 'Google News', hasImages: false },
-        { url: 'https://news.google.com/rss/search?q=avocado+fresh+produce+europe+fruitnet&hl=en&gl=NL&ceid=NL:en', fruit: 'avocado', source: 'Google News', hasImages: false },
+        // AGF.nl direct — shows ALL articles, no keyword filter
+        { url: 'https://www.agf.nl/rss.xml/', fruit: 'all', source: 'AGF.nl', hasImages: true, showAll: true },
+
+        // Google News — excluding AGF.nl to prevent duplicates
+        { url: 'https://news.google.com/rss/search?q=banaan+bananen+fruit+handel+-site:agf.nl&hl=nl&gl=NL&ceid=NL:nl', fruit: 'banana', source: 'Google Nieuws', hasImages: false },
+        { url: 'https://news.google.com/rss/search?q=mango+fruit+import+export+europa+-site:agf.nl&hl=nl&gl=NL&ceid=NL:nl', fruit: 'mango', source: 'Google Nieuws', hasImages: false },
+        { url: 'https://news.google.com/rss/search?q=avocado+fruit+import+export+europa+-site:agf.nl&hl=nl&gl=NL&ceid=NL:nl', fruit: 'avocado', source: 'Google Nieuws', hasImages: false },
+        { url: 'https://news.google.com/rss/search?q=banana+fresh+produce+europe+-site:agf.nl&hl=en&gl=NL&ceid=NL:en', fruit: 'banana', source: 'Google News', hasImages: false },
+        { url: 'https://news.google.com/rss/search?q=mango+fresh+produce+europe+-site:agf.nl&hl=en&gl=NL&ceid=NL:en', fruit: 'mango', source: 'Google News', hasImages: false },
+        { url: 'https://news.google.com/rss/search?q=avocado+fresh+produce+europe+-site:agf.nl&hl=en&gl=NL&ceid=NL:en', fruit: 'avocado', source: 'Google News', hasImages: false },
     ];
 
     const KEYWORDS = {
@@ -24,11 +28,13 @@ const NewsManager = (() => {
     let allArticles = [];
     let activeFilter = 'all';
     const articleMap = {};
+    let autoRefreshTimer = null;
 
     function getFruitImage(fruit) {
         if (fruit === 'banana') return 'banana.png';
         if (fruit === 'mango') return 'mango.png';
-        return 'avocado.png';
+        if (fruit === 'avocado') return 'avocado.png';
+        return 'banana.png';
     }
 
     function init() {
@@ -37,6 +43,36 @@ const NewsManager = (() => {
             tab.classList.toggle('active', tab.dataset.filter === 'all');
         });
         loadNews();
+        startAutoRefresh();
+    }
+
+    function startAutoRefresh() {
+        if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+        autoRefreshTimer = setInterval(() => {
+            silentRefresh();
+        }, AUTO_REFRESH_INTERVAL);
+    }
+
+    async function silentRefresh() {
+        try {
+            const freshArticles = await fetchArticles();
+            if (!freshArticles || freshArticles.length === 0) return;
+
+            // Check if there are new articles
+            const currentLinks = new Set(allArticles.map(a => a.link));
+            const hasNew = freshArticles.some(a => !currentLinks.has(a.link));
+
+            if (hasNew) {
+                allArticles = freshArticles;
+                const now = Date.now();
+                localStorage.setItem(CACHE_KEY, JSON.stringify(allArticles));
+                localStorage.setItem(CACHE_TIME_KEY, now.toString());
+                renderNews();
+                updateCacheStatus(now);
+            }
+        } catch (e) {
+            console.log('Silent refresh failed silently');
+        }
     }
 
     async function loadNews() {
@@ -48,10 +84,20 @@ const NewsManager = (() => {
             updateCacheStatus(cached.timestamp);
             return;
         }
-        await fetchNews();
+        const articles = await fetchArticles();
+        if (articles) {
+            allArticles = articles;
+            const now = Date.now();
+            localStorage.setItem(CACHE_KEY, JSON.stringify(allArticles));
+            localStorage.setItem(CACHE_TIME_KEY, now.toString());
+            renderNews();
+            updateCacheStatus(now);
+        } else {
+            showError();
+        }
     }
 
-    async function fetchNews() {
+    async function fetchArticles() {
         try {
             const results = await Promise.allSettled(
                 RSS_FEEDS.map(feed =>
@@ -61,7 +107,7 @@ const NewsManager = (() => {
                 )
             );
 
-            allArticles = [];
+            const articles = [];
 
             results.forEach(result => {
                 if (result.status !== 'fulfilled') return;
@@ -70,15 +116,24 @@ const NewsManager = (() => {
 
                 const items = parseRSS(xml);
                 items.forEach(item => {
-                    if (allArticles.find(a => a.link === item.link)) return;
+                    if (articles.find(a => a.link === item.link)) return;
 
                     const text = ((item.title || '') + ' ' + (item.description || '')).toLowerCase();
                     let fruit = null;
 
-                    if (feed.fruit === 'banana') fruit = 'banana';
-                    else if (feed.fruit === 'mango') fruit = 'mango';
-                    else if (feed.fruit === 'avocado') fruit = 'avocado';
-                    else {
+                    if (feed.showAll) {
+                        // AGF.nl — tag all articles, general ones go to 'general'
+                        if (KEYWORDS.banana.some(k => text.includes(k))) fruit = 'banana';
+                        else if (KEYWORDS.mango.some(k => text.includes(k))) fruit = 'mango';
+                        else if (KEYWORDS.avocado.some(k => text.includes(k))) fruit = 'avocado';
+                        else fruit = 'general'; // Shows only under All tab
+                    } else if (feed.fruit === 'banana') {
+                        fruit = 'banana';
+                    } else if (feed.fruit === 'mango') {
+                        fruit = 'mango';
+                    } else if (feed.fruit === 'avocado') {
+                        fruit = 'avocado';
+                    } else {
                         if (KEYWORDS.banana.some(k => text.includes(k))) fruit = 'banana';
                         else if (KEYWORDS.mango.some(k => text.includes(k))) fruit = 'mango';
                         else if (KEYWORDS.avocado.some(k => text.includes(k))) fruit = 'avocado';
@@ -89,12 +144,12 @@ const NewsManager = (() => {
                         .replace(/<[^>]*>/g, '')
                         .substring(0, 300);
 
-                    allArticles.push({
+                    articles.push({
                         title: item.title,
                         description: cleanDesc,
                         link: item.link,
                         image_url: feed.hasImages ? (item.image || null) : null,
-                        fruit_image: feed.hasImages ? null : getFruitImage(fruit),
+                        fruit_image: feed.hasImages ? null : getFruitImage(fruit === 'general' ? 'banana' : fruit),
                         pubDate: item.pubDate,
                         source_id: feed.source,
                         fruit
@@ -104,23 +159,31 @@ const NewsManager = (() => {
 
             // Remove duplicates by title
             const seen = new Set();
-            allArticles = allArticles.filter(a => {
+            const deduped = articles.filter(a => {
                 const key = (a.title || '').toLowerCase().substring(0, 50);
                 if (seen.has(key)) return false;
                 seen.add(key);
                 return true;
             });
 
-            allArticles.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+            deduped.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+            return deduped;
+        } catch (err) {
+            console.error('News fetch failed:', err);
+            return null;
+        }
+    }
 
+    async function fetchNews() {
+        const articles = await fetchArticles();
+        if (articles) {
+            allArticles = articles;
             const now = Date.now();
             localStorage.setItem(CACHE_KEY, JSON.stringify(allArticles));
             localStorage.setItem(CACHE_TIME_KEY, now.toString());
-
             renderNews();
             updateCacheStatus(now);
-        } catch (err) {
-            console.error('News fetch failed:', err);
+        } else {
             showError();
         }
     }
@@ -192,13 +255,15 @@ const NewsManager = (() => {
     function getFruitColor(fruit) {
         if (fruit === 'banana') return '#78c830';
         if (fruit === 'mango') return '#ff8c00';
-        return '#a6e22e';
+        if (fruit === 'avocado') return '#a6e22e';
+        return '#78c830';
     }
 
     function getFruitEmoji(fruit) {
         if (fruit === 'banana') return '🍌';
         if (fruit === 'mango') return '🥭';
-        return '🥑';
+        if (fruit === 'avocado') return '🥑';
+        return '🌿';
     }
 
     function timeAgo(dateStr) {
@@ -259,7 +324,7 @@ const NewsManager = (() => {
         html += `</div></div>`;
         if (rest.length > 0) {
             html += `<div class="news-bottom-row">`;
-            rest.slice(0, 6).forEach(a => { html += renderHorizontalCard(a); });
+            rest.slice(0, 9).forEach(a => { html += renderHorizontalCard(a); });
             html += `</div>`;
         }
         list.innerHTML = html;
@@ -398,6 +463,7 @@ const NewsManager = (() => {
                 hero.style.backgroundImage = `url('${img}')`;
                 hero.style.backgroundSize = 'cover';
                 hero.style.backgroundPosition = 'center';
+                hero.style.backgroundColor = '';
             } else if (fruitImg) {
                 hero.style.backgroundImage = `url('${fruitImg}')`;
                 hero.style.backgroundSize = 'contain';
@@ -467,7 +533,7 @@ const NewsManager = (() => {
         localStorage.removeItem(CACHE_KEY);
         localStorage.removeItem(CACHE_TIME_KEY);
         allArticles = [];
-        fetchNews();
+        loadNews();
     }
 
     function showLoading() {

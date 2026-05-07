@@ -204,37 +204,6 @@ input {
 }
 #defectCanvas { display: none; }
 
-/* Checklist */
-.checklist-section { margin-top: 16px; }
-.checklist-header {
-    font-size: 0.6rem; font-weight: 900;
-    color: var(--pulp-lime); text-transform: uppercase;
-    letter-spacing: 2px; margin-bottom: 10px;
-    padding-bottom: 8px; border-bottom: 1px solid var(--border-glass);
-}
-.checklist-scroll { max-height: 220px; overflow-y: auto; padding-right: 4px; }
-.check-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 10px 12px; border-radius: 14px;
-    margin-bottom: 7px; background: var(--glass-card);
-    border: 1px solid var(--border-glass);
-    cursor: pointer; transition: 0.2s;
-}
-.check-item:hover { border-color: rgba(166, 226, 46, 0.3); }
-.check-item.checked { border-color: var(--pulp-lime); background: rgba(166, 226, 46, 0.05); }
-.check-box {
-    width: 20px; height: 20px; border-radius: 7px;
-    border: 1.5px solid var(--border-glass);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; font-size: 0.75rem; color: #000; font-weight: 900; transition: 0.2s;
-}
-.check-item.checked .check-box { background: var(--pulp-lime); border-color: var(--pulp-lime); }
-.check-label {
-    font-size: 0.72rem; font-weight: 800;
-    color: var(--text-main); text-transform: uppercase;
-    letter-spacing: 0.5px; flex: 1;
-}
-
 /* Severity Badges */
 .severity-badge {
     font-size: 0.5rem; font-weight: 900;
@@ -316,7 +285,6 @@ input {
    NEWS STYLES — MOBILE + DESKTOP
    ============================================= */
 
-/* Filter tabs */
 .news-filter-row {
     display: flex; gap: 6px; margin-bottom: 14px;
     overflow-x: auto; padding-bottom: 4px;
@@ -333,7 +301,6 @@ input {
 }
 .news-filter-tab.active { background: rgba(166, 226, 46, 0.1); border-color: var(--pulp-lime); color: var(--pulp-lime); }
 
-/* Cache status */
 #newsCacheStatus {
     display: none; align-items: center; gap: 6px;
     padding: 8px 12px; margin-bottom: 14px;
@@ -343,7 +310,6 @@ input {
     color: var(--pulp-amber); text-transform: uppercase; letter-spacing: 1px;
 }
 
-/* Shared card elements */
 .news-cat {
     font-size: 0.48rem; font-weight: 900;
     text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;
@@ -353,7 +319,7 @@ input {
 .news-time { font-size: 0.48rem; font-weight: 700; color: var(--text-dim); }
 .news-meta-row { display: flex; align-items: center; gap: 6px; }
 
-/* ---- MOBILE: Featured hero card ---- */
+/* Mobile hero card */
 .news-featured-card {
     background: var(--glass-card); border: 1px solid var(--border-glass);
     border-radius: 24px; overflow: hidden; margin-bottom: 12px;
@@ -381,7 +347,7 @@ input {
     line-height: 1.4; margin-bottom: 8px;
 }
 
-/* ---- MOBILE: Masonry grid ---- */
+/* Mobile masonry grid */
 .news-masonry { columns: 2; column-gap: 8px; }
 .news-masonry-card {
     break-inside: avoid; margin-bottom: 8px;
@@ -402,7 +368,7 @@ input {
 }
 .news-masonry-meta { font-size: 0.48rem; color: var(--text-dim); font-weight: 700; }
 
-/* ---- DESKTOP: Main grid ---- */
+/* Desktop layout */
 @media (min-width: 900px) {
     #news-view { max-width: 100% !important; }
     #news-view > div { max-width: 100% !important; }
@@ -413,13 +379,11 @@ input {
         gap: 14px;
         margin-bottom: 14px;
     }
-
     .news-desktop-hero {
         grid-row: span 2;
         border-radius: 22px; overflow: hidden;
         background: var(--glass-card); border: 1px solid var(--border-glass);
-        cursor: pointer; display: flex; flex-direction: column;
-        transition: 0.2s;
+        cursor: pointer; display: flex; flex-direction: column; transition: 0.2s;
     }
     .news-desktop-hero:hover { border-color: rgba(166, 226, 46, 0.3); }
     .news-desktop-hero-img {
@@ -446,11 +410,7 @@ input {
         display: flex; justify-content: space-between;
         font-size: 0.55rem; color: var(--text-dim); font-weight: 700;
     }
-
-    .news-desktop-right {
-        display: contents;
-    }
-
+    .news-desktop-right { display: contents; }
     .news-desktop-card {
         border-radius: 18px; overflow: hidden;
         background: var(--glass-card); border: 1px solid var(--border-glass);
@@ -471,7 +431,6 @@ input {
     }
     .news-desktop-card-meta { font-size: 0.52rem; color: var(--text-dim); font-weight: 700; }
 
-    /* Bottom horizontal row */
     .news-bottom-row {
         display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
     }

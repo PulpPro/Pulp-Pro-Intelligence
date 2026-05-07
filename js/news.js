@@ -3,20 +3,16 @@ const NewsManager = (() => {
     const CACHE_TIME_KEY = 'pulpProNewsTime';
     const CACHE_DURATION = 6 * 60 * 60 * 1000;
 
-    const RSS2JSON = 'https://api.rss2json.com/v1/api.json?count=50&rss_url=';
+    const PROXY = 'https://api.allorigins.win/get?url=';
 
     const RSS_FEEDS = [
-        { url: 'https://www.agf.nl/sector/78/bananen/rss.xml/', fruit: 'banana', source: 'AGF.nl' },
-        { url: 'https://www.agf.nl/sector/93/exotische-agf/rss.xml/', fruit: 'exotic', source: 'AGF.nl' },
-        { url: 'https://www.agf.nl/sector/91/fruit/rss.xml/', fruit: 'fruit', source: 'AGF.nl' },
+        { url: 'https://www.agf.nl/rss.xml/', fruit: 'all', source: 'AGF.nl' },
         { url: 'https://www.freshplaza.com/europe/rss/', fruit: 'all', source: 'FreshPlaza EU' },
-        { url: 'https://www.freshplaza.com/rss/', fruit: 'all', source: 'FreshPlaza' },
-        { url: 'https://www.groentennieuws.nl/rss.xml/', fruit: 'all', source: 'Groentennieuws' },
         { url: 'https://www.fruitnet.com/rss', fruit: 'all', source: 'Fruitnet' },
     ];
 
     const KEYWORDS = {
-        banana: ['banaan', 'bananen', 'banana', 'bananas', 'chiquita', 'fyffes', 'dole', 'del monte', 'fyffes', 'rijpcel', 'bananencel', 'ripening'],
+        banana: ['banaan', 'bananen', 'banana', 'bananas', 'chiquita', 'fyffes', 'dole', 'del monte', 'rijpcel', 'bananencel', 'ripening'],
         mango: ['mango', "mango's", 'mangoes', 'mangos'],
         avocado: ['avocado', "avocado's", 'avocados', 'hass']
     };
@@ -49,9 +45,9 @@ const NewsManager = (() => {
         try {
             const results = await Promise.allSettled(
                 RSS_FEEDS.map(feed =>
-                    fetch(RSS2JSON + encodeURIComponent(feed.url))
+                    fetch(PROXY + encodeURIComponent(feed.url))
                         .then(r => r.json())
-                        .then(data => ({ data, feed }))
+                        .then(data => ({ xml: data.contents, feed }))
                 )
             );
 
@@ -59,33 +55,20 @@ const NewsManager = (() => {
 
             results.forEach(result => {
                 if (result.status !== 'fulfilled') return;
-                const { data, feed } = result.value;
-                if (!data || data.status !== 'ok') return;
+                const { xml, feed } = result.value;
+                if (!xml) return;
 
-                const items = data.items || [];
+                const items = parseRSS(xml);
                 items.forEach(item => {
                     if (allArticles.find(a => a.link === item.link)) return;
 
                     const text = ((item.title || '') + ' ' + (item.description || '')).toLowerCase();
                     let fruit = null;
 
-                    if (feed.fruit === 'banana') {
-                        fruit = 'banana';
-                    } else if (feed.fruit === 'exotic') {
-                        if (KEYWORDS.mango.some(k => text.includes(k))) fruit = 'mango';
-                        else if (KEYWORDS.avocado.some(k => text.includes(k))) fruit = 'avocado';
-                        else return;
-                    } else if (feed.fruit === 'fruit') {
-                        if (KEYWORDS.banana.some(k => text.includes(k))) fruit = 'banana';
-                        else if (KEYWORDS.mango.some(k => text.includes(k))) fruit = 'mango';
-                        else if (KEYWORDS.avocado.some(k => text.includes(k))) fruit = 'avocado';
-                        else return;
-                    } else {
-                        if (KEYWORDS.banana.some(k => text.includes(k))) fruit = 'banana';
-                        else if (KEYWORDS.mango.some(k => text.includes(k))) fruit = 'mango';
-                        else if (KEYWORDS.avocado.some(k => text.includes(k))) fruit = 'avocado';
-                        else return;
-                    }
+                    if (KEYWORDS.banana.some(k => text.includes(k))) fruit = 'banana';
+                    else if (KEYWORDS.mango.some(k => text.includes(k))) fruit = 'mango';
+                    else if (KEYWORDS.avocado.some(k => text.includes(k))) fruit = 'avocado';
+                    else return;
 
                     const cleanDesc = (item.description || '')
                         .replace(/<[^>]*>/g, '')
@@ -95,7 +78,7 @@ const NewsManager = (() => {
                         title: item.title,
                         description: cleanDesc,
                         link: item.link,
-                        image_url: item.enclosure?.link || item.thumbnail || null,
+                        image_url: item.image || null,
                         pubDate: item.pubDate,
                         source_id: feed.source,
                         fruit
@@ -115,6 +98,35 @@ const NewsManager = (() => {
             console.error('News fetch failed:', err);
             showError();
         }
+    }
+
+    function parseRSS(xml) {
+        try {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(xml, 'text/xml');
+            const items = doc.querySelectorAll('item');
+            return Array.from(items).map(item => {
+                const get = tag => item.querySelector(tag)?.textContent?.trim() || '';
+                const enclosure = item.querySelector('enclosure');
+                const img = enclosure?.getAttribute('url') ||
+                    item.querySelector('thumbnail')?.getAttribute('url') ||
+                    extractImageFromDesc(get('description')) || null;
+                return {
+                    title: get('title'),
+                    description: get('description'),
+                    link: get('link'),
+                    pubDate: get('pubDate'),
+                    image: img
+                };
+            });
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function extractImageFromDesc(html) {
+        const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+        return match ? match[1] : null;
     }
 
     function getCachedNews() {
@@ -182,9 +194,7 @@ const NewsManager = (() => {
     function renderNews() {
         const list = document.getElementById('newsArticleList');
         if (!list) return;
-
         const articles = getFilteredArticles();
-
         if (articles.length === 0) {
             list.innerHTML = `
             <div style="text-align:center; padding:40px 20px; opacity:0.4;">
@@ -193,7 +203,6 @@ const NewsManager = (() => {
             </div>`;
             return;
         }
-
         const isDesktop = window.innerWidth >= 900;
         if (isDesktop) {
             renderDesktop(articles);
@@ -207,24 +216,16 @@ const NewsManager = (() => {
         const hero = articles[0];
         const top = articles.slice(1, 5);
         const rest = articles.slice(5);
-
         let html = `<div class="news-desktop-grid">`;
-
-        // Hero
         html += renderDesktopHero(hero);
-
-        // Top right 2x2
         html += `<div class="news-desktop-right">`;
         top.forEach(a => { html += renderDesktopCard(a); });
         html += `</div></div>`;
-
-        // Bottom horizontal row
         if (rest.length > 0) {
             html += `<div class="news-bottom-row">`;
             rest.slice(0, 6).forEach(a => { html += renderHorizontalCard(a); });
             html += `</div>`;
         }
-
         list.innerHTML = html;
     }
 
@@ -232,12 +233,10 @@ const NewsManager = (() => {
         const list = document.getElementById('newsArticleList');
         const hero = articles[0];
         const rest = articles.slice(1);
-
         let html = renderMobileHero(hero);
         html += `<div class="news-masonry">`;
         rest.forEach((a, i) => { html += renderMasonryCard(a, i); });
         html += `</div>`;
-
         list.innerHTML = html;
     }
 
@@ -247,7 +246,6 @@ const NewsManager = (() => {
         const emoji = getFruitEmoji(article.fruit);
         const img = article.image_url;
         const time = timeAgo(article.pubDate);
-
         return `
         <div class="news-desktop-hero" onclick="NewsManager.openArticleById('${id}')">
             <div class="news-desktop-hero-img" style="${img ? `background-image:url('${img}'); background-size:cover; background-position:center;` : `background:rgba(22,22,24,0.98);`}">
@@ -272,7 +270,6 @@ const NewsManager = (() => {
         const emoji = getFruitEmoji(article.fruit);
         const img = article.image_url;
         const time = timeAgo(article.pubDate);
-
         return `
         <div class="news-desktop-card" onclick="NewsManager.openArticleById('${id}')">
             <div class="news-desktop-card-img" style="${img ? `background-image:url('${img}'); background-size:cover; background-position:center;` : `background:${colour}10;`}">
@@ -292,7 +289,6 @@ const NewsManager = (() => {
         const emoji = getFruitEmoji(article.fruit);
         const img = article.image_url;
         const time = timeAgo(article.pubDate);
-
         return `
         <div class="news-h-card" onclick="NewsManager.openArticleById('${id}')">
             <div class="news-h-thumb" style="${img ? `background-image:url('${img}'); background-size:cover; background-position:center;` : `background:${colour}10;`}">
@@ -312,7 +308,6 @@ const NewsManager = (() => {
         const emoji = getFruitEmoji(article.fruit);
         const img = article.image_url;
         const time = timeAgo(article.pubDate);
-
         return `
         <div class="news-featured-card" onclick="NewsManager.openArticleById('${id}')">
             <div class="news-featured-img" style="${img ? `background-image:url('${img}'); background-size:cover; background-position:center;` : `background:rgba(22,22,24,0.98);`}">
@@ -338,12 +333,9 @@ const NewsManager = (() => {
         const img = article.image_url;
         const time = timeAgo(article.pubDate);
         const tall = img && index % 3 === 0;
-
         return `
         <div class="news-masonry-card" onclick="NewsManager.openArticleById('${id}')">
-            ${img ? `
-            <div class="news-masonry-img ${tall ? 'tall' : 'short'}" style="background-image:url('${img}'); background-size:cover; background-position:center;"></div>
-            ` : ''}
+            ${img ? `<div class="news-masonry-img ${tall ? 'tall' : 'short'}" style="background-image:url('${img}'); background-size:cover; background-position:center;"></div>` : ''}
             <div class="news-masonry-body">
                 <div class="news-cat" style="color:${colour};">${emoji} ${article.source_id}</div>
                 <div class="news-masonry-title">${article.title || ''}</div>
@@ -364,7 +356,9 @@ const NewsManager = (() => {
         const img = article.image_url;
         const time = timeAgo(article.pubDate);
         const date = article.pubDate
-            ? new Date(article.pubDate).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()
+            ? new Date(article.pubDate).toLocaleDateString('nl-NL', {
+                day: '2-digit', month: 'short', year: 'numeric'
+              }).toUpperCase()
             : '';
 
         const hero = document.getElementById('articleHero');
@@ -375,6 +369,7 @@ const NewsManager = (() => {
         }
         const emojiEl = document.getElementById('articleEmoji');
         if (emojiEl) emojiEl.innerText = !img ? emoji : '';
+
         const badge = document.getElementById('articleCatBadge');
         if (badge) {
             badge.innerText = `${emoji} ${article.source_id}`;
@@ -383,7 +378,10 @@ const NewsManager = (() => {
             badge.style.background = colour + '20';
         }
 
-        const setField = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+        const setField = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = val;
+        };
         setField('articleTitle', article.title || '');
         setField('articleSource', article.source_id || '');
         setField('articleTime', time);
@@ -392,7 +390,11 @@ const NewsManager = (() => {
         setField('articleSummary', article.description || 'Geen samenvatting beschikbaar.');
 
         const readBtn = document.getElementById('articleReadBtn');
-        if (readBtn) readBtn.onclick = () => { if (article.link) window.open(article.link, '_blank'); };
+        if (readBtn) {
+            readBtn.onclick = () => {
+                if (article.link) window.open(article.link, '_blank');
+            };
+        }
 
         const shareBtn = document.getElementById('articleShareBtn');
         if (shareBtn) {
@@ -402,7 +404,9 @@ const NewsManager = (() => {
                 } else {
                     navigator.clipboard.writeText(article.link);
                     shareBtn.innerText = '✓ Link gekopieerd!';
-                    setTimeout(() => shareBtn.innerHTML = '<i class="bi bi-share-fill"></i> Artikel Delen', 2000);
+                    setTimeout(() => {
+                        shareBtn.innerHTML = '<i class="bi bi-share-fill"></i> Artikel Delen';
+                    }, 2000);
                 }
             };
         }

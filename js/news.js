@@ -6,19 +6,16 @@ const NewsManager = (() => {
     const PROXY = 'https://corsproxy.io/?url=';
 
     const RSS_FEEDS = [
-        // AGF.nl — Dutch/Belgian fruit trade (confirmed working)
+        // AGF.nl — confirmed working directly
         { url: 'https://www.agf.nl/rss.xml/', fruit: 'all', source: 'AGF.nl' },
 
-        // Fruitnet dedicated fruit feeds (confirmed working)
-        { url: 'https://www.fruitnet.com/products/fruit/bananas/rss', fruit: 'banana', source: 'Fruitnet' },
-        { url: 'https://www.fruitnet.com/products/fruit/mangoes/rss', fruit: 'mango', source: 'Fruitnet' },
-        { url: 'https://www.fruitnet.com/products/fruit/avocados/rss', fruit: 'avocado', source: 'Fruitnet' },
-
-        // FreshPlaza EU — biggest EU fresh produce platform
-        { url: 'https://www.freshplaza.com/europe/rss/', fruit: 'all', source: 'FreshPlaza EU' },
-
-        // Eurofresh Distribution — EU trade magazine
-        { url: 'https://www.eurofresh-distribution.com/feed', fruit: 'all', source: 'Eurofresh' },
+        // Google News RSS — aggregates Fruitnet, FreshPlaza and more
+        { url: 'https://news.google.com/rss/search?q=banaan+bananen+fruit+handel&hl=nl&gl=NL&ceid=NL:nl', fruit: 'banana', source: 'Google Nieuws' },
+        { url: 'https://news.google.com/rss/search?q=mango+fruit+import+export+europa&hl=nl&gl=NL&ceid=NL:nl', fruit: 'mango', source: 'Google Nieuws' },
+        { url: 'https://news.google.com/rss/search?q=avocado+fruit+import+export+europa&hl=nl&gl=NL&ceid=NL:nl', fruit: 'avocado', source: 'Google Nieuws' },
+        { url: 'https://news.google.com/rss/search?q=banana+fresh+produce+europe+fruitnet&hl=en&gl=NL&ceid=NL:en', fruit: 'banana', source: 'Google News' },
+        { url: 'https://news.google.com/rss/search?q=mango+fresh+produce+europe+fruitnet&hl=en&gl=NL&ceid=NL:en', fruit: 'mango', source: 'Google News' },
+        { url: 'https://news.google.com/rss/search?q=avocado+fresh+produce+europe+fruitnet&hl=en&gl=NL&ceid=NL:en', fruit: 'avocado', source: 'Google News' },
     ];
 
     const KEYWORDS = {
@@ -75,7 +72,6 @@ const NewsManager = (() => {
                     const text = ((item.title || '') + ' ' + (item.description || '')).toLowerCase();
                     let fruit = null;
 
-                    // For dedicated feeds, use the feed's fruit directly
                     if (feed.fruit === 'banana') {
                         fruit = 'banana';
                     } else if (feed.fruit === 'mango') {
@@ -83,7 +79,6 @@ const NewsManager = (() => {
                     } else if (feed.fruit === 'avocado') {
                         fruit = 'avocado';
                     } else {
-                        // For general feeds, detect fruit from keywords
                         if (KEYWORDS.banana.some(k => text.includes(k))) fruit = 'banana';
                         else if (KEYWORDS.mango.some(k => text.includes(k))) fruit = 'mango';
                         else if (KEYWORDS.avocado.some(k => text.includes(k))) fruit = 'avocado';
@@ -104,6 +99,15 @@ const NewsManager = (() => {
                         fruit
                     });
                 });
+            });
+
+            // Remove duplicates by title
+            const seen = new Set();
+            allArticles = allArticles.filter(a => {
+                const key = (a.title || '').toLowerCase().substring(0, 50);
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
             });
 
             allArticles.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));

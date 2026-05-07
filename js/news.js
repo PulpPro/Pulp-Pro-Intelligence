@@ -4,15 +4,11 @@ const NewsManager = (() => {
     const CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 hours
 
     const RSS_FEEDS = [
-        // Fruitnet dedicated fruit feeds
         { url: 'https://www.fruitnet.com/products/fruit/bananas/rss', fruit: 'banana' },
         { url: 'https://www.fruitnet.com/products/fruit/mangoes/rss', fruit: 'mango' },
         { url: 'https://www.fruitnet.com/products/fruit/avocados/rss', fruit: 'avocado' },
-        // FreshFruitPortal - general tropical fruit
         { url: 'https://www.freshfruitportal.com/feed', fruit: 'all' },
-        // FreshPlaza - general produce
         { url: 'https://www.freshplaza.com/rss', fruit: 'all' },
-        // Google News RSS - targeted per fruit
         { url: 'https://news.google.com/rss/search?q=banana+fruit+trade&hl=en&gl=US&ceid=US:en', fruit: 'banana' },
         { url: 'https://news.google.com/rss/search?q=mango+fruit+trade&hl=en&gl=US&ceid=US:en', fruit: 'mango' },
         { url: 'https://news.google.com/rss/search?q=avocado+fruit+trade&hl=en&gl=US&ceid=US:en', fruit: 'avocado' }
@@ -53,12 +49,41 @@ const NewsManager = (() => {
         return null;
     }
 
+    function parseRSS(xmlText) {
+        try {
+            const parser = new DOMParser();
+            const xml = parser.parseFromString(xmlText, 'text/xml');
+            const items = xml.querySelectorAll('item');
+            return Array.from(items).map(item => ({
+                title: item.querySelector('title')?.textContent || '',
+                link: item.querySelector('link')?.textContent || '',
+                description: item.querySelector('description')?.textContent || '',
+                pubDate: item.querySelector('pubDate')?.textContent || '',
+                thumbnail: item.querySelector('enclosure')?.getAttribute('url') || '',
+                author: item.querySelector('source')?.textContent || ''
+            }));
+        } catch (e) {
+            return [];
+        }
+    }
+
     async function fetchFeed(feedUrl) {
-        const proxy = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}&count=20`;
-        const response = await fetch(proxy);
-        const data = await response.json();
-        if (data.status !== 'ok') return [];
-        return data.items || [];
+        try {
+            // Try rss2json first
+            const proxy = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}&count=20`;
+            const response = await fetch(proxy);
+            const data = await response.json();
+            if (data.status === 'ok' && data.items?.length > 0) return data.items;
+
+            // Fallback: fetch raw XML via corsproxy and parse manually
+            const corsProxy = `https://corsproxy.io/?${encodeURIComponent(feedUrl)}`;
+            const xmlResponse = await fetch(corsProxy);
+            const xmlText = await xmlResponse.text();
+            return parseRSS(xmlText);
+        } catch (err) {
+            console.warn('Feed failed:', feedUrl, err);
+            return [];
+        }
     }
 
     async function fetchNews() {

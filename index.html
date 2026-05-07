@@ -17,6 +17,12 @@
 </head>
 <body>
 
+<!-- Splash Screen -->
+<div id="splash-screen">
+<img src="edited-image.png" class="splash-logo">
+<div class="splash-text">PULP PRO</div>
+</div>
+
 <!-- Update Banner -->
 <div id="updateBanner" class="hidden" style="
     position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
@@ -27,12 +33,6 @@
     box-shadow: 0 10px 40px rgba(166,226,46,0.4);
     white-space: nowrap;" onclick="applyUpdate()">
     ⬆ New Update Available — Tap to Refresh
-</div>
-
-<!-- Splash Screen -->
-<div id="splash-screen">
-<img src="edited-image.png" class="splash-logo">
-<div class="splash-text">PULP PRO</div>
 </div>
 
 <!-- Menu Trigger -->
@@ -58,23 +58,81 @@
 </div>
 <div id="menu-overlay" onclick="toggleMenu()"></div>
 
-<!-- Fruit Hub -->
+<!-- Fruit Hub — Premium Bento Grid -->
 <div id="fruit-hub" class="nav-view">
-<div class="hub-title">Select Commodity</div>
-<div class="selection-grid-container">
-<div class="selection-grid">
-<div class="selection-card" onclick="openMiddleHub('banana')"><img src="banana.png" alt="banana"><div class="commodity-name-section"><span>Banana</span></div></div>
-<div class="selection-card" onclick="openMiddleHub('mango')"><img src="mango.png" alt="mango"><div class="commodity-name-section"><span>Mango</span><span style="color:var(--pulp-amber); font-size:0.6rem; letter-spacing:1px;">(SOON)</span></div></div>
-<div class="selection-card" onclick="openMiddleHub('avocado')"><img src="avocado.png" alt="avocado"><div class="commodity-name-section"><span>Avocado</span><span style="color:var(--pulp-amber); font-size:0.6rem; letter-spacing:1px;">(SOON)</span></div></div>
-<div class="selection-card" onclick="openDefectDetector()"><img src="rotten.png" alt="defect"><div class="commodity-name-section"><span>Defect Detector</span></div></div>
-<div class="selection-card" onclick="openColourScanner()"><img src="colour.png" alt="colour"><div class="commodity-name-section"><span>Colour Scanner</span></div></div>
-<div class="selection-card" onclick="openNews()"><img src="news.png" alt="news"><div class="commodity-name-section"><span>News</span></div></div>
-</div>
-</div>
-<div id="favorites-section" class="hidden">
-<div class="hub-title" style="color:var(--pulp-amber); font-size:0.8rem; margin-top:20px;">Saved Favorites</div>
-<div class="fav-grid" id="fav-grid"></div>
-</div>
+
+    <div class="hub-top-bar">
+        <div class="hub-logo-area">
+            <div class="hub-logo-dot"></div>
+            <div class="hub-logo-text">Pulp Pro</div>
+        </div>
+    </div>
+
+    <div class="bento-grid">
+
+        <div class="bento-tile bento-wide tile-banana" onclick="openMiddleHub('banana')">
+            <div class="bento-tile-img" style="background-image:url('banana.png');"></div>
+            <div class="bento-tile-overlay"></div>
+            <div class="bento-tile-dot"></div>
+            <div class="bento-tile-content">
+                <div class="bento-tile-badge badge-live">Active</div>
+                <div class="bento-tile-label">Banana</div>
+                <div class="bento-tile-sub">Age Checker · Colour Scanner · Defects</div>
+            </div>
+        </div>
+
+        <div class="bento-tile bento-tall tile-defect" onclick="openDefectDetector()">
+            <div class="bento-tile-img" style="background-image:url('rotten.png');"></div>
+            <div class="bento-tile-overlay"></div>
+            <div class="bento-tile-content">
+                <div class="bento-tile-label">Defect Detector</div>
+                <div class="bento-tile-sub">Camera · AI Analysis</div>
+            </div>
+        </div>
+
+        <div class="bento-tile bento-tall tile-colour" onclick="openColourScanner()">
+            <div class="bento-tile-img" style="background-image:url('colour.png');"></div>
+            <div class="bento-tile-overlay"></div>
+            <div class="bento-tile-content">
+                <div class="bento-tile-label">Colour Scanner</div>
+                <div class="bento-tile-sub">Single · Multi · Batch</div>
+            </div>
+        </div>
+
+        <div class="bento-tile bento-normal tile-mango" onclick="openMiddleHub('mango')">
+            <div class="bento-tile-img" style="background-image:url('mango.png');"></div>
+            <div class="bento-tile-overlay"></div>
+            <div class="bento-tile-content">
+                <div class="bento-tile-badge badge-soon">Soon</div>
+                <div class="bento-tile-label">Mango</div>
+            </div>
+        </div>
+
+        <div class="bento-tile bento-normal tile-avocado" onclick="openMiddleHub('avocado')">
+            <div class="bento-tile-img" style="background-image:url('avocado.png');"></div>
+            <div class="bento-tile-overlay"></div>
+            <div class="bento-tile-content">
+                <div class="bento-tile-badge badge-soon">Soon</div>
+                <div class="bento-tile-label">Avocado</div>
+            </div>
+        </div>
+
+        <div class="bento-tile bento-wide tile-news" onclick="openNews()">
+            <div class="bento-tile-img" style="background-image:url('news.png');"></div>
+            <div class="bento-tile-overlay"></div>
+            <div class="bento-tile-content">
+                <div class="bento-tile-label">Fruit Industry News</div>
+                <div class="bento-tile-sub">AGF.nl · FreshPlaza · Google News</div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="favorites-section" class="hidden">
+        <div class="fav-strip-label">⭐ Favorites</div>
+        <div class="fav-grid" id="fav-grid"></div>
+    </div>
+
 </div>
 
 <!-- Middle Hub -->
@@ -276,7 +334,7 @@
 
 <!-- News View -->
 <div id="news-view" class="nav-view hidden">
-<div style="max-width:400px; margin:0 auto;">
+<div style="max-width:1200px; margin:0 auto;">
 <div id="news-list-view">
 <div class="hub-title">📰 Fruit Industry News</div>
 <div id="newsCacheStatus"></div>

@@ -6,9 +6,19 @@ const NewsManager = (() => {
     const PROXY = 'https://corsproxy.io/?url=';
 
     const RSS_FEEDS = [
+        // AGF.nl — Dutch/Belgian fruit trade (confirmed working)
         { url: 'https://www.agf.nl/rss.xml/', fruit: 'all', source: 'AGF.nl' },
+
+        // Fruitnet dedicated fruit feeds (confirmed working)
+        { url: 'https://www.fruitnet.com/products/fruit/bananas/rss', fruit: 'banana', source: 'Fruitnet' },
+        { url: 'https://www.fruitnet.com/products/fruit/mangoes/rss', fruit: 'mango', source: 'Fruitnet' },
+        { url: 'https://www.fruitnet.com/products/fruit/avocados/rss', fruit: 'avocado', source: 'Fruitnet' },
+
+        // FreshPlaza EU — biggest EU fresh produce platform
         { url: 'https://www.freshplaza.com/europe/rss/', fruit: 'all', source: 'FreshPlaza EU' },
-        { url: 'https://www.fruitnet.com/rss', fruit: 'all', source: 'Fruitnet' },
+
+        // Eurofresh Distribution — EU trade magazine
+        { url: 'https://www.eurofresh-distribution.com/feed', fruit: 'all', source: 'Eurofresh' },
     ];
 
     const KEYWORDS = {
@@ -65,10 +75,20 @@ const NewsManager = (() => {
                     const text = ((item.title || '') + ' ' + (item.description || '')).toLowerCase();
                     let fruit = null;
 
-                    if (KEYWORDS.banana.some(k => text.includes(k))) fruit = 'banana';
-                    else if (KEYWORDS.mango.some(k => text.includes(k))) fruit = 'mango';
-                    else if (KEYWORDS.avocado.some(k => text.includes(k))) fruit = 'avocado';
-                    else return;
+                    // For dedicated feeds, use the feed's fruit directly
+                    if (feed.fruit === 'banana') {
+                        fruit = 'banana';
+                    } else if (feed.fruit === 'mango') {
+                        fruit = 'mango';
+                    } else if (feed.fruit === 'avocado') {
+                        fruit = 'avocado';
+                    } else {
+                        // For general feeds, detect fruit from keywords
+                        if (KEYWORDS.banana.some(k => text.includes(k))) fruit = 'banana';
+                        else if (KEYWORDS.mango.some(k => text.includes(k))) fruit = 'mango';
+                        else if (KEYWORDS.avocado.some(k => text.includes(k))) fruit = 'avocado';
+                        else return;
+                    }
 
                     const cleanDesc = (item.description || '')
                         .replace(/<[^>]*>/g, '')

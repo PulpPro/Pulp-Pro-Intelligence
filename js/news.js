@@ -6,16 +6,13 @@ const NewsManager = (() => {
     const PROXY = 'https://corsproxy.io/?url=';
 
     const RSS_FEEDS = [
-        // AGF.nl — confirmed working directly
-        { url: 'https://www.agf.nl/rss.xml/', fruit: 'all', source: 'AGF.nl' },
-
-        // Google News RSS — aggregates Fruitnet, FreshPlaza and more
-        { url: 'https://news.google.com/rss/search?q=banaan+bananen+fruit+handel&hl=nl&gl=NL&ceid=NL:nl', fruit: 'banana', source: 'Google Nieuws' },
-        { url: 'https://news.google.com/rss/search?q=mango+fruit+import+export+europa&hl=nl&gl=NL&ceid=NL:nl', fruit: 'mango', source: 'Google Nieuws' },
-        { url: 'https://news.google.com/rss/search?q=avocado+fruit+import+export+europa&hl=nl&gl=NL&ceid=NL:nl', fruit: 'avocado', source: 'Google Nieuws' },
-        { url: 'https://news.google.com/rss/search?q=banana+fresh+produce+europe+fruitnet&hl=en&gl=NL&ceid=NL:en', fruit: 'banana', source: 'Google News' },
-        { url: 'https://news.google.com/rss/search?q=mango+fresh+produce+europe+fruitnet&hl=en&gl=NL&ceid=NL:en', fruit: 'mango', source: 'Google News' },
-        { url: 'https://news.google.com/rss/search?q=avocado+fresh+produce+europe+fruitnet&hl=en&gl=NL&ceid=NL:en', fruit: 'avocado', source: 'Google News' },
+        { url: 'https://www.agf.nl/rss.xml/', fruit: 'all', source: 'AGF.nl', hasImages: true },
+        { url: 'https://news.google.com/rss/search?q=banaan+bananen+fruit+handel&hl=nl&gl=NL&ceid=NL:nl', fruit: 'banana', source: 'Google Nieuws', hasImages: false },
+        { url: 'https://news.google.com/rss/search?q=mango+fruit+import+export+europa&hl=nl&gl=NL&ceid=NL:nl', fruit: 'mango', source: 'Google Nieuws', hasImages: false },
+        { url: 'https://news.google.com/rss/search?q=avocado+fruit+import+export+europa&hl=nl&gl=NL&ceid=NL:nl', fruit: 'avocado', source: 'Google Nieuws', hasImages: false },
+        { url: 'https://news.google.com/rss/search?q=banana+fresh+produce+europe+fruitnet&hl=en&gl=NL&ceid=NL:en', fruit: 'banana', source: 'Google News', hasImages: false },
+        { url: 'https://news.google.com/rss/search?q=mango+fresh+produce+europe+fruitnet&hl=en&gl=NL&ceid=NL:en', fruit: 'mango', source: 'Google News', hasImages: false },
+        { url: 'https://news.google.com/rss/search?q=avocado+fresh+produce+europe+fruitnet&hl=en&gl=NL&ceid=NL:en', fruit: 'avocado', source: 'Google News', hasImages: false },
     ];
 
     const KEYWORDS = {
@@ -27,6 +24,12 @@ const NewsManager = (() => {
     let allArticles = [];
     let activeFilter = 'all';
     const articleMap = {};
+
+    function getFruitImage(fruit) {
+        if (fruit === 'banana') return 'banana.png';
+        if (fruit === 'mango') return 'mango.png';
+        return 'avocado.png';
+    }
 
     function init() {
         activeFilter = 'all';
@@ -72,13 +75,10 @@ const NewsManager = (() => {
                     const text = ((item.title || '') + ' ' + (item.description || '')).toLowerCase();
                     let fruit = null;
 
-                    if (feed.fruit === 'banana') {
-                        fruit = 'banana';
-                    } else if (feed.fruit === 'mango') {
-                        fruit = 'mango';
-                    } else if (feed.fruit === 'avocado') {
-                        fruit = 'avocado';
-                    } else {
+                    if (feed.fruit === 'banana') fruit = 'banana';
+                    else if (feed.fruit === 'mango') fruit = 'mango';
+                    else if (feed.fruit === 'avocado') fruit = 'avocado';
+                    else {
                         if (KEYWORDS.banana.some(k => text.includes(k))) fruit = 'banana';
                         else if (KEYWORDS.mango.some(k => text.includes(k))) fruit = 'mango';
                         else if (KEYWORDS.avocado.some(k => text.includes(k))) fruit = 'avocado';
@@ -93,7 +93,8 @@ const NewsManager = (() => {
                         title: item.title,
                         description: cleanDesc,
                         link: item.link,
-                        image_url: item.image || null,
+                        image_url: feed.hasImages ? (item.image || null) : null,
+                        fruit_image: feed.hasImages ? null : getFruitImage(fruit),
                         pubDate: item.pubDate,
                         source_id: feed.source,
                         fruit
@@ -215,6 +216,17 @@ const NewsManager = (() => {
         return id;
     }
 
+    function getCardImage(article) {
+        if (article.image_url) {
+            return `background-image:url('${article.image_url}'); background-size:cover; background-position:center;`;
+        }
+        if (article.fruit_image) {
+            return `background-image:url('${article.fruit_image}'); background-size:contain; background-position:center; background-repeat:no-repeat; background-color:rgba(22,22,24,0.98);`;
+        }
+        const colour = getFruitColor(article.fruit);
+        return `background:${colour}10;`;
+    }
+
     function renderNews() {
         const list = document.getElementById('newsArticleList');
         if (!list) return;
@@ -268,12 +280,11 @@ const NewsManager = (() => {
         const id = storeArticle(article);
         const colour = getFruitColor(article.fruit);
         const emoji = getFruitEmoji(article.fruit);
-        const img = article.image_url;
         const time = timeAgo(article.pubDate);
+        const bgStyle = getCardImage(article);
         return `
         <div class="news-desktop-hero" onclick="NewsManager.openArticleById('${id}')">
-            <div class="news-desktop-hero-img" style="${img ? `background-image:url('${img}'); background-size:cover; background-position:center;` : `background:rgba(22,22,24,0.98);`}">
-                ${!img ? `<div style="font-size:5rem;">${emoji}</div>` : ''}
+            <div class="news-desktop-hero-img" style="${bgStyle}">
                 <div class="news-desktop-hero-overlay"></div>
                 <div class="news-cat-badge" style="background:${colour}20; border:1px solid ${colour}50; color:${colour};">${emoji} ${article.source_id}</div>
             </div>
@@ -292,13 +303,11 @@ const NewsManager = (() => {
         const id = storeArticle(article);
         const colour = getFruitColor(article.fruit);
         const emoji = getFruitEmoji(article.fruit);
-        const img = article.image_url;
         const time = timeAgo(article.pubDate);
+        const bgStyle = getCardImage(article);
         return `
         <div class="news-desktop-card" onclick="NewsManager.openArticleById('${id}')">
-            <div class="news-desktop-card-img" style="${img ? `background-image:url('${img}'); background-size:cover; background-position:center;` : `background:${colour}10;`}">
-                ${!img ? `<span style="font-size:2rem;">${emoji}</span>` : ''}
-            </div>
+            <div class="news-desktop-card-img" style="${bgStyle}"></div>
             <div class="news-desktop-card-body">
                 <div class="news-cat" style="color:${colour};">${emoji} ${article.source_id}</div>
                 <div class="news-desktop-card-title">${article.title || ''}</div>
@@ -311,13 +320,11 @@ const NewsManager = (() => {
         const id = storeArticle(article);
         const colour = getFruitColor(article.fruit);
         const emoji = getFruitEmoji(article.fruit);
-        const img = article.image_url;
         const time = timeAgo(article.pubDate);
+        const bgStyle = getCardImage(article);
         return `
         <div class="news-h-card" onclick="NewsManager.openArticleById('${id}')">
-            <div class="news-h-thumb" style="${img ? `background-image:url('${img}'); background-size:cover; background-position:center;` : `background:${colour}10;`}">
-                ${!img ? `<span style="font-size:1.6rem;">${emoji}</span>` : ''}
-            </div>
+            <div class="news-h-thumb" style="${bgStyle}"></div>
             <div class="news-h-content">
                 <div class="news-cat" style="color:${colour};">${emoji} ${article.source_id}</div>
                 <div class="news-h-title">${article.title || ''}</div>
@@ -330,12 +337,11 @@ const NewsManager = (() => {
         const id = storeArticle(article);
         const colour = getFruitColor(article.fruit);
         const emoji = getFruitEmoji(article.fruit);
-        const img = article.image_url;
         const time = timeAgo(article.pubDate);
+        const bgStyle = getCardImage(article);
         return `
         <div class="news-featured-card" onclick="NewsManager.openArticleById('${id}')">
-            <div class="news-featured-img" style="${img ? `background-image:url('${img}'); background-size:cover; background-position:center;` : `background:rgba(22,22,24,0.98);`}">
-                ${!img ? `<div style="font-size:3.5rem;">${emoji}</div>` : ''}
+            <div class="news-featured-img" style="${bgStyle}">
                 <div class="news-featured-overlay"></div>
                 <div class="news-cat-badge" style="background:${colour}20; border:1px solid ${colour}50; color:${colour};">${emoji} ${article.source_id}</div>
             </div>
@@ -354,12 +360,12 @@ const NewsManager = (() => {
         const id = storeArticle(article);
         const colour = getFruitColor(article.fruit);
         const emoji = getFruitEmoji(article.fruit);
-        const img = article.image_url;
         const time = timeAgo(article.pubDate);
-        const tall = img && index % 3 === 0;
+        const tall = article.image_url && index % 3 === 0;
+        const bgStyle = getCardImage(article);
         return `
         <div class="news-masonry-card" onclick="NewsManager.openArticleById('${id}')">
-            ${img ? `<div class="news-masonry-img ${tall ? 'tall' : 'short'}" style="background-image:url('${img}'); background-size:cover; background-position:center;"></div>` : ''}
+            <div class="news-masonry-img ${tall ? 'tall' : 'short'}" style="${bgStyle}"></div>
             <div class="news-masonry-body">
                 <div class="news-cat" style="color:${colour};">${emoji} ${article.source_id}</div>
                 <div class="news-masonry-title">${article.title || ''}</div>
@@ -378,6 +384,7 @@ const NewsManager = (() => {
         const colour = getFruitColor(article.fruit);
         const emoji = getFruitEmoji(article.fruit);
         const img = article.image_url;
+        const fruitImg = article.fruit_image;
         const time = timeAgo(article.pubDate);
         const date = article.pubDate
             ? new Date(article.pubDate).toLocaleDateString('nl-NL', {
@@ -387,12 +394,24 @@ const NewsManager = (() => {
 
         const hero = document.getElementById('articleHero');
         if (hero) {
-            hero.style.backgroundImage = img ? `url('${img}')` : '';
-            hero.style.backgroundSize = 'cover';
-            hero.style.backgroundPosition = 'center';
+            if (img) {
+                hero.style.backgroundImage = `url('${img}')`;
+                hero.style.backgroundSize = 'cover';
+                hero.style.backgroundPosition = 'center';
+            } else if (fruitImg) {
+                hero.style.backgroundImage = `url('${fruitImg}')`;
+                hero.style.backgroundSize = 'contain';
+                hero.style.backgroundPosition = 'center';
+                hero.style.backgroundRepeat = 'no-repeat';
+                hero.style.backgroundColor = 'rgba(22,22,24,0.98)';
+            } else {
+                hero.style.backgroundImage = '';
+                hero.style.backgroundColor = 'rgba(22,22,24,0.98)';
+            }
         }
+
         const emojiEl = document.getElementById('articleEmoji');
-        if (emojiEl) emojiEl.innerText = !img ? emoji : '';
+        if (emojiEl) emojiEl.innerText = (!img && !fruitImg) ? emoji : '';
 
         const badge = document.getElementById('articleCatBadge');
         if (badge) {

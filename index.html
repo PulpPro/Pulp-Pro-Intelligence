@@ -58,7 +58,8 @@
 </div>
 <div id="menu-overlay" onclick="toggleMenu()"></div>
 
-<!-- Fruit Hub — Premium Bento Grid -->
+
+    <!-- Fruit Hub -->
 <div id="fruit-hub" class="nav-view">
 
     <div class="hub-top-bar">
@@ -68,73 +69,79 @@
         </div>
     </div>
 
-    <div class="bento-grid">
+    <div class="home-grid">
 
-        <div class="bento-tile bento-wide tile-banana" onclick="openMiddleHub('banana')">
-            <div class="bento-tile-img" style="background-image:url('banana.png');"></div>
-            <div class="bento-tile-overlay"></div>
-            <div class="bento-tile-dot"></div>
-            <div class="bento-tile-content">
-                <div class="bento-tile-badge badge-live">Active</div>
-                <div class="bento-tile-label">Banana</div>
-                <div class="bento-tile-sub">Age Checker · Colour Scanner · Defects</div>
+        <!-- 1. Banana — wide at top -->
+        <div class="home-card home-card-wide" onclick="openMiddleHub('banana')">
+            <div class="card-gradient" style="background:linear-gradient(135deg, rgba(166,226,46,0.12) 0%, transparent 100%);"></div>
+            <div class="card-content">
+                <div class="card-badge badge-active">● Active</div>
+                <div class="card-title">Banana</div>
+                <div class="card-sub">Age Checker · Colour · Defects</div>
             </div>
+            <div class="card-image card-image-large">🍌</div>
         </div>
 
-        <div class="bento-tile bento-tall tile-defect" onclick="openDefectDetector()">
-            <div class="bento-tile-img" style="background-image:url('rotten.png');"></div>
-            <div class="bento-tile-overlay"></div>
-            <div class="bento-tile-content">
-                <div class="bento-tile-label">Defect Detector</div>
-                <div class="bento-tile-sub">Camera · AI Analysis</div>
+        <!-- 2. Mango -->
+        <div class="home-card" onclick="openMiddleHub('mango')">
+            <div class="card-gradient" style="background:linear-gradient(135deg, rgba(255,140,0,0.1) 0%, transparent 100%);"></div>
+            <div class="card-content">
+                <div class="card-badge badge-soon">Soon</div>
+                <div class="card-title">Mango</div>
             </div>
+            <div class="card-image">🥭</div>
         </div>
 
-        <div class="bento-tile bento-tall tile-colour" onclick="openColourScanner()">
-            <div class="bento-tile-img" style="background-image:url('colour.png');"></div>
-            <div class="bento-tile-overlay"></div>
-            <div class="bento-tile-content">
-                <div class="bento-tile-label">Colour Scanner</div>
-                <div class="bento-tile-sub">Single · Multi · Batch</div>
+        <!-- 3. Avocado -->
+        <div class="home-card" onclick="openMiddleHub('avocado')">
+            <div class="card-gradient" style="background:linear-gradient(135deg, rgba(166,226,46,0.08) 0%, transparent 100%);"></div>
+            <div class="card-content">
+                <div class="card-badge badge-soon">Soon</div>
+                <div class="card-title">Avocado</div>
             </div>
+            <div class="card-image">🥑</div>
         </div>
 
-        <div class="bento-tile bento-normal tile-mango" onclick="openMiddleHub('mango')">
-            <div class="bento-tile-img" style="background-image:url('mango.png');"></div>
-            <div class="bento-tile-overlay"></div>
-            <div class="bento-tile-content">
-                <div class="bento-tile-badge badge-soon">Soon</div>
-                <div class="bento-tile-label">Mango</div>
+        <!-- 4. Defect Detector -->
+        <div class="home-card" onclick="openDefectDetector()">
+            <div class="card-gradient" style="background:linear-gradient(135deg, rgba(255,77,77,0.08) 0%, transparent 100%);"></div>
+            <div class="card-content">
+                <div class="card-title">Defect<br>Detector</div>
+                <div class="card-sub">Camera · AI</div>
             </div>
+            <div class="card-image">🔍</div>
         </div>
 
-        <div class="bento-tile bento-normal tile-avocado" onclick="openMiddleHub('avocado')">
-            <div class="bento-tile-img" style="background-image:url('avocado.png');"></div>
-            <div class="bento-tile-overlay"></div>
-            <div class="bento-tile-content">
-                <div class="bento-tile-badge badge-soon">Soon</div>
-                <div class="bento-tile-label">Avocado</div>
+        <!-- 5. Colour Scanner -->
+        <div class="home-card" onclick="openColourScanner()">
+            <div class="card-gradient" style="background:linear-gradient(135deg, rgba(85,117,221,0.08) 0%, transparent 100%);"></div>
+            <div class="card-content">
+                <div class="card-title">Colour<br>Scanner</div>
+                <div class="card-sub">Single · Batch</div>
             </div>
+            <div class="card-image">🎨</div>
         </div>
 
-        <div class="bento-tile bento-wide tile-news" onclick="openNews()">
-            <div class="bento-tile-img" style="background-image:url('news.png');"></div>
-            <div class="bento-tile-overlay"></div>
-            <div class="bento-tile-content">
-                <div class="bento-tile-label">Fruit Industry News</div>
-                <div class="bento-tile-sub">AGF.nl · FreshPlaza · Google News</div>
+        <!-- 6. News — wide at bottom -->
+        <div class="home-card home-card-wide" onclick="openNews()">
+            <div class="card-gradient" style="background:linear-gradient(135deg, rgba(255,200,117,0.1) 0%, transparent 100%);"></div>
+            <div class="card-content">
+                <div class="card-title">Fruit Industry News</div>
+                <div class="card-sub">AGF.nl · FreshPlaza · Google News</div>
             </div>
+            <div class="card-image card-image-large">📰</div>
         </div>
 
     </div>
 
+    <!-- Favorites -->
     <div id="favorites-section" class="hidden">
         <div class="fav-strip-label">⭐ Favorites</div>
         <div class="fav-grid" id="fav-grid"></div>
     </div>
 
 </div>
-
+    
 <!-- Middle Hub -->
 <div id="middle-hub" class="nav-view hidden">
 <div class="hub-title" id="middleHubTitle">Banana Menu</div>

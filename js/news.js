@@ -45,9 +45,7 @@ const NewsManager = (() => {
 
     function startAutoRefresh() {
         if (autoRefreshTimer) clearInterval(autoRefreshTimer);
-        autoRefreshTimer = setInterval(() => {
-            silentRefresh();
-        }, AUTO_REFRESH_INTERVAL);
+        autoRefreshTimer = setInterval(() => { silentRefresh(); }, AUTO_REFRESH_INTERVAL);
     }
 
     async function silentRefresh() {
@@ -133,7 +131,7 @@ const NewsManager = (() => {
 
                     const cleanDesc = (item.description || '')
                         .replace(/<[^>]*>/g, '')
-                        .substring(0, 300);
+                        .substring(0, 600);
 
                     const fruitForImage = fruit === 'general' ? 'banana' : fruit;
 
@@ -185,9 +183,7 @@ const NewsManager = (() => {
                     image: img
                 };
             });
-        } catch (e) {
-            return [];
-        }
+        } catch (e) { return []; }
     }
 
     function extractImageFromDesc(html) {
@@ -237,6 +233,13 @@ const NewsManager = (() => {
         return '#78c830';
     }
 
+    function getFruitBg(fruit) {
+        if (fruit === 'banana') return 'linear-gradient(135deg, #0d1f0d 0%, #152b10 100%)';
+        if (fruit === 'mango') return 'linear-gradient(135deg, #1f1200 0%, #2e1c00 100%)';
+        if (fruit === 'avocado') return 'linear-gradient(135deg, #0a1a0a 0%, #152515 100%)';
+        return 'linear-gradient(135deg, #0d1f0d 0%, #152b10 100%)';
+    }
+
     function getFruitEmoji(fruit) {
         if (fruit === 'banana') return '🍌';
         if (fruit === 'mango') return '🥭';
@@ -259,21 +262,11 @@ const NewsManager = (() => {
         return id;
     }
 
-    function getBgStyle(article) {
-        if (article.image_url) {
-            return `background-image:url('${article.image_url}'); background-size:cover; background-position:center;`;
-        }
-        if (article.fruit_image) {
-            return `background-image:url('${article.fruit_image}'); background-size:contain; background-position:center; background-repeat:no-repeat; background-color:rgba(22,22,24,0.98);`;
-        }
-        const colour = getFruitColor(article.fruit);
-        return `background:linear-gradient(135deg, ${colour}18, ${colour}08);`;
-    }
-
     function renderNews() {
         const list = document.getElementById('newsArticleList');
         if (!list) return;
         const articles = getFilteredArticles();
+
         if (articles.length === 0) {
             list.innerHTML = `
             <div style="text-align:center; padding:40px 20px; opacity:0.4;">
@@ -282,30 +275,162 @@ const NewsManager = (() => {
             </div>`;
             return;
         }
-        // Same masonry layout for both mobile and desktop — CSS handles columns
-        list.innerHTML = `<div class="news-masonry-grid">${articles.map((a, i) => renderMasonryTile(a, i)).join('')}</div>`;
+
+        const isDesktop = window.innerWidth >= 900;
+
+        if (isDesktop) {
+            renderDesktop(articles, list);
+        } else {
+            renderMobile(articles, list);
+        }
     }
 
-    function renderMasonryTile(article, index) {
+    function renderMobile(articles, list) {
+        const hero = articles[0];
+        const rest = articles.slice(1);
+        list.innerHTML = renderHeroCard(hero) + `<div class="flip-card-list">${rest.map(a => renderFlipCard(a)).join('')}</div>`;
+    }
+
+    function renderDesktop(articles, list) {
+        const hero = articles[0];
+        const top = articles.slice(1, 5);
+        const bottom = articles.slice(5);
+
+        list.innerHTML = `
+        <div class="flip-desktop-grid">
+            <div class="flip-desktop-hero">${renderDesktopHero(hero)}</div>
+            <div class="flip-desktop-side">
+                ${top.map(a => renderDesktopSideCard(a)).join('')}
+            </div>
+        </div>
+        ${bottom.length > 0 ? `<div class="flip-bottom-row">${bottom.map(a => renderBottomCard(a)).join('')}</div>` : ''}`;
+    }
+
+    function renderHeroCard(article) {
         const id = storeArticle(article);
         const colour = getFruitColor(article.fruit);
         const emoji = getFruitEmoji(article.fruit);
         const time = timeAgo(article.pubDate);
-        const bgStyle = getBgStyle(article);
+        const hasImg = !!article.image_url;
 
-        // Vary tile heights — every 5th tile is tall, every 3rd is medium, rest normal
-        let sizeClass = 'tile-normal';
-        if (index % 7 === 0) sizeClass = 'tile-tall';
-        else if (index % 3 === 0) sizeClass = 'tile-medium';
+        const imgSection = hasImg
+            ? `<div class="flip-hero-img" style="background-image:url('${article.image_url}'); background-size:cover; background-position:center;">
+                <div class="flip-hero-overlay"></div>
+                <div class="flip-hero-badge" style="background:${colour}30; border:1px solid ${colour}60; color:${colour};">${emoji} ${article.source_id}</div>
+               </div>`
+            : `<div class="flip-hero-img flip-text-fill" style="${getFruitBg(article.fruit)}">
+                <div class="flip-hero-badge" style="background:${colour}30; border:1px solid ${colour}60; color:${colour};">${emoji} ${article.source_id}</div>
+                <div class="flip-text-fill-title">${article.title || ''}</div>
+               </div>`;
 
         return `
-        <div class="news-tile ${sizeClass}" onclick="NewsManager.openArticleById('${id}')">
-            <div class="news-tile-bg" style="${bgStyle}"></div>
-            <div class="news-tile-overlay"></div>
-            <div class="news-tile-content">
-                <div class="news-tile-badge" style="background:${colour}30; border:1px solid ${colour}60; color:${colour};">${emoji} ${article.source_id}</div>
-                <div class="news-tile-title">${article.title || ''}</div>
-                <div class="news-tile-meta">${time}</div>
+        <div class="flip-hero-card" onclick="NewsManager.openArticleById('${id}')">
+            ${imgSection}
+            <div class="flip-hero-body">
+                <div class="flip-hero-title">${article.title || ''}</div>
+                ${article.description ? `<div class="flip-hero-excerpt">${article.description.substring(0, 120)}...</div>` : ''}
+                <div class="flip-meta"><span class="flip-source" style="color:${colour};">${article.source_id}</span><span class="flip-dot"></span><span class="flip-time">${time}</span></div>
+            </div>
+        </div>`;
+    }
+
+    function renderFlipCard(article) {
+        const id = storeArticle(article);
+        const colour = getFruitColor(article.fruit);
+        const emoji = getFruitEmoji(article.fruit);
+        const time = timeAgo(article.pubDate);
+        const hasImg = !!article.image_url;
+
+        const imgSection = hasImg
+            ? `<div class="flip-card-img" style="background-image:url('${article.image_url}'); background-size:cover; background-position:center;"></div>`
+            : `<div class="flip-card-img flip-text-fill" style="${getFruitBg(article.fruit)}">
+                <div class="flip-text-fill-title">${article.title || ''}</div>
+               </div>`;
+
+        return `
+        <div class="flip-card" onclick="NewsManager.openArticleById('${id}')">
+            ${imgSection}
+            <div class="flip-card-body">
+                <div class="flip-card-badge" style="background:${colour}25; border:1px solid ${colour}50; color:${colour};">${emoji} ${article.source_id}</div>
+                <div class="flip-card-title">${article.title || ''}</div>
+                ${article.description ? `<div class="flip-card-excerpt">${article.description.substring(0, 100)}...</div>` : ''}
+                <div class="flip-meta"><span class="flip-source" style="color:${colour};">${article.source_id}</span><span class="flip-dot"></span><span class="flip-time">${time}</span></div>
+            </div>
+        </div>`;
+    }
+
+    function renderDesktopHero(article) {
+        const id = storeArticle(article);
+        const colour = getFruitColor(article.fruit);
+        const emoji = getFruitEmoji(article.fruit);
+        const time = timeAgo(article.pubDate);
+        const hasImg = !!article.image_url;
+
+        const imgSection = hasImg
+            ? `<div class="flip-dt-hero-img" style="background-image:url('${article.image_url}'); background-size:cover; background-position:center;">
+                <div class="flip-hero-overlay"></div>
+                <div class="flip-hero-badge" style="background:${colour}30; border:1px solid ${colour}60; color:${colour};">${emoji} ${article.source_id}</div>
+               </div>`
+            : `<div class="flip-dt-hero-img flip-text-fill" style="${getFruitBg(article.fruit)}">
+                <div class="flip-hero-badge" style="background:${colour}30; border:1px solid ${colour}60; color:${colour};">${emoji} ${article.source_id}</div>
+                <div class="flip-text-fill-title" style="font-size:1.3rem;">${article.title || ''}</div>
+               </div>`;
+
+        return `
+        <div style="cursor:pointer; height:100%; display:flex; flex-direction:column;" onclick="NewsManager.openArticleById('${id}')">
+            ${imgSection}
+            <div class="flip-dt-hero-body">
+                <div class="flip-dt-hero-title">${article.title || ''}</div>
+                ${article.description ? `<div class="flip-dt-hero-excerpt">${article.description.substring(0, 200)}...</div>` : ''}
+                <div class="flip-meta" style="margin-top:auto;"><span class="flip-source" style="color:${colour};">${article.source_id}</span><span class="flip-dot"></span><span class="flip-time">${time}</span></div>
+            </div>
+        </div>`;
+    }
+
+    function renderDesktopSideCard(article) {
+        const id = storeArticle(article);
+        const colour = getFruitColor(article.fruit);
+        const emoji = getFruitEmoji(article.fruit);
+        const time = timeAgo(article.pubDate);
+        const hasImg = !!article.image_url;
+
+        const imgSection = hasImg
+            ? `<div class="flip-dt-side-img" style="background-image:url('${article.image_url}'); background-size:cover; background-position:center;"></div>`
+            : `<div class="flip-dt-side-img flip-text-fill" style="${getFruitBg(article.fruit)}">
+                <div class="flip-text-fill-title" style="font-size:0.8rem;">${article.title || ''}</div>
+               </div>`;
+
+        return `
+        <div class="flip-dt-side-card" onclick="NewsManager.openArticleById('${id}')">
+            ${imgSection}
+            <div class="flip-dt-side-body">
+                <div class="flip-card-badge" style="background:${colour}25; border:1px solid ${colour}50; color:${colour}; margin-bottom:5px;">${emoji} ${article.source_id}</div>
+                <div class="flip-dt-side-title">${article.title || ''}</div>
+                <div class="flip-meta"><span class="flip-source" style="color:${colour};">${article.source_id}</span><span class="flip-dot"></span><span class="flip-time">${time}</span></div>
+            </div>
+        </div>`;
+    }
+
+    function renderBottomCard(article) {
+        const id = storeArticle(article);
+        const colour = getFruitColor(article.fruit);
+        const emoji = getFruitEmoji(article.fruit);
+        const time = timeAgo(article.pubDate);
+        const hasImg = !!article.image_url;
+
+        const thumb = hasImg
+            ? `<div class="flip-bottom-thumb" style="background-image:url('${article.image_url}'); background-size:cover; background-position:center;"></div>`
+            : `<div class="flip-bottom-thumb flip-text-fill" style="${getFruitBg(article.fruit)}; min-height:70px;">
+                <div style="font-size:0.6rem; font-weight:800; color:#fff; line-height:1.3; padding:8px;">${(article.title || '').substring(0, 60)}...</div>
+               </div>`;
+
+        return `
+        <div class="flip-bottom-card" onclick="NewsManager.openArticleById('${id}')">
+            ${thumb}
+            <div class="flip-bottom-body">
+                <div class="flip-card-badge" style="background:${colour}25; border:1px solid ${colour}50; color:${colour}; margin-bottom:5px;">${emoji}</div>
+                <div class="flip-bottom-title">${article.title || ''}</div>
+                <div class="flip-meta"><span class="flip-time">${time}</span></div>
             </div>
         </div>`;
     }
@@ -320,12 +445,9 @@ const NewsManager = (() => {
         const colour = getFruitColor(article.fruit);
         const emoji = getFruitEmoji(article.fruit);
         const img = article.image_url;
-        const fruitImg = article.fruit_image;
         const time = timeAgo(article.pubDate);
         const date = article.pubDate
-            ? new Date(article.pubDate).toLocaleDateString('nl-NL', {
-                day: '2-digit', month: 'short', year: 'numeric'
-              }).toUpperCase()
+            ? new Date(article.pubDate).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()
             : '';
 
         const hero = document.getElementById('articleHero');
@@ -335,21 +457,14 @@ const NewsManager = (() => {
                 hero.style.backgroundSize = 'cover';
                 hero.style.backgroundPosition = 'center';
                 hero.style.backgroundColor = '';
-                hero.style.backgroundRepeat = '';
-            } else if (fruitImg) {
-                hero.style.backgroundImage = `url('${fruitImg}')`;
-                hero.style.backgroundSize = 'contain';
-                hero.style.backgroundPosition = 'center';
-                hero.style.backgroundRepeat = 'no-repeat';
-                hero.style.backgroundColor = 'rgba(22,22,24,0.98)';
             } else {
                 hero.style.backgroundImage = '';
-                hero.style.backgroundColor = 'rgba(22,22,24,0.98)';
+                hero.style.background = getFruitBg(article.fruit);
             }
         }
 
         const emojiEl = document.getElementById('articleEmoji');
-        if (emojiEl) emojiEl.innerText = (!img && !fruitImg) ? emoji : '';
+        if (emojiEl) emojiEl.innerText = !img ? '' : '';
 
         const badge = document.getElementById('articleCatBadge');
         if (badge) {
@@ -359,10 +474,7 @@ const NewsManager = (() => {
             badge.style.background = colour + '20';
         }
 
-        const setField = (id, val) => {
-            const el = document.getElementById(id);
-            if (el) el.innerText = val;
-        };
+        const setField = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
         setField('articleTitle', article.title || '');
         setField('articleSource', article.source_id || '');
         setField('articleTime', time);

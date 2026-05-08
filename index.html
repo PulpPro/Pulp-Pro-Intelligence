@@ -58,90 +58,41 @@
 </div>
 <div id="menu-overlay" onclick="toggleMenu()"></div>
 
-
-    <!-- Fruit Hub -->
+<!-- Fruit Hub -->
 <div id="fruit-hub" class="nav-view">
-
-    <div class="hub-top-bar">
-        <div class="hub-logo-area">
-            <div class="hub-logo-dot"></div>
-            <div class="hub-logo-text">Pulp Pro</div>
-        </div>
-    </div>
-
-    <div class="home-grid">
-
-        <!-- 1. Banana — wide at top -->
-        <div class="home-card home-card-wide" onclick="openMiddleHub('banana')">
-            <div class="card-gradient" style="background:linear-gradient(135deg, rgba(166,226,46,0.12) 0%, transparent 100%);"></div>
-            <div class="card-content">
-                <div class="card-badge badge-active">● Active</div>
-                <div class="card-title">Banana</div>
-                <div class="card-sub">Age Checker · Colour · Defects</div>
-            </div>
-            <div class="card-image card-image-large">🍌</div>
-        </div>
-
-        <!-- 2. Mango -->
-        <div class="home-card" onclick="openMiddleHub('mango')">
-            <div class="card-gradient" style="background:linear-gradient(135deg, rgba(255,140,0,0.1) 0%, transparent 100%);"></div>
-            <div class="card-content">
-                <div class="card-badge badge-soon">Soon</div>
-                <div class="card-title">Mango</div>
-            </div>
-            <div class="card-image">🥭</div>
-        </div>
-
-        <!-- 3. Avocado -->
-        <div class="home-card" onclick="openMiddleHub('avocado')">
-            <div class="card-gradient" style="background:linear-gradient(135deg, rgba(166,226,46,0.08) 0%, transparent 100%);"></div>
-            <div class="card-content">
-                <div class="card-badge badge-soon">Soon</div>
-                <div class="card-title">Avocado</div>
-            </div>
-            <div class="card-image">🥑</div>
-        </div>
-
-        <!-- 4. Defect Detector -->
-        <div class="home-card" onclick="openDefectDetector()">
-            <div class="card-gradient" style="background:linear-gradient(135deg, rgba(255,77,77,0.08) 0%, transparent 100%);"></div>
-            <div class="card-content">
-                <div class="card-title">Defect<br>Detector</div>
-                <div class="card-sub">Camera · AI</div>
-            </div>
-            <div class="card-image">🔍</div>
-        </div>
-
-        <!-- 5. Colour Scanner -->
-        <div class="home-card" onclick="openColourScanner()">
-            <div class="card-gradient" style="background:linear-gradient(135deg, rgba(85,117,221,0.08) 0%, transparent 100%);"></div>
-            <div class="card-content">
-                <div class="card-title">Colour<br>Scanner</div>
-                <div class="card-sub">Single · Batch</div>
-            </div>
-            <div class="card-image">🎨</div>
-        </div>
-
-        <!-- 6. News — wide at bottom -->
-        <div class="home-card home-card-wide" onclick="openNews()">
-            <div class="card-gradient" style="background:linear-gradient(135deg, rgba(255,200,117,0.1) 0%, transparent 100%);"></div>
-            <div class="card-content">
-                <div class="card-title">Fruit Industry News</div>
-                <div class="card-sub">AGF.nl · FreshPlaza · Google News</div>
-            </div>
-            <div class="card-image card-image-large">📰</div>
-        </div>
-
-    </div>
-
-    <!-- Favorites -->
-    <div id="favorites-section" class="hidden">
-        <div class="fav-strip-label">⭐ Favorites</div>
-        <div class="fav-grid" id="fav-grid"></div>
-    </div>
-
+<div class="hub-title">Select Tool</div>
+<div class="selection-grid">
+<div class="selection-card" onclick="openMiddleHub('banana')">
+<img src="banana.png" alt="Banana">
+<span>Banana</span>
 </div>
-    
+<div class="selection-card" onclick="openMiddleHub('mango')">
+<img src="mango.png" alt="Mango">
+<span>Mango</span>
+</div>
+<div class="selection-card" onclick="openMiddleHub('avocado')">
+<img src="avocado.png" alt="Avocado">
+<span>Avocado</span>
+</div>
+<div class="selection-card" onclick="openDefectDetector()">
+<img src="rotten.png" alt="Defect Detector">
+<span>Defect Detector</span>
+</div>
+<div class="selection-card" onclick="openColourScanner()">
+<img src="colour.png" alt="Colour Scanner">
+<span>Colour Scanner</span>
+</div>
+<div class="selection-card" onclick="openNews()">
+<img src="news.png" alt="News">
+<span>News</span>
+</div>
+</div>
+<div id="favorites-section" class="hidden" style="margin-top:30px;">
+<div style="font-size:0.6rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; margin-bottom:12px;">⭐ Favorites</div>
+<div class="fav-grid" id="fav-grid"></div>
+</div>
+</div>
+
 <!-- Middle Hub -->
 <div id="middle-hub" class="nav-view hidden">
 <div class="hub-title" id="middleHubTitle">Banana Menu</div>
@@ -416,7 +367,6 @@ navigator.serviceWorker.register('sw.js').catch(err => console.log('SW failed', 
 }
 </script>
 
-<!-- Scripts in correct order -->
 <script src="js/translations.js"></script>
 <script src="js/app.js"></script>
 <script src="js/favorites.js"></script>

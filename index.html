@@ -16,39 +16,20 @@
 <link rel="stylesheet" href="css/components.css">
 </head>
 <body>
-
-<!-- Splash Screen -->
 <div id="splash-screen">
 <img src="edited-image.png" class="splash-logo">
 <div class="splash-text">PULP PRO</div>
 </div>
 
-<!-- Update Banner -->
-<div id="updateBanner" class="hidden" style="
-    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-    background: var(--pulp-lime); color: #000; z-index: 99999;
-    padding: 14px 24px; border-radius: 100px;
-    font-weight: 900; font-size: 0.8rem; text-transform: uppercase;
-    letter-spacing: 1px; cursor: pointer; text-align: center;
-    box-shadow: 0 10px 40px rgba(166,226,46,0.4);
-    white-space: nowrap;" onclick="applyUpdate()">
-    ⬆ New Update Available — Tap to Refresh
-</div>
-
-<!-- Menu Trigger -->
 <div id="menu-trigger" onclick="toggleMenu()"><span></span></div>
-
-<!-- Side Drawer -->
 <div id="menu-drawer">
 <div style="text-align:center; margin-bottom:40px;">
 <img src="edited-image.png" style="width:50px; margin-bottom:10px;">
 <div style="font-weight:900; color:var(--pulp-lime);">PULP PRO</div>
 </div>
 <div class="menu-item" onclick="showHub(); toggleMenu();"><span>🏠 Home</span></div>
-<div class="menu-item" onclick="openNews(); toggleMenu();"><span>📰 News</span></div>
 <div class="settings-label">App Settings</div>
 <div class="menu-item" onclick="toggleTheme()"><span>🌓 <span id="themeText">Dark Mode</span></span></div>
-<div class="menu-item" onclick="toggleLanguage()"><span>🌐 <span id="langText">🇳🇱 Nederlands</span></span></div>
 <div class="menu-item" onclick="clearHistory()" style="color:var(--pulp-red);"><span>⚠️ Clear Logs</span></div>
 <div class="menu-item" onclick="sendFeedback()"><span>💬 Send Feedback</span></div>
 <div id="menu-fav-container">
@@ -56,314 +37,85 @@
 <div id="menu-fav-list"></div>
 </div>
 </div>
+
 <div id="menu-overlay" onclick="toggleMenu()"></div>
 
-<!-- Fruit Hub -->
 <div id="fruit-hub" class="nav-view">
 <div class="hub-title">Select Commodity</div>
 <div class="selection-grid-container">
 <div class="selection-grid">
-<div class="selection-card" onclick="openMiddleHub('banana')">
-<img src="banana.png" alt="banana">
-<div class="commodity-name-section"><span>Banana</span></div>
-</div>
-<div class="selection-card" onclick="openMiddleHub('mango')">
-<img src="mango.png" alt="mango">
-<div class="commodity-name-section">
-<span>Mango</span>
-<span style="color:var(--pulp-amber); font-size:0.6rem; letter-spacing:1px;">(SOON)</span>
+<div class="selection-card" onclick="openMiddleHub('banana')"><img src="banana.png" alt="banana"><div class="commodity-name-section"><span>Banana</span></div></div>
+<div class="selection-card" onclick="openMiddleHub('mango')"><img src="mango.png" alt="mango"><div class="commodity-name-section"><span>Mango</span><span style="color:var(--pulp-amber); font-size:0.6rem; letter-spacing:1px;">(SOON)</span></div></div>
+<div class="selection-card" onclick="openMiddleHub('avocado')"><img src="avocado.png" alt="avocado"><div class="commodity-name-section"><span>Avocado</span><span style="color:var(--pulp-amber); font-size:0.6rem; letter-spacing:1px;">(SOON)</span></div></div>
+<div class="selection-card" onclick="openDefectDetector()"><img src="rotten.png" alt="defect"><div class="commodity-name-section"><span>Defect Detector</span></div></div>
 </div>
 </div>
-<div class="selection-card" onclick="openMiddleHub('avocado')">
-<img src="avocado.png" alt="avocado">
-<div class="commodity-name-section">
-<span>Avocado</span>
-<span style="color:var(--pulp-amber); font-size:0.6rem; letter-spacing:1px;">(SOON)</span>
-</div>
-</div>
-<div class="selection-card" onclick="openDefectDetector()">
-<img src="rotten.png" alt="defect">
-<div class="commodity-name-section"><span>Defect Detector</span></div>
-</div>
-<div class="selection-card" onclick="openColourScanner()">
-<img src="colour.png" alt="colour">
-<div class="commodity-name-section"><span>Colour Scanner</span></div>
-</div>
-<div class="selection-card" onclick="openNews()">
-<img src="news.png" alt="news">
-<div class="commodity-name-section"><span>News</span></div>
-</div>
-</div>
-</div>
+
 <div id="favorites-section" class="hidden">
-<div class="hub-title" style="color:var(--pulp-amber); font-size:0.8rem; margin-top:20px;">Saved Favorites</div>
+<div class="hub-title" style="color: var(--pulp-amber); font-size: 0.8rem; margin-top:20px;">Saved Favorites</div>
 <div class="fav-grid" id="fav-grid"></div>
 </div>
 </div>
 
-<!-- Middle Hub -->
 <div id="middle-hub" class="nav-view hidden">
 <div class="hub-title" id="middleHubTitle">Banana Menu</div>
 <div class="list-container">
 <div class="list-btn" id="brandsBtn" onclick="openBrands(activeFruit)">Banana Brands</div>
-<div class="list-btn disabled" id="defectsSoonBtn">Defects (Soon)</div>
-<div class="list-btn disabled" id="ripeningSoonBtn">Ripening (Soon)</div>
+<div class="list-btn disabled">Defects (Soon)</div>
+<div class="list-btn disabled">Ripening (Soon)</div>
 </div>
-<button class="btn-main btn-back" onclick="showHub()" id="backToHubBtn">← Back</button>
+<button class="btn-main" style="margin-top:40px; background:transparent; border:1px solid var(--border-glass); color:var(--text-main);" onclick="showHub()">← Back</button>
 </div>
 
-<!-- Brand Hub -->
 <div id="brand-hub" class="nav-view hidden">
 <div class="hub-title" id="brandHubTitle">Select Brand</div>
 <div class="list-container" id="brandGrid"></div>
-<button class="btn-main btn-back" onclick="openMiddleHub(activeFruit)">← Back</button>
+<button class="btn-main" style="margin-top:40px; background:transparent; border:1px solid var(--border-glass); color:var(--text-main);" onclick="openMiddleHub(activeFruit)">← Back</button>
 </div>
 
-<!-- Defect Hub -->
 <div id="defect-hub" class="nav-view hidden">
 <div class="hub-title">Defect Detector</div>
 <div class="list-container">
-<div class="list-btn" onclick="DefectDetector.selectFruit('banana')">🍌 Banana</div>
-<div class="list-btn" onclick="DefectDetector.selectFruit('mango')">🥭 Mango</div>
-<div class="list-btn" onclick="DefectDetector.selectFruit('avocado')">🥑 Avocado</div>
+<div class="list-btn" onclick="startDefectScan('banana')">Scan Banana</div>
+<div class="list-btn" onclick="startDefectScan('mango')">Scan Mango</div>
+<div class="list-btn" onclick="startDefectScan('avocado')">Scan Avocado</div>
 </div>
-<button class="btn-main btn-back" onclick="showHub()">← Back</button>
-</div>
-
-<!-- Defect Type View -->
-<div id="defect-type-view" class="nav-view hidden">
-<div class="hub-title" id="defectTypeTitle">Banana — Select Type</div>
-<div style="max-width:400px; margin:0 auto;">
-<div class="type-btn" onclick="DefectDetector.selectType('external')">
-<div class="type-btn-title" id="extDefectsBtn">🔍 External Defects</div>
-<div class="type-btn-desc" id="defectTypeDesc_external">Skin, colour, bruising, cuts, mould</div>
-</div>
-<div class="type-btn" onclick="DefectDetector.selectType('internal')">
-<div class="type-btn-title" id="intDefectsBtn">🔬 Internal Defects</div>
-<div class="type-btn-desc" id="defectTypeDesc_internal">Flesh, rot, discolouration, flavour</div>
-</div>
-</div>
-<button class="btn-main btn-back" onclick="DefectDetector.showDefectView('defect-hub')">← Back</button>
-</div>
-
-<!-- Defect Scan View -->
-<div id="defect-scan-view" class="nav-view hidden">
-<div style="max-width:400px; margin:0 auto; position:relative;">
-<i class="bi bi-star-fill fav-toggle" id="defectFavStar" onclick="toggleFavorite('defect')" style="position:absolute; top:0; right:0; z-index:10;"></i>
-<div class="hub-title" id="defectScanTitle" style="padding-right:40px;">Banana — External</div>
-<div class="camera-wrapper">
-<video id="defectVideo" autoplay playsinline muted style="display:none;"></video>
-<canvas id="defectCanvas" style="display:none;"></canvas>
-<div id="cameraPlaceholder" style="display:flex; flex-direction:column; align-items:center; gap:8px; padding:30px; min-height:200px;">
-<i class="bi bi-camera" style="font-size:2rem; opacity:0.25; color:var(--text-main);"></i>
-<span style="font-size:0.55rem; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:var(--text-dim);">Camera not available</span>
-</div>
-<button class="capture-btn" id="defectScanActionBtn" onclick="DefectDetector.doScan()">
-<i class="bi bi-camera-fill"></i> Scan
-</button>
-</div>
-<div style="margin:10px 0 14px; text-align:center;">
-<span id="defectDisclaimer" style="font-size:0.55rem; font-weight:700; color:var(--pulp-red); text-transform:uppercase; letter-spacing:1px; opacity:0.8;">
-⚠️ Camera detection is colour-based. Accuracy may vary. Always verify results manually.
-</span>
-</div>
-<div id="defectScanResults" class="hidden"></div>
-<button class="btn-main btn-back" style="margin-top:10px;" onclick="DefectDetector.showDefectView('defect-type-view'); DefectDetector.stopCamera();">← Back</button>
-</div>
-</div>
-
-<!-- Defect Info View -->
-<div id="defect-info-view" class="nav-view hidden">
-<div class="hub-title" id="defectInfoTitle">Defect Info</div>
-<div style="max-width:400px; margin:0 auto;">
-<div id="defectInfoContent"></div>
-<button class="btn-main btn-back" onclick="DefectDetector.showDefectView('defect-scan-view')" id="backToScanBtn">← Back to Scan</button>
-</div>
-</div>
-
-<!-- Defect Report View -->
-<div id="defect-report-view" class="nav-view hidden">
-<div class="hub-title">Defect Report</div>
-<div style="max-width:400px; margin:0 auto;">
-<div class="report-card">
-<div class="grade-circle" id="reportGradeCircle">
-<div class="grade-letter" id="reportGradeLetter">A</div>
-<div class="grade-sub">Grade</div>
-</div>
-<div class="report-row"><span class="report-key">Fruit</span><span class="report-val" id="reportFruit">—</span></div>
-<div class="report-row"><span class="report-key">Date</span><span class="report-val" id="reportTimestamp">—</span></div>
-<div class="report-row"><span class="report-key">Defects Found</span><span class="report-val" id="reportDefectCount">—</span></div>
-<div class="report-row"><span class="report-key">Severity</span><span class="report-val" id="reportSeverity">—</span></div>
-<div class="report-row"><span class="report-key">Status</span><span class="report-val" id="reportStatus">—</span></div>
-</div>
-<div class="report-defects-title">Defect Breakdown</div>
-<div class="report-defects-scroll" id="reportDefectList"></div>
-<button id="copyReportBtn" onclick="DefectDetector.copyReport ? DefectDetector.copyReport() : null">
-<i class="bi bi-clipboard"></i> Copy Report
-</button>
-<button class="btn-main btn-back" onclick="DefectDetector.showDefectView('defect-hub')">← New Scan</button>
-</div>
-</div>
-
-<!-- Colour Scanner View -->
-<div id="colour-scanner-view" class="nav-view hidden">
-<div style="max-width:400px; margin:0 auto; position:relative;">
-<i class="bi bi-star-fill fav-toggle" id="colourFavStar" onclick="toggleFavorite('colour')" style="position:absolute; top:0; right:0; z-index:10;"></i>
-<div style="text-align:center; margin-bottom:14px;">
-<img src="edited-image.png" style="width:46px; border-radius:14px; margin-bottom:6px;">
-<div style="font-size:0.6rem; font-weight:900; color:var(--pulp-lime); letter-spacing:3px; text-transform:uppercase;">Pulp Pro</div>
-</div>
-<div class="hub-title" id="csScannerTitle">Banana Colour Scanner</div>
-<div style="display:flex; gap:8px; margin-bottom:14px;">
-<div class="cs-toggle-btn active" id="csSingleBtn" onclick="ColourScanner.setScanMode('single')">Single Scan</div>
-<div class="cs-toggle-btn" id="csMultiBtn" onclick="ColourScanner.setScanMode('multi')">Multi Scan</div>
-</div>
-<div id="cs-scanner">
-<div class="camera-wrapper">
-<video id="csVideo" autoplay playsinline muted style="display:none;"></video>
-<canvas id="csCanvas" style="display:none;"></canvas>
-<div id="csPlaceholder" style="display:flex; flex-direction:column; align-items:center; gap:8px; padding:30px; min-height:200px;">
-<i class="bi bi-camera" style="font-size:2rem; opacity:0.25; color:var(--text-main);"></i>
-<span id="csPointCamera" style="font-size:0.55rem; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:var(--text-dim);">Point camera at banana</span>
-</div>
-<div class="cs-crosshair"></div>
-<button class="capture-btn" id="csScanBtn" onclick="ColourScanner.doScan()">Scan</button>
-</div>
-<div id="csOfflineLabel" style="font-size:0.55rem; color:var(--text-dim); text-align:center; text-transform:uppercase; letter-spacing:2px; margin:10px 0; opacity:0.4;">Works offline — no internet needed</div>
-<div id="csMultiList" style="margin-bottom:10px;"></div>
-<button id="csBatchBtn" class="btn-main" style="display:none; margin-bottom:8px;" onclick="ColourScanner.getBatchResult()">Get Batch Result →</button>
-</div>
-<div id="cs-single-result" class="hidden">
-<div class="camera-wrapper" style="margin-bottom:14px; height:180px;">
-<img id="csSinglePhoto" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:25px;">
-<div id="csSinglePhotoPlaceholder" style="display:flex; flex-direction:column; align-items:center; gap:8px; padding:30px;">
-<i class="bi bi-image" style="font-size:2rem; opacity:0.2; color:var(--text-main);"></i>
-<span style="font-size:0.55rem; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:var(--text-dim);">No photo</span>
-</div>
-</div>
-<div class="report-card" style="margin-bottom:12px;">
-<div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
-<div id="csSingleSwatch" style="width:54px; height:54px; border-radius:14px; flex-shrink:0; background:#78c830;"></div>
-<div style="flex:1;">
-<div id="csSingleLabel" style="font-size:1.4rem; font-weight:900; color:var(--text-main); line-height:1;">Color 1</div>
-<div id="csSingleName" style="font-size:0.65rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-top:3px;">Full Green</div>
-<div class="color-bar-wrap" style="margin-top:8px;"><div id="csSingleBar" class="color-bar" style="width:16%; background:#78c830;"></div></div>
-</div>
-</div>
-<div class="report-row"><span class="report-key" id="shelfLifeLabel">Shelf Life</span><span class="report-val" id="csSingleShelf">—</span></div>
-<div class="report-row"><span class="report-key" id="statusLabel2">Status</span><span class="report-val" id="csSingleStatus">—</span></div>
-<div id="csNotePreview" class="hidden" style="background:rgba(166,226,46,0.06); border:1px solid rgba(166,226,46,0.15); border-radius:12px; padding:8px 12px; margin-top:10px;">
-<div style="font-size:0.45rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:2px; margin-bottom:4px;">📝 Note</div>
-<div id="csNotePreviewText" style="font-size:0.68rem; color:var(--text-dim); font-weight:600; line-height:1.4;"></div>
-</div>
-</div>
-<div style="background:var(--glass-card); border:1px solid var(--border-glass); border-radius:20px; padding:14px; margin-bottom:12px;">
-<div style="font-size:0.5rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">📝 Add a note <span style="color:rgba(255,255,255,0.15); font-size:0.45rem;">(optional)</span></div>
-<textarea id="csNoteInput" placeholder="e.g. Supplier X, Pallet 4, Cell 3..." maxlength="120" oninput="ColourScanner.updateNotePreview(this.value)" style="width:100%; background:var(--input-bg); border:1px solid var(--border-glass); border-radius:12px; padding:10px 12px; color:var(--text-main); font-size:0.7rem; font-family:-apple-system,sans-serif; font-weight:600; resize:none; outline:none; min-height:60px;"></textarea>
-<div id="csNoteCharCount" style="font-size:0.45rem; color:rgba(255,255,255,0.2); text-align:right; margin-top:4px; font-weight:700;">0 / 120</div>
-</div>
-<button class="btn-main" style="margin-bottom:8px;" onclick="ColourScanner.shareReport()"><i class="bi bi-share-fill"></i> Share Report Card</button>
-<button id="csCopySingle" class="btn-copy" style="width:100%; justify-content:center; margin-bottom:10px;" onclick="ColourScanner.copySingleResult()"><i class="bi bi-clipboard"></i> Copy Text Report</button>
-<button class="btn-main btn-back" onclick="ColourScanner.resetScanner()" id="csNewScanBtn">← New Scan</button>
-</div>
-<div id="cs-batch-result" class="hidden">
-<div id="csBatchPhotoGrid" style="display:flex; gap:8px; margin-bottom:12px;"></div>
-<div style="background:rgba(166,226,46,0.06); border:1px solid rgba(166,226,46,0.2); border-radius:16px; padding:14px; margin-bottom:12px; display:flex; align-items:center; gap:12px;">
-<div id="csBatchSwatch" style="width:48px; height:48px; border-radius:12px; flex-shrink:0; background:#98c428;"></div>
-<div>
-<div id="batchAvgLabel" style="font-size:0.55rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:2px; margin-bottom:3px;">Batch Average</div>
-<div id="csBatchLabel" style="font-size:0.95rem; font-weight:900; color:var(--text-main);">Color 1.5</div>
-</div>
-</div>
-<div class="report-card" style="margin-bottom:12px;">
-<div id="csBatchBreakdown" style="margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--border-glass);"></div>
-<div class="report-row"><span class="report-key" id="boxesScannedLabel">Boxes Scanned</span><span class="report-val" id="csBatchCount">—</span></div>
-<div class="report-row"><span class="report-key" id="shelfLifeEstLabel">Shelf Life Est.</span><span class="report-val" id="csBatchShelf">—</span></div>
-<div class="report-row"><span class="report-key" id="batchStatusLabel">Batch Status</span><span class="report-val" id="csBatchStatus">—</span></div>
-<div id="csBatchNotePreview" class="hidden" style="background:rgba(166,226,46,0.06); border:1px solid rgba(166,226,46,0.15); border-radius:12px; padding:8px 12px; margin-top:10px;">
-<div style="font-size:0.45rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:2px; margin-bottom:4px;">📝 Note</div>
-<div id="csBatchNotePreviewText" style="font-size:0.68rem; color:var(--text-dim); font-weight:600; line-height:1.4;"></div>
-</div>
-</div>
-<div style="background:var(--glass-card); border:1px solid var(--border-glass); border-radius:20px; padding:14px; margin-bottom:12px;">
-<div style="font-size:0.5rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">📝 Add a note <span style="color:rgba(255,255,255,0.15); font-size:0.45rem;">(optional)</span></div>
-<textarea id="csBatchNoteInput" placeholder="e.g. Supplier X, Pallet 4, Cell 3..." maxlength="120" oninput="ColourScanner.updateBatchNotePreview(this.value)" style="width:100%; background:var(--input-bg); border:1px solid var(--border-glass); border-radius:12px; padding:10px 12px; color:var(--text-main); font-size:0.7rem; font-family:-apple-system,sans-serif; font-weight:600; resize:none; outline:none; min-height:60px;"></textarea>
-<div id="csBatchNoteCharCount" style="font-size:0.45rem; color:rgba(255,255,255,0.2); text-align:right; margin-top:4px; font-weight:700;">0 / 120</div>
-</div>
-<button class="btn-main" style="margin-bottom:8px;" onclick="ColourScanner.shareBatchReport()"><i class="bi bi-share-fill"></i> Share Batch Report</button>
-<button id="csCopyBatch" class="btn-copy" style="width:100%; justify-content:center; margin-bottom:10px;" onclick="ColourScanner.copyBatchResult()"><i class="bi bi-clipboard"></i> Copy Text Report</button>
-<button class="btn-main btn-back" onclick="ColourScanner.resetScanner()" id="csNewBatchScanBtn">← New Scan</button>
-</div>
-<button class="btn-main btn-back" style="margin-top:10px;" onclick="ColourScanner.close()" id="csBackBtn">← Back</button>
-</div>
-</div>
-
-<!-- News View -->
-<div id="news-view" class="nav-view hidden">
-<div style="max-width:1200px; margin:0 auto;">
-<div id="news-list-view">
-<div class="hub-title">📰 Fruit Industry News</div>
-<div id="newsCacheStatus"></div>
-<div class="news-filter-row">
-<div class="news-filter-tab active" data-filter="all" onclick="NewsManager.setFilter('all')">All</div>
-<div class="news-filter-tab" data-filter="banana" onclick="NewsManager.setFilter('banana')">🍌 Banana</div>
-<div class="news-filter-tab" data-filter="mango" onclick="NewsManager.setFilter('mango')">🥭 Mango</div>
-<div class="news-filter-tab" data-filter="avocado" onclick="NewsManager.setFilter('avocado')">🥑 Avocado</div>
-</div>
-<div id="newsArticleList"></div>
-<button class="btn-main btn-back" style="margin-top:10px;" onclick="showHub()">← Back</button>
-</div>
-<div id="news-article-view" class="hidden">
-<div id="articleHero" style="width:100%; height:200px; display:flex; align-items:center; justify-content:center; position:relative; background:rgba(22,22,24,0.98); border-radius:0 0 30px 30px; overflow:hidden; margin-bottom:0;">
-<div id="articleEmoji" style="font-size:4rem;"></div>
-<div class="article-hero-overlay"></div>
-<div class="article-back-btn" onclick="NewsManager.closeArticle()">← Back</div>
-<div id="articleCatBadge" class="news-cat-badge"></div>
-</div>
-<div class="article-body">
-<div class="article-title" id="articleTitle"></div>
-<div class="article-meta">
-<span class="article-source" id="articleSource"></span>
-<div class="news-dot"></div>
-<span class="news-time" id="articleTime"></span>
-<div class="news-dot"></div>
-<span class="news-time" id="articleDate"></span>
-<span class="article-country" id="articleCountry"></span>
-</div>
-<div class="article-summary-label">Summary</div>
-<div class="article-summary-text" id="articleSummary"></div>
-<button class="article-read-btn" id="articleReadBtn">
-<i class="bi bi-box-arrow-up-right"></i> Read Full Article
-</button>
-<button class="article-share-btn" id="articleShareBtn">
-<i class="bi bi-share-fill"></i> Share Article
-</button>
-<div class="article-disclaimer">
-Full article content is available on the publisher's website.<br>
-Pulp Pro is not affiliated with any news source.
-</div>
-</div>
-</div>
-</div>
+<button class="btn-main" style="margin-top:40px; background:transparent; border:1px solid var(--border-glass); color:var(--text-main);" onclick="showHub()">← Back</button>
 </div>
 
 <!-- App Interface (Calculator) -->
-<div class="app-container hidden" id="appInterface">
+<div class="app-container" id="appInterface">
 <div class="app-card" id="appCard">
-<i class="bi bi-star-fill fav-toggle" id="favStar" onclick="toggleFavorite('calculator')"></i>
+<i class="bi bi-star-fill fav-toggle" id="favStar" onclick="toggleFavorite()"></i>
 <img src="edited-image.png" style="width:50px; margin-bottom:10px;">
-<div id="brandName" style="font-size:1.4rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase;">Chiquita</div>
-<div id="commodityLabel" style="font-weight:900; letter-spacing:4px; opacity:0.5; font-size:0.7rem; margin-bottom:25px; color:var(--text-main);">BANANA AGE CHECKER</div>
+<div id="brandName" style="font-size: 1.4rem; font-weight: 900; color: var(--pulp-lime); text-transform: uppercase;">Chiquita</div>
+<div id="commodityLabel" style="font-weight: 900; letter-spacing: 4px; opacity: 0.5; font-size: 0.7rem; margin-bottom: 25px; color:var(--text-main);">BANANA AGE CHECKER</div>
+
+<!-- Scan Mode Toggle -->
+<div style="display:flex; gap:8px; margin-bottom:20px;">
+<div class="scan-toggle-btn active" id="singleCodeBtn" onclick="setScanMode('single')">Single Code</div>
+<div class="scan-toggle-btn" id="batchCodeBtn" onclick="setScanMode('batch')">Batch Scan</div>
+</div>
+
 <div class="input-wrapper"><input type="text" id="codeIn" placeholder="---" maxlength="3" autofocus></div>
+
+<!-- Batch List (hidden by default) -->
+<div id="batchList" style="display:none; background:var(--input-bg); border-radius:20px; margin-bottom:15px; max-height:300px; overflow-y:auto;"></div>
+
+<!-- Batch Report Button (hidden by default) -->
+<button id="batchReportBtn" class="btn-main" style="display:none; margin-bottom:15px;" onclick="showBatchReport()">Get Batch Report →</button>
+
 <button onclick="checkFruit()" class="btn-main" id="calcBtn">Calculate</button>
+
 <div id="resBox" class="result-display hidden">
 <div id="statusLabel" style="font-weight:900;">READY</div>
 <div id="daysValue">--</div>
-<div id="dateText" style="font-size:1.3rem; font-weight:900; margin-top:10px;">-- -- ----</div>
+<div id="dateText" style="font-size: 1.3rem; font-weight: 900; margin-top: 10px;">-- -- ----</div>
 <button class="btn btn-copy" onclick="copyResult()" id="copyBtn"><i class="bi bi-clipboard"></i> COPY</button>
 </div>
-<button class="btn-main btn-back" style="margin-top:25px;" onclick="openBrands(activeFruit)" id="backToBrandsBtn">← Back to Brands</button>
+<button class="btn-main" style="margin-top:25px; background:transparent; border:none; opacity:0.4; font-size:0.6rem; color:var(--text-main);" onclick="openBrands(activeFruit)">← Back to Brands</button>
 </div>
+
 <div id="historySection" class="history-section"><div id="historyList"></div></div>
 </div>
 
@@ -375,17 +127,12 @@ navigator.serviceWorker.register('sw.js').catch(err => console.log('SW failed', 
 }
 </script>
 
-<script src="js/translations.js"></script>
 <script src="js/app.js"></script>
-<script src="js/favorites.js"></script>
-<script src="js/history.js"></script>
-<script src="js/brands.js"></script>
 <script src="js/navigation.js"></script>
 <script src="js/calculator.js"></script>
-<script src="js/defects-data.js"></script>
+<script src="js/history.js"></script>
+<script src="js/favorites.js"></script>
+<script src="js/brands.js"></script>
 <script src="js/defect-detector.js"></script>
-<script src="js/colour-scanner.js"></script>
-<script src="js/news.js"></script>
-
 </body>
 </html>

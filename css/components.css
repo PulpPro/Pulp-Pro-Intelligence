@@ -153,6 +153,34 @@ input {
 .log-timestamp { display: block; opacity: 0.6; font-size: 0.55rem; font-weight: 800; }
 
 /* =============================================
+   SCAN MODE TOGGLE (Age Checker)
+   ============================================= */
+.scan-toggle-btn {
+    flex: 1; padding: 12px 8px; border-radius: 16px;
+    border: 1px solid var(--border-glass); background: var(--glass-card);
+    color: var(--text-dim); font-weight: 900; font-size: 0.7rem;
+    text-transform: uppercase; letter-spacing: 1px; cursor: pointer;
+    transition: 0.2s; text-align: center;
+}
+.scan-toggle-btn.active {
+    border-color: var(--pulp-lime); color: var(--pulp-lime);
+    background: rgba(166, 226, 46, 0.08);
+}
+.scan-toggle-btn:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-main);
+}
+
+/* Batch Item */
+.batch-item {
+    display: flex; justify-content: space-between;
+    align-items: center; padding: 12px 15px;
+    border-bottom: 1px solid var(--border-glass);
+    transition: background 0.2s ease;
+}
+.batch-item:hover { background: rgba(255, 255, 255, 0.03); }
+
+/* =============================================
    DEFECT DETECTOR STYLES
    ============================================= */
 .type-btn {

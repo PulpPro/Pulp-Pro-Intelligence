@@ -27,13 +27,6 @@ const NewsManager = (() => {
     const articleMap = {};
     let autoRefreshTimer = null;
 
-    function getFruitImage(fruit) {
-        if (fruit === 'banana') return 'banana.png';
-        if (fruit === 'mango') return 'mango.png';
-        if (fruit === 'avocado') return 'avocado.png';
-        return 'banana.png';
-    }
-
     function init() {
         activeFilter = 'all';
         document.querySelectorAll('.news-filter-tab').forEach(tab => {
@@ -67,7 +60,6 @@ const NewsManager = (() => {
 
     async function loadNews() {
         showLoading();
-        // Always clear old cache first to prevent stale articles showing
         const cached = getCachedNews();
         if (cached) {
             allArticles = cached.articles;
@@ -111,7 +103,6 @@ const NewsManager = (() => {
                 items.forEach(item => {
                     if (articles.find(a => a.link === item.link)) return;
 
-                    // Skip articles older than MAX_AGE_DAYS
                     if (item.pubDate) {
                         const articleDate = new Date(item.pubDate);
                         if (!isNaN(articleDate) && articleDate < cutoffDate) return;
@@ -155,7 +146,6 @@ const NewsManager = (() => {
                 });
             });
 
-            // Deduplicate
             const seen = new Set();
             const deduped = articles.filter(a => {
                 const key = (a.title || '').toLowerCase().substring(0, 50);
@@ -164,7 +154,6 @@ const NewsManager = (() => {
                 return true;
             });
 
-            // Always sort newest first
             deduped.sort((a, b) => {
                 const dateA = a.pubDate ? new Date(a.pubDate).getTime() : 0;
                 const dateB = b.pubDate ? new Date(b.pubDate).getTime() : 0;
@@ -355,9 +344,7 @@ const NewsManager = (() => {
     function renderDesktop(articles, list) {
         const hero = articles[0];
         const rest = articles.slice(1);
-        const heroHtml = renderDesktopHero(hero);
-        const masonryHtml = `<div class="flip-masonry">${rest.map((a, i) => renderDesktopTile(a, i + 1)).join('')}</div>`;
-        list.innerHTML = heroHtml + masonryHtml;
+        list.innerHTML = renderDesktopHero(hero) + `<div class="flip-masonry">${rest.map((a, i) => renderDesktopTile(a, i + 1)).join('')}</div>`;
     }
 
     function renderDesktopHero(article) {
@@ -441,21 +428,25 @@ const NewsManager = (() => {
             ? new Date(article.pubDate).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()
             : '';
 
-        const hero = document.getElementById('articleHero');
-        if (hero) {
-            if (article.image_url) {
-                hero.style.backgroundImage = `url('${article.image_url}')`;
-                hero.style.backgroundSize = 'cover';
-                hero.style.backgroundPosition = 'center';
-                hero.style.background = '';
-            } else {
-                hero.style.backgroundImage = '';
-                hero.style.background = getFruitBg(article.fruit);
-            }
-        }
+        const heroWrap = document.getElementById('articleHero');
+        const heroImg = document.getElementById('articleHeroImg');
+        const heroBg = document.getElementById('articleHeroBg');
 
-        const emojiEl = document.getElementById('articleEmoji');
-        if (emojiEl) emojiEl.innerText = '';
+        if (article.image_url) {
+            // Show real image — sizes naturally to content
+            heroImg.src = article.image_url;
+            heroImg.style.display = 'block';
+            heroBg.style.display = 'none';
+            heroWrap.classList.add('has-image');
+            heroWrap.classList.remove('has-bg');
+        } else {
+            // No image — show fruit-colored background
+            heroImg.style.display = 'none';
+            heroBg.style.display = 'block';
+            heroBg.style.background = getFruitBg(article.fruit);
+            heroWrap.classList.add('has-bg');
+            heroWrap.classList.remove('has-image');
+        }
 
         const badge = document.getElementById('articleCatBadge');
         if (badge) {

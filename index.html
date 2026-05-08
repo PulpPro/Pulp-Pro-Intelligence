@@ -313,9 +313,12 @@
 <div id="newsArticleList"></div>
 <button class="btn-main btn-back" style="margin-top:10px;" onclick="showHub()">← Back</button>
 </div>
+
+<!-- Article View — hero uses real img tag for natural sizing -->
 <div id="news-article-view" class="hidden">
-<div id="articleHero" style="width:100%; height:200px; display:flex; align-items:center; justify-content:center; position:relative; background:rgba(22,22,24,0.98); border-radius:0 0 30px 30px; overflow:hidden; margin-bottom:0;">
-<div id="articleEmoji" style="font-size:4rem;"></div>
+<div id="articleHero" class="article-hero-wrap">
+<img id="articleHeroImg" src="" alt="" style="display:none;">
+<div id="articleHeroBg" class="article-hero-bg"></div>
 <div class="article-hero-overlay"></div>
 <div class="article-back-btn" onclick="NewsManager.closeArticle()">← Back</div>
 <div id="articleCatBadge" class="news-cat-badge"></div>

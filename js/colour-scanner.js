@@ -5,6 +5,14 @@ const ColourScanner = (() => {
     let capturedPhotos = [];
     const MAX_SCANS = 3;
 
+    // ── AI MODEL STATE ────────────────────────────────────────
+    const AI_MODEL_URL = 'https://raw.githubusercontent.com/PulpPro/banana-brain/main/scanner/banana_brain.json';
+    let aiClassifier = null;
+    let aiMobileNet = null;
+    let aiReady = false;
+    let aiLoading = false;
+
+    // ── COLOUR STAGES (fallback HSV detection) ────────────────
     const COLOUR_STAGES = [
         { value: 1,   hex: '#78c830', name: 'Full Green',     shelfLife: '7+ Days',  status: 'Unripe',   statusColor: '#78c830' },
         { value: 1.5, hex: '#86c82c', name: 'Green+',         shelfLife: '6–7 Days', status: 'Unripe',   statusColor: '#86c82c' },
@@ -19,6 +27,107 @@ const ColourScanner = (() => {
         { value: 6,   hex: '#905818', name: 'Full Brown',      shelfLife: 'Sell Now', status: 'Overripe', statusColor: '#ff5722' }
     ];
 
+    // ── AI MODEL LOADER ───────────────────────────────────────
+    async function loadAIModel() {
+        if (aiReady || aiLoading) return;
+        aiLoading = true;
+        setAIStatus('loading');
+
+        try {
+            // Check if TensorFlow libraries are available
+            if (typeof tf === 'undefined' || typeof knnClassifier === 'undefined' || typeof mobilenet === 'undefined') {
+                setAIStatus('unavailable');
+                aiLoading = false;
+                return;
+            }
+
+            // Fetch trained data from GitHub
+            const res = await fetch(AI_MODEL_URL + '?t=' + Date.now());
+            if (!res.ok) {
+                setAIStatus('unavailable');
+                aiLoading = false;
+                return;
+            }
+
+            const data = await res.json();
+            if (!data || Object.keys(data).length === 0) {
+                setAIStatus('unavailable');
+                aiLoading = false;
+                return;
+            }
+
+            // Load MobileNet
+            aiMobileNet = await mobilenet.load();
+
+            // Load KNN classifier with saved data
+            aiClassifier = knnClassifier.create();
+            const tensorDataset = {};
+            let totalSamples = 0;
+            Object.keys(data).forEach(label => {
+                const flat = data[label];
+                const numSamples = Math.floor(flat.length / 1024);
+                if (numSamples > 0) {
+                    tensorDataset[label] = tf.tensor2d(flat, [numSamples, 1024]);
+                    totalSamples += numSamples;
+                }
+            });
+            aiClassifier.setClassifierDataset(tensorDataset);
+
+            aiReady = true;
+            aiLoading = false;
+            setAIStatus('active', totalSamples);
+        } catch (e) {
+            console.warn('AI model load failed, using classic mode:', e);
+            aiReady = false;
+            aiLoading = false;
+            setAIStatus('unavailable');
+        }
+    }
+
+    function setAIStatus(state, samples) {
+        const el = document.getElementById('csAIStatus');
+        if (!el) return;
+        if (state === 'loading') {
+            el.innerText = '⏳ Loading AI model...';
+            el.style.color = 'var(--pulp-amber)';
+        } else if (state === 'active') {
+            el.innerText = `🤖 AI Model Active (${samples} samples)`;
+            el.style.color = 'var(--pulp-lime)';
+        } else {
+            el.innerText = '📊 Classic Mode';
+            el.style.color = 'rgba(255,255,255,0.3)';
+        }
+    }
+
+    // ── AI SCAN ───────────────────────────────────────────────
+    async function detectStageAI(videoEl) {
+        try {
+            if (!aiReady || !aiClassifier || !aiMobileNet) return null;
+            if (aiClassifier.getNumClasses() === 0) return null;
+
+            const imgTensor = tf.browser.fromPixels(videoEl);
+            const activation = aiMobileNet.infer(imgTensor, 'conv_preds');
+            const result = await aiClassifier.predictClass(activation);
+            imgTensor.dispose();
+            activation.dispose();
+
+            const labelVal = parseFloat(result.label);
+            const confidence = result.confidences[result.label] || 0;
+
+            // Find matching stage
+            const stage = COLOUR_STAGES.find(s => s.value === labelVal)
+                || COLOUR_STAGES.reduce((prev, curr) =>
+                    Math.abs(curr.value - labelVal) < Math.abs(prev.value - labelVal) ? curr : prev
+                );
+
+            return { type: 'single', stage, confidence };
+        } catch (e) {
+            console.warn('AI scan failed, falling back to HSV:', e);
+            return null;
+        }
+    }
+
+    // ── CLASSIC HSV DETECTION (fallback) ─────────────────────
     function hexToRgb(hex) {
         return {
             r: parseInt(hex.slice(1, 3), 16),
@@ -56,6 +165,7 @@ const ColourScanner = (() => {
         return { type: 'single', stage: best.stage };
     }
 
+    // ── CAMERA HELPERS ────────────────────────────────────────
     function capturePhotoDataUrl() {
         const video = document.getElementById('csVideo');
         const canvas = document.getElementById('csCanvas');
@@ -133,6 +243,7 @@ const ColourScanner = (() => {
         if (target) target.classList.remove('hidden');
     }
 
+    // ── INIT ──────────────────────────────────────────────────
     function init() {
         multiScans = [];
         capturedPhotos = [];
@@ -146,6 +257,9 @@ const ColourScanner = (() => {
         showView('cs-scanner');
         updateScanButton();
         renderMultiScans();
+
+        // Load AI model silently in background
+        loadAIModel();
     }
 
     function setScanMode(mode) {
@@ -177,7 +291,8 @@ const ColourScanner = (() => {
         }
     }
 
-    function doScan() {
+    // ── DO SCAN (AI first, HSV fallback) ──────────────────────
+    async function doScan() {
         if (scanMode === 'multi' && multiScans.length >= MAX_SCANS) return;
 
         const btn = document.getElementById('csScanBtn');
@@ -186,36 +301,44 @@ const ColourScanner = (() => {
             btn.disabled = true;
         }
 
-        setTimeout(() => {
-            const photoDataUrl = capturePhotoDataUrl();
-            const rgb = sampleCameraColour();
-            let result;
+        const photoDataUrl = capturePhotoDataUrl();
+        const video = document.getElementById('csVideo');
+        let result = null;
 
+        // Try AI first
+        if (aiReady && video) {
+            result = await detectStageAI(video);
+        }
+
+        // Fall back to classic HSV if AI not available or failed
+        if (!result) {
+            const rgb = sampleCameraColour();
             if (rgb) {
                 result = detectStage(rgb.r, rgb.g, rgb.b);
             } else {
                 const idx = Math.floor(Math.random() * COLOUR_STAGES.length);
                 result = { type: 'single', stage: COLOUR_STAGES[idx] };
             }
+        }
 
-            if (btn) btn.disabled = false;
+        if (btn) btn.disabled = false;
 
-            if (scanMode === 'single') {
-                capturedPhotos = [photoDataUrl];
-                showSingleResult(result);
-            } else {
-                capturedPhotos.push(photoDataUrl);
-                multiScans.push(result);
-                renderMultiScans();
-                updateScanButton();
-                if (multiScans.length >= 1) {
-                    const batchBtn = document.getElementById('csBatchBtn');
-                    if (batchBtn) batchBtn.style.display = 'block';
-                }
+        if (scanMode === 'single') {
+            capturedPhotos = [photoDataUrl];
+            showSingleResult(result);
+        } else {
+            capturedPhotos.push(photoDataUrl);
+            multiScans.push(result);
+            renderMultiScans();
+            updateScanButton();
+            if (multiScans.length >= 1) {
+                const batchBtn = document.getElementById('csBatchBtn');
+                if (batchBtn) batchBtn.style.display = 'block';
             }
-        }, 600);
+        }
     }
 
+    // ── RESULT HELPERS ────────────────────────────────────────
     function getResultColour(result) {
         if (result.type === 'single') return result.stage.hex;
         const c1 = hexToRgb(result.lower.hex);
@@ -251,6 +374,7 @@ const ColourScanner = (() => {
         return { label: riper.status, color: riper.statusColor };
     }
 
+    // ── SHOW SINGLE RESULT ────────────────────────────────────
     function showSingleResult(result) {
         stopCamera();
         const colour = getResultColour(result);
@@ -282,6 +406,17 @@ const ColourScanner = (() => {
             document.getElementById('csSinglePhotoPlaceholder').style.display = 'none';
         }
 
+        // Show AI confidence if available
+        const confidenceEl = document.getElementById('csAIConfidence');
+        if (confidenceEl) {
+            if (result.confidence !== undefined) {
+                confidenceEl.innerText = `🤖 AI Confidence: ${Math.round(result.confidence * 100)}%`;
+                confidenceEl.style.display = 'block';
+            } else {
+                confidenceEl.style.display = 'none';
+            }
+        }
+
         // Reset note
         const noteInput = document.getElementById('csNoteInput');
         if (noteInput) noteInput.value = '';
@@ -290,6 +425,7 @@ const ColourScanner = (() => {
         showView('cs-single-result');
     }
 
+    // ── MULTI SCAN RENDER ─────────────────────────────────────
     function renderMultiScans() {
         const container = document.getElementById('csMultiList');
         if (!container) return;
@@ -323,6 +459,7 @@ const ColourScanner = (() => {
         container.innerHTML = html;
     }
 
+    // ── BATCH RESULT ──────────────────────────────────────────
     function getBatchResult() {
         if (multiScans.length === 0) return;
         stopCamera();
@@ -360,11 +497,9 @@ const ColourScanner = (() => {
         const batchCount = document.getElementById('csBatchCount');
         if (batchCount) batchCount.innerText = multiScans.length + ' of ' + MAX_SCANS;
 
-        // Render batch photo grid
         renderBatchPhotos();
         renderBatchBreakdown();
 
-        // Reset note
         const noteInput = document.getElementById('csBatchNoteInput');
         if (noteInput) noteInput.value = '';
         updateBatchNotePreview('');
@@ -410,7 +545,7 @@ const ColourScanner = (() => {
         }).join('');
     }
 
-    // Note preview update for single scan
+    // ── NOTE HELPERS ──────────────────────────────────────────
     function updateNotePreview(val) {
         const preview = document.getElementById('csNotePreview');
         const previewText = document.getElementById('csNotePreviewText');
@@ -426,7 +561,6 @@ const ColourScanner = (() => {
         }
     }
 
-    // Note preview update for batch scan
     function updateBatchNotePreview(val) {
         const preview = document.getElementById('csBatchNotePreview');
         const previewText = document.getElementById('csBatchNotePreviewText');
@@ -453,7 +587,7 @@ const ColourScanner = (() => {
             + ' · ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
-    // Share single result as image
+    // ── SHARE / COPY ──────────────────────────────────────────
     async function shareReport() {
         const label = document.getElementById('csSingleLabel')?.innerText || '';
         const shelf = document.getElementById('csSingleShelf')?.innerText || '';
@@ -470,7 +604,6 @@ const ColourScanner = (() => {
         shareCanvas(canvas, 'pulp-pro-colour-scan.png');
     }
 
-    // Share batch result as image
     async function shareBatchReport() {
         const label = document.getElementById('csBatchLabel')?.innerText || '';
         const shelf = document.getElementById('csBatchShelf')?.innerText || '';
@@ -497,11 +630,9 @@ const ColourScanner = (() => {
         canvas.width = W;
         canvas.height = H;
 
-        // Background
         ctx.fillStyle = '#0a0a0a';
         ctx.fillRect(0, 0, W, H);
 
-        // Photo
         if (photo) {
             const img = await loadImage(photo);
             ctx.save();
@@ -509,7 +640,6 @@ const ColourScanner = (() => {
             ctx.clip();
             ctx.drawImage(img, 40, 40, W - 80, 400);
             ctx.restore();
-            // Overlay gradient
             const grad = ctx.createLinearGradient(0, 300, 0, 440);
             grad.addColorStop(0, 'rgba(10,10,10,0)');
             grad.addColorStop(1, 'rgba(10,10,10,0.95)');
@@ -521,22 +651,18 @@ const ColourScanner = (() => {
             ctx.fill();
         }
 
-        // Colour swatch
         ctx.fillStyle = colour;
         roundRect(ctx, 60, 460, 100, 100, 20);
         ctx.fill();
 
-        // Label
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 52px -apple-system, sans-serif';
         ctx.fillText(label, 180, 520);
 
-        // Bar background
         ctx.fillStyle = 'rgba(255,255,255,0.08)';
         roundRect(ctx, 60, 580, W - 120, 12, 6);
         ctx.fill();
 
-        // Data rows
         const rows = [
             ['Shelf Life', shelf],
             ['Status', status],
@@ -553,7 +679,6 @@ const ColourScanner = (() => {
             y += 50;
         });
 
-        // Note
         if (note) {
             ctx.fillStyle = 'rgba(166,226,46,0.1)';
             roundRect(ctx, 60, y + 10, W - 120, 60, 16);
@@ -564,7 +689,6 @@ const ColourScanner = (() => {
             y += 80;
         }
 
-        // Logo bar
         ctx.fillStyle = 'rgba(255,255,255,0.06)';
         ctx.fillRect(0, H - 80, W, 80);
         ctx.fillStyle = '#a6e22e';
@@ -590,7 +714,6 @@ const ColourScanner = (() => {
         ctx.fillStyle = '#0a0a0a';
         ctx.fillRect(0, 0, W, H);
 
-        // Title
         ctx.fillStyle = '#a6e22e';
         ctx.font = 'bold 36px -apple-system, sans-serif';
         ctx.fillText('BATCH COLOUR SCAN', 60, 70);
@@ -600,7 +723,6 @@ const ColourScanner = (() => {
 
         let y = 150;
 
-        // Each box scan
         for (let i = 0; i < scans.length; i++) {
             const scan = scans[i];
             const photo = photos[i];
@@ -640,12 +762,10 @@ const ColourScanner = (() => {
             y += photoH + 120;
         }
 
-        // Divider
         ctx.fillStyle = 'rgba(166,226,46,0.2)';
         ctx.fillRect(40, y, W - 80, 2);
         y += 20;
 
-        // Batch average
         ctx.fillStyle = '#a6e22e';
         ctx.font = 'bold 28px -apple-system, sans-serif';
         ctx.fillText('BATCH AVERAGE', 60, y + 40);
@@ -674,7 +794,6 @@ const ColourScanner = (() => {
             by += 46;
         });
 
-        // Note
         if (note) {
             ctx.fillStyle = 'rgba(166,226,46,0.1)';
             roundRect(ctx, 60, by + 10, W - 120, 60, 16);
@@ -685,7 +804,6 @@ const ColourScanner = (() => {
             by += 80;
         }
 
-        // Logo bar
         ctx.fillStyle = 'rgba(255,255,255,0.06)';
         ctx.fillRect(0, H - 80, W, 80);
         ctx.fillStyle = '#a6e22e';

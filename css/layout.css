@@ -88,41 +88,59 @@
     margin-bottom: 30px; color: var(--pulp-lime);
 }
 
-/* Selection Grid — 2 columns, scrollable */
-.selection-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    max-width: 400px;
-    margin: 0 auto;
+/* Selection Grid Container */
+.selection-grid-container {
+    display: flex;
+    justify-content: center;
     padding: 0 20px;
 }
 
+/* Selection Grid */
+.selection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 20px;
+    max-width: 600px;
+    width: 100%;
+}
+
+/* Selection Card */
 .selection-card {
     background: var(--glass-card);
     border: 1px solid var(--border-glass);
-    padding: 20px;
+    padding: 25px 15px;
     border-radius: 25px;
     cursor: pointer;
     transition: 0.3s;
     text-align: center;
     box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
+
 .selection-card:hover {
     border-color: var(--pulp-lime);
     background: rgba(166, 226, 46, 0.05);
     transform: translateY(-3px);
 }
+
 .selection-card img {
-    width: 70px;
-    height: 70px;
+    width: 80px;
+    height: 80px;
     object-fit: contain;
-    margin-bottom: 12px;
+    margin-bottom: 15px;
 }
-.selection-card span {
-    display: block;
+
+.commodity-name-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.commodity-name-section span {
     font-weight: 900;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 1px;
     color: var(--text-main);

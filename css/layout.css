@@ -88,6 +88,46 @@
     margin-bottom: 30px; color: var(--pulp-lime);
 }
 
+/* Selection Grid — 2 columns, scrollable */
+.selection-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.selection-card {
+    background: var(--glass-card);
+    border: 1px solid var(--border-glass);
+    padding: 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: 0.3s;
+    text-align: center;
+    box-shadow: var(--shadow);
+}
+.selection-card:hover {
+    border-color: var(--pulp-lime);
+    background: rgba(166, 226, 46, 0.05);
+    transform: translateY(-3px);
+}
+.selection-card img {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+    margin-bottom: 12px;
+}
+.selection-card span {
+    display: block;
+    font-weight: 900;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-main);
+}
+
 /* App Container */
 .app-container {
     display: none; flex-direction: column;
@@ -112,196 +152,11 @@
 /* History */
 .history-section { margin-top: 30px; text-align: left; display: none; }
 
-/* =============================================
-   HOME SCREEN — PREMIUM CLEAN CARDS
-   ============================================= */
-
-#fruit-hub {
-    max-width: 600px;
-    width: 100%;
-    margin: 0 auto;
-    padding: 16px 16px 100px;
-    text-align: left;
-    opacity: 0;
-    transition: 0.5s;
-}
-.loaded #fruit-hub { opacity: 1; }
-
-/* Top bar */
-.hub-top-bar {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    margin-bottom: 18px;
-}
-.hub-logo-area {
-    display: flex; align-items: center; gap: 8px;
-}
-.hub-logo-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%; background: var(--pulp-lime);
-    box-shadow: 0 0 8px rgba(166,226,46,0.5);
-}
-.hub-logo-text {
-    font-size: 0.65rem; font-weight: 900;
-    color: var(--pulp-lime); letter-spacing: 3px;
-    text-transform: uppercase;
-}
-
-/* Card grid */
-.home-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-}
-
-/* Base card */
-.home-card {
-    background: var(--glass-card);
-    border: 1px solid var(--border-glass);
-    border-radius: 20px;
-    padding: 18px 16px;
-    cursor: pointer;
-    transition: 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    min-height: 100px;
-    position: relative;
-    overflow: hidden;
-}
-.home-card:hover {
-    border-color: var(--pulp-lime);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-    transform: translateY(-1px);
-}
-
-/* Wide cards */
-.home-card-wide {
-    grid-column: span 2;
-    min-height: 110px;
-}
-
-/* Card gradient backgrounds */
-.card-gradient {
-    position: absolute;
-    inset: 0;
-    opacity: 0.35;
-    z-index: 0;
-}
-
-/* Card content */
-.card-content {
-    position: relative;
-    z-index: 2;
-    flex: 1;
-}
-.card-badge {
-    font-size: 0.4rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    padding: 3px 8px;
-    border-radius: 8px;
-    display: inline-block;
-    margin-bottom: 6px;
-}
-.badge-active {
-    background: rgba(166,226,46,0.15);
-    color: var(--pulp-lime);
-    border: 1px solid rgba(166,226,46,0.3);
-}
-.badge-soon {
-    background: rgba(255,140,0,0.15);
-    color: var(--pulp-amber);
-    border: 1px solid rgba(255,140,0,0.3);
-}
-.card-title {
-    font-size: 0.85rem;
-    font-weight: 900;
-    color: var(--text-main);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    line-height: 1.2;
-    margin-bottom: 3px;
-}
-.card-sub {
-    font-size: 0.5rem;
-    color: var(--text-dim);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-/* Card image/emoji */
-.card-image {
-    width: 65px;
-    height: 65px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 3.2rem;
-    flex-shrink: 0;
-    margin-left: 12px;
-    position: relative;
-    z-index: 2;
-}
-.card-image-large {
-    width: 85px;
-    height: 85px;
-    font-size: 4.5rem;
-}
-
-/* Favorites */
-#favorites-section { margin-top: 12px; }
-.fav-strip-label {
-    font-size: 0.5rem; font-weight: 900;
-    color: rgba(255,255,255,0.25);
-    text-transform: uppercase; letter-spacing: 2px;
-    margin-bottom: 8px; padding: 0 2px;
-}
+/* Favorites grid */
 .fav-grid {
-    display: flex; gap: 8px;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-}
-.fav-grid::-webkit-scrollbar { display: none; }
-.fav-card {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 100px; padding: 7px 14px;
-    white-space: nowrap; flex-shrink: 0;
-    font-size: 0.58rem; font-weight: 800;
-    color: rgba(255,255,255,0.4);
-    text-transform: uppercase; letter-spacing: 1px;
-    cursor: pointer; transition: 0.2s;
-    display: inline-flex; align-items: center;
-    gap: 6px; box-shadow: none;
-    min-width: unset;
-}
-.fav-card:hover {
-    border-color: rgba(166,226,46,0.4);
-    color: var(--pulp-lime);
-    background: rgba(166,226,46,0.06);
-}
-.fav-card i { font-size: 0.9rem; }
-.fav-card span { color: inherit; }
-.fav-card small { display: none; }
-
-/* Desktop wider */
-@media (min-width: 600px) {
-    #fruit-hub { max-width: 700px; }
-    .home-grid { gap: 14px; }
-    .home-card { min-height: 110px; padding: 20px 18px; }
-    .home-card-wide { min-height: 120px; }
-    .card-title { font-size: 0.9rem; }
-    .card-image { width: 70px; height: 70px; font-size: 3.5rem; }
-    .card-image-large { width: 90px; height: 90px; font-size: 4.8rem; }
-}
-
-@media (min-width: 900px) {
-    #fruit-hub { max-width: 900px; }
-    .home-grid { grid-template-columns: repeat(3, 1fr); }
-    .home-card-wide { grid-column: span 3; }
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    padding: 10px 0;
 }

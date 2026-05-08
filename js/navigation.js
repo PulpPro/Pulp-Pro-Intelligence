@@ -1,109 +1,115 @@
-// Global State
+// Navigation Module
+// Handles navigation between different hubs in the app
+
 let activeFruit = null;
 let activeBrand = null;
 
-// Helper — hide all views
-function hideAllViews() {
-    document.getElementById('fruit-hub').classList.add('hidden');
+// Show fruit hub
+function showHub() {
+    document.getElementById('fruit-hub').classList.remove('hidden');
     document.getElementById('middle-hub').classList.add('hidden');
     document.getElementById('brand-hub').classList.add('hidden');
-    document.getElementById('defect-hub').classList.add('hidden');
-    document.getElementById('defect-type-view').classList.add('hidden');
-    document.getElementById('defect-scan-view').classList.add('hidden');
-    document.getElementById('defect-report-view').classList.add('hidden');
-    document.getElementById('defect-info-view').classList.add('hidden');
-    document.getElementById('colour-scanner-view').classList.add('hidden');
-    document.getElementById('news-view').classList.add('hidden');
     document.getElementById('appInterface').classList.add('hidden');
+    document.getElementById('defect-detector-hub').classList.add('hidden');
 }
 
-// Show Home Hub
-function showHub() {
-    hideAllViews();
-    document.getElementById('fruit-hub').classList.remove('hidden');
-    renderFavorites();
-}
-
-// Open Middle Hub
+// Open middle hub for fruit selection
 function openMiddleHub(fruit) {
     activeFruit = fruit;
-    const fruitNames = { banana:'Banana', mango:'Mango', avocado:'Avocado' };
-    const name = fruitNames[fruit] || fruit;
-    document.getElementById('middleHubTitle').innerText = name + ' ' + t('menu');
-    document.getElementById('brandsBtn').innerText = name + ' ' + t('brands');
-    hideAllViews();
+    const fruitNames = {
+        'banana': 'Banana',
+        'mango': 'Mango',
+        'avocado': 'Avocado'
+    };
+    
+    document.getElementById('middleHubTitle').innerText = fruitNames[fruit] + ' Menu';
+    document.getElementById('fruit-hub').classList.add('hidden');
     document.getElementById('middle-hub').classList.remove('hidden');
+    document.getElementById('appInterface').classList.add('hidden');
+    document.getElementById('defect-detector-hub').classList.add('hidden');
 }
 
-// Open Brand Hub
+// Open brands hub
 function openBrands(fruit) {
     activeFruit = fruit;
-    const fruitNames = { banana:'Banana', mango:'Mango', avocado:'Avocado' };
-    document.getElementById('brandHubTitle').innerText = t('selectBrand') + ' — ' + (fruitNames[fruit] || fruit);
-    hideAllViews();
+    const fruitNames = {
+        'banana': 'Banana',
+        'mango': 'Mango',
+        'avocado': 'Avocado'
+    };
+    
+    document.getElementById('brandHubTitle').innerText = 'Select ' + fruitNames[fruit] + ' Brand';
+    document.getElementById('fruit-hub').classList.add('hidden');
+    document.getElementById('middle-hub').classList.add('hidden');
     document.getElementById('brand-hub').classList.remove('hidden');
+    document.getElementById('appInterface').classList.add('hidden');
+    document.getElementById('defect-detector-hub').classList.add('hidden');
+    
     renderBrands(fruit);
 }
 
-// Select Brand — open calculator
+// Select brand and show calculator
 function selectBrand(brand) {
     activeBrand = brand;
+    const fruitNames = {
+        'banana': 'Banana',
+        'mango': 'Mango',
+        'avocado': 'Avocado'
+    };
     document.getElementById('brandName').innerText = brand;
-    document.getElementById('commodityLabel').innerText = (activeFruit || 'fruit').toUpperCase() + ' ' + t('bananaAgeChecker');
-    document.getElementById('codeIn').value = '';
-    document.getElementById('resBox').classList.add('hidden');
-    hideAllViews();
+    document.getElementById('commodityLabel').innerText = fruitNames[activeFruit] + ' AGE CHECKER';
+    document.getElementById('fruit-hub').classList.add('hidden');
+    document.getElementById('middle-hub').classList.add('hidden');
+    document.getElementById('brand-hub').classList.add('hidden');
     document.getElementById('appInterface').classList.remove('hidden');
-    updateFavoriteUI();
-    renderHistory();
-    setTimeout(() => document.getElementById('codeIn').focus(), 100);
+    document.getElementById('defect-detector-hub').classList.add('hidden');
 }
 
-// Open Defect Detector Hub
+// Open defect detector hub
 function openDefectDetector() {
-    hideAllViews();
-    document.getElementById('defect-hub').classList.remove('hidden');
+    document.getElementById('fruit-hub').classList.add('hidden');
+    document.getElementById('middle-hub').classList.add('hidden');
+    document.getElementById('brand-hub').classList.add('hidden');
+    document.getElementById('appInterface').classList.add('hidden');
+    document.getElementById('defect-detector-hub').classList.remove('hidden');
 }
 
-// Open Defect Detector directly from favorites
-function openDefectDetectorDirect(fruit, type) {
-    window.defectActiveFruit = fruit;
-    window.defectActiveType = type;
-    hideAllViews();
-    document.getElementById('defect-scan-view').classList.remove('hidden');
-    const fruitNames = { banana:'Banana', mango:'Mango', avocado:'Avocado' };
-    const typeLabel = type === 'external' ? t('external') : t('internal');
-    document.getElementById('defectScanTitle').innerText = fruitNames[fruit] + ' — ' + typeLabel;
-    updateDefectFavoriteUI();
-    DefectDetector.selectType(type);
+// Open specific fruit defect scanner
+function openDefectScanner(fruit) {
+    const fruitNames = {
+        'banana': 'Banana',
+        'mango': 'Mango',
+        'avocado': 'Avocado'
+    };
+    
+    activeFruit = fruit;
+    document.getElementById('defectScannerTitle').innerText = 'Scan ' + fruitNames[fruit] + ' for Defects';
+    document.getElementById('defect-detector-hub').classList.add('hidden');
+    document.getElementById('defect-scanner-view').classList.remove('hidden');
 }
 
-// Open Colour Scanner
-function openColourScanner() {
-    hideAllViews();
-    document.getElementById('colour-scanner-view').classList.remove('hidden');
-    updateColourFavoriteUI();
-    ColourScanner.init();
-    ColourScanner.setScanMode('single');
+// Back from defect scanner to defect hub
+function backToDefectHub() {
+    document.getElementById('defect-scanner-view').classList.add('hidden');
+    document.getElementById('defect-detector-hub').classList.remove('hidden');
 }
 
-// Open News
-function openNews() {
-    hideAllViews();
-    document.getElementById('news-view').classList.remove('hidden');
-    NewsManager.init();
+// Back from defect hub to main fruit hub
+function backToFruitHub() {
+    document.getElementById('defect-detector-hub').classList.add('hidden');
+    document.getElementById('fruit-hub').classList.remove('hidden');
 }
 
-// Toggle Menu Drawer
+// Toggle menu drawer
 function toggleMenu() {
-    document.getElementById('menu-drawer').classList.toggle('open');
-    document.getElementById('menu-overlay').classList.toggle('open');
+    document.getElementById('menu-drawer').classList.toggle('hidden');
+    document.getElementById('menu-overlay').classList.toggle('hidden');
 }
 
-// Toggle Theme
+// Toggle theme
 function toggleTheme() {
     document.body.classList.toggle('light-theme');
-    const isLight = document.body.classList.contains('light-theme');
-    document.getElementById('themeText').innerText = isLight ? t('lightMode') : t('darkMode');
-    localStorage.setItem('pulpTheme', isLight ? 'light' : 'dark');
+    const themeText = document.getElementById('themeText');
+    themeText.innerText = document.body.classList.contains('light-theme') ? 'Light Mode' : 'Dark Mode';
+    localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
 }

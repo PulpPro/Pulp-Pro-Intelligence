@@ -3,6 +3,7 @@ const NewsManager = (() => {
     const CACHE_TIME_KEY = 'pulpProNewsTime';
     const CACHE_DURATION = 6 * 60 * 60 * 1000;
     const AUTO_REFRESH_INTERVAL = 30 * 60 * 1000;
+    const MAX_AGE_DAYS = 30;
     const PROXY = 'https://corsproxy.io/?url=';
 
     const RSS_FEEDS = [
@@ -66,6 +67,7 @@ const NewsManager = (() => {
 
     async function loadNews() {
         showLoading();
+        // Always clear old cache first to prevent stale articles showing
         const cached = getCachedNews();
         if (cached) {
             allArticles = cached.articles;
@@ -97,6 +99,8 @@ const NewsManager = (() => {
             );
 
             const articles = [];
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - MAX_AGE_DAYS);
 
             results.forEach(result => {
                 if (result.status !== 'fulfilled') return;
@@ -106,6 +110,12 @@ const NewsManager = (() => {
                 const items = parseRSS(xml);
                 items.forEach(item => {
                     if (articles.find(a => a.link === item.link)) return;
+
+                    // Skip articles older than MAX_AGE_DAYS
+                    if (item.pubDate) {
+                        const articleDate = new Date(item.pubDate);
+                        if (!isNaN(articleDate) && articleDate < cutoffDate) return;
+                    }
 
                     const text = ((item.title || '') + ' ' + (item.description || '')).toLowerCase();
                     let fruit = null;
@@ -128,13 +138,10 @@ const NewsManager = (() => {
                         else return;
                     }
 
-                    // Pull maximum text — no truncation
                     const cleanDesc = (item.description || '')
                         .replace(/<[^>]*>/g, '')
                         .replace(/\s+/g, ' ')
                         .trim();
-
-                    const fruitForImage = fruit === 'general' ? 'banana' : fruit;
 
                     articles.push({
                         title: item.title,
@@ -148,6 +155,7 @@ const NewsManager = (() => {
                 });
             });
 
+            // Deduplicate
             const seen = new Set();
             const deduped = articles.filter(a => {
                 const key = (a.title || '').toLowerCase().substring(0, 50);
@@ -156,7 +164,13 @@ const NewsManager = (() => {
                 return true;
             });
 
-            deduped.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+            // Always sort newest first
+            deduped.sort((a, b) => {
+                const dateA = a.pubDate ? new Date(a.pubDate).getTime() : 0;
+                const dateB = b.pubDate ? new Date(b.pubDate).getTime() : 0;
+                return dateB - dateA;
+            });
+
             return deduped;
         } catch (err) {
             console.error('News fetch failed:', err);
@@ -262,7 +276,6 @@ const NewsManager = (() => {
         return id;
     }
 
-    // Determine tile size based on content
     function getTileSize(article, index) {
         if (index === 0) return 'hero';
         if (article.image_url) {
@@ -311,7 +324,6 @@ const NewsManager = (() => {
         const badge = `<div class="flip-badge" style="background:${colour}25; border:1px solid ${colour}50; color:${colour};">${emoji} ${article.source_id}</div>`;
 
         if (article.image_url) {
-            // Card with real image
             const imgHeight = size === 'hero' ? '220px' : size === 'large' ? '180px' : '140px';
             return `
             <div class="flip-mobile-card" onclick="NewsManager.openArticleById('${id}')">
@@ -326,14 +338,13 @@ const NewsManager = (() => {
                 </div>
             </div>`;
         } else {
-            // Text fill card
             const minHeight = size === 'large-text' ? '160px' : size === 'medium-text' ? '120px' : '90px';
-            const titleSize = size === 'large-text' ? 'flip-title-lg' : 'flip-title-md';
+            const titleClass = size === 'large-text' ? 'flip-title-lg' : 'flip-title-md';
             return `
             <div class="flip-mobile-card flip-text-fill" style="${getFruitBg(article.fruit)}; min-height:${minHeight};" onclick="NewsManager.openArticleById('${id}')">
                 ${badge}
                 <div class="flip-text-fill-inner">
-                    <div class="${titleSize}">${article.title || ''}</div>
+                    <div class="${titleClass}">${article.title || ''}</div>
                     ${article.description ? `<div class="flip-excerpt" style="color:rgba(255,255,255,0.5);">${article.description.substring(0, 120)}...</div>` : ''}
                     <div class="flip-meta"><span style="color:${colour}; font-weight:900; font-size:0.55rem;">${article.source_id}</span><span class="flip-dot"></span><span class="flip-time">${time}</span></div>
                 </div>
@@ -344,7 +355,6 @@ const NewsManager = (() => {
     function renderDesktop(articles, list) {
         const hero = articles[0];
         const rest = articles.slice(1);
-
         const heroHtml = renderDesktopHero(hero);
         const masonryHtml = `<div class="flip-masonry">${rest.map((a, i) => renderDesktopTile(a, i + 1)).join('')}</div>`;
         list.innerHTML = heroHtml + masonryHtml;
@@ -461,7 +471,6 @@ const NewsManager = (() => {
         setField('articleTime', time);
         setField('articleDate', date);
         setField('articleCountry', '');
-        // Show full description — no truncation
         setField('articleSummary', article.description || 'Geen samenvatting beschikbaar voor dit artikel.');
 
         const readBtn = document.getElementById('articleReadBtn');

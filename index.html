@@ -60,35 +60,43 @@
 
 <!-- Fruit Hub -->
 <div id="fruit-hub" class="nav-view">
-<div class="hub-title">Select Tool</div>
+<div class="hub-title">Select Commodity</div>
+<div class="selection-grid-container">
 <div class="selection-grid">
 <div class="selection-card" onclick="openMiddleHub('banana')">
-<img src="banana.png" alt="Banana">
-<span>Banana</span>
+<img src="banana.png" alt="banana">
+<div class="commodity-name-section"><span>Banana</span></div>
 </div>
 <div class="selection-card" onclick="openMiddleHub('mango')">
-<img src="mango.png" alt="Mango">
+<img src="mango.png" alt="mango">
+<div class="commodity-name-section">
 <span>Mango</span>
+<span style="color:var(--pulp-amber); font-size:0.6rem; letter-spacing:1px;">(SOON)</span>
+</div>
 </div>
 <div class="selection-card" onclick="openMiddleHub('avocado')">
-<img src="avocado.png" alt="Avocado">
+<img src="avocado.png" alt="avocado">
+<div class="commodity-name-section">
 <span>Avocado</span>
+<span style="color:var(--pulp-amber); font-size:0.6rem; letter-spacing:1px;">(SOON)</span>
+</div>
 </div>
 <div class="selection-card" onclick="openDefectDetector()">
-<img src="rotten.png" alt="Defect Detector">
-<span>Defect Detector</span>
+<img src="rotten.png" alt="defect">
+<div class="commodity-name-section"><span>Defect Detector</span></div>
 </div>
 <div class="selection-card" onclick="openColourScanner()">
-<img src="colour.png" alt="Colour Scanner">
-<span>Colour Scanner</span>
+<img src="colour.png" alt="colour">
+<div class="commodity-name-section"><span>Colour Scanner</span></div>
 </div>
 <div class="selection-card" onclick="openNews()">
-<img src="news.png" alt="News">
-<span>News</span>
+<img src="news.png" alt="news">
+<div class="commodity-name-section"><span>News</span></div>
 </div>
 </div>
-<div id="favorites-section" class="hidden" style="margin-top:30px;">
-<div style="font-size:0.6rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; margin-bottom:12px;">⭐ Favorites</div>
+</div>
+<div id="favorites-section" class="hidden">
+<div class="hub-title" style="color:var(--pulp-amber); font-size:0.8rem; margin-top:20px;">Saved Favorites</div>
 <div class="fav-grid" id="fav-grid"></div>
 </div>
 </div>

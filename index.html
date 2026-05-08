@@ -14,6 +14,10 @@
 <link rel="stylesheet" href="css/theme.css">
 <link rel="stylesheet" href="css/layout.css">
 <link rel="stylesheet" href="css/components.css">
+<!-- TensorFlow for AI Colour Scanner -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/knn-classifier"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
 </head>
 <body>
 
@@ -214,6 +218,10 @@
 <div style="font-size:0.6rem; font-weight:900; color:var(--pulp-lime); letter-spacing:3px; text-transform:uppercase;">Pulp Pro</div>
 </div>
 <div class="hub-title" id="csScannerTitle">Banana Colour Scanner</div>
+
+<!-- AI Status Line — subtle, top of scanner -->
+<div id="csAIStatus" style="text-align:center; font-size:0.5rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:rgba(255,255,255,0.3); margin-bottom:10px;">📊 Classic Mode</div>
+
 <div style="display:flex; gap:8px; margin-bottom:14px;">
 <div class="cs-toggle-btn active" id="csSingleBtn" onclick="ColourScanner.setScanMode('single')">Single Scan</div>
 <div class="cs-toggle-btn" id="csMultiBtn" onclick="ColourScanner.setScanMode('multi')">Multi Scan</div>
@@ -250,6 +258,8 @@
 <div class="color-bar-wrap" style="margin-top:8px;"><div id="csSingleBar" class="color-bar" style="width:16%; background:#78c830;"></div></div>
 </div>
 </div>
+<!-- AI confidence — only shows when AI model is active -->
+<div id="csAIConfidence" style="display:none; font-size:0.5rem; font-weight:700; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; opacity:0.8;"></div>
 <div class="report-row"><span class="report-key" id="shelfLifeLabel">Shelf Life</span><span class="report-val" id="csSingleShelf">—</span></div>
 <div class="report-row"><span class="report-key" id="statusLabel2">Status</span><span class="report-val" id="csSingleStatus">—</span></div>
 <div id="csNotePreview" class="hidden" style="background:rgba(166,226,46,0.06); border:1px solid rgba(166,226,46,0.15); border-radius:12px; padding:8px 12px; margin-top:10px;">
@@ -313,8 +323,6 @@
 <div id="newsArticleList"></div>
 <button class="btn-main btn-back" style="margin-top:10px;" onclick="showHub()">← Back</button>
 </div>
-
-<!-- Article View — hero uses real img tag for natural sizing -->
 <div id="news-article-view" class="hidden">
 <div id="articleHero" class="article-hero-wrap">
 <img id="articleHeroImg" src="" alt="" style="display:none;">
@@ -357,21 +365,13 @@ Pulp Pro is not affiliated with any news source.
 <img src="edited-image.png" style="width:50px; margin-bottom:10px;">
 <div id="brandName" style="font-size:1.4rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase;">Chiquita</div>
 <div id="commodityLabel" style="font-weight:900; letter-spacing:4px; opacity:0.5; font-size:0.7rem; margin-bottom:25px; color:var(--text-main);">BANANA AGE CHECKER</div>
-
-<!-- Scan Mode Toggle -->
 <div style="display:flex; gap:8px; margin-bottom:20px;">
 <div class="scan-toggle-btn active" id="singleCodeBtn" onclick="setScanMode('single')">Single Code</div>
 <div class="scan-toggle-btn" id="batchCodeBtn" onclick="setScanMode('batch')">Batch Scan</div>
 </div>
-
 <div class="input-wrapper"><input type="text" id="codeIn" placeholder="---" maxlength="3" autofocus></div>
-
-<!-- Batch List -->
 <div id="batchList" style="display:none; background:var(--input-bg); border-radius:20px; margin-bottom:15px; max-height:300px; overflow-y:auto;"></div>
-
-<!-- Batch Report Button -->
 <button id="batchReportBtn" class="btn-main" style="display:none; margin-bottom:15px;" onclick="showBatchReport()">Get Batch Report →</button>
-
 <button onclick="checkFruit()" class="btn-main" id="calcBtn">Calculate</button>
 <div id="resBox" class="result-display hidden">
 <div id="statusLabel" style="font-weight:900;">READY</div>

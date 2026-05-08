@@ -344,7 +344,6 @@ input {
     text-transform: uppercase; letter-spacing: 1px;
     padding: 4px 10px; border-radius: 20px; z-index: 2;
 }
-.flip-img-wrap { border-radius: 0; overflow: hidden; }
 .flip-img-overlay {
     position: absolute; bottom: 0; left: 0; right: 0; height: 70px;
     background: linear-gradient(transparent, rgba(0,0,0,0.8));
@@ -360,15 +359,10 @@ input {
 
 /* Text fill cards */
 .flip-text-fill {
-    position: relative;
-    border-radius: 16px;
-    overflow: hidden;
+    position: relative; border-radius: 16px; overflow: hidden;
     border: 1px solid rgba(255,255,255,0.06);
 }
-.flip-text-fill-inner {
-    padding: 44px 14px 14px;
-    display: flex; flex-direction: column; gap: 6px; height: 100%;
-}
+.flip-text-fill-inner { padding: 44px 14px 14px; display: flex; flex-direction: column; gap: 6px; height: 100%; }
 
 /* Mobile cards */
 .flip-mobile-card {
@@ -387,32 +381,15 @@ input {
     min-height: 260px; box-shadow: var(--shadow);
 }
 .flip-dt-hero:hover { border-color: rgba(166,226,46,0.3); }
-.flip-dt-hero-img {
-    width: 50%; min-height: 260px; position: relative; flex-shrink: 0;
-}
-.flip-dt-hero-body {
-    flex: 1; padding: 22px 24px;
-    display: flex; flex-direction: column;
-}
-.flip-dt-hero-title {
-    font-size: 1.3rem; font-weight: 900; color: var(--text-main);
-    line-height: 1.4; margin-bottom: 12px;
-}
-.flip-dt-hero-excerpt {
-    font-size: 0.88rem; color: var(--text-dim); line-height: 1.8;
-    flex: 1; margin-bottom: 14px;
-}
-.flip-dt-hero-text {
-    flex-direction: column; padding: 24px;
-}
+.flip-dt-hero-img { width: 50%; min-height: 260px; position: relative; flex-shrink: 0; }
+.flip-dt-hero-body { flex: 1; padding: 22px 24px; display: flex; flex-direction: column; }
+.flip-dt-hero-title { font-size: 1.3rem; font-weight: 900; color: var(--text-main); line-height: 1.4; margin-bottom: 12px; }
+.flip-dt-hero-excerpt { font-size: 0.88rem; color: var(--text-dim); line-height: 1.8; flex: 1; margin-bottom: 14px; }
+.flip-dt-hero-text { flex-direction: column; padding: 24px; }
 
 /* Desktop masonry */
-.flip-masonry {
-    columns: 3; column-gap: 12px;
-}
-@media (max-width: 1100px) {
-    .flip-masonry { columns: 2; }
-}
+.flip-masonry { columns: 3; column-gap: 12px; }
+@media (max-width: 1100px) { .flip-masonry { columns: 2; } }
 .flip-dt-tile {
     break-inside: avoid; margin-bottom: 12px;
     border-radius: 14px; overflow: hidden;
@@ -421,36 +398,50 @@ input {
 }
 .flip-dt-tile:hover { border-color: rgba(166,226,46,0.3); }
 
-/* Article detail */
-.news-dot { width: 3px; height: 3px; border-radius: 50%; background: rgba(255,255,255,0.2); flex-shrink: 0; }
-.news-cat-badge {
-    position: absolute; top: 10px; left: 10px;
-    font-size: 0.45rem; font-weight: 900;
-    text-transform: uppercase; letter-spacing: 1px;
-    padding: 4px 10px; border-radius: 20px;
+/* =============================================
+   ARTICLE DETAIL — NATURAL IMAGE SIZING
+   ============================================= */
+.article-hero-wrap {
+    position: relative; width: 100%;
+    overflow: hidden; margin-bottom: 0;
 }
-#articleHero {
-    width: 100%; height: 240px;
-    display: flex; align-items: center; justify-content: center;
-    position: relative; background: rgba(22,22,24,0.98);
-    border-radius: 0 0 30px 30px; overflow: hidden; margin-bottom: 0;
+
+/* When article HAS an image — img fills width naturally */
+.article-hero-wrap.has-image #articleHeroImg {
+    width: 100%; height: auto;
+    max-height: 60vh; object-fit: cover;
+    display: block; border-radius: 0 0 30px 30px;
 }
+
+/* When article has NO image — show colored bg with min height */
+.article-hero-wrap.has-bg .article-hero-bg {
+    width: 100%; min-height: 200px;
+    border-radius: 0 0 30px 30px;
+    display: block;
+}
+
+.article-hero-bg { display: none; }
+
 .article-hero-overlay {
     position: absolute; bottom: 0; left: 0; right: 0; height: 80px;
-    background: linear-gradient(transparent, var(--bg-black));
+    background: linear-gradient(transparent, rgba(0,0,0,0.5));
+    border-radius: 0 0 30px 30px;
 }
 .article-back-btn {
     position: absolute; top: 14px; left: 14px;
     background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15);
     color: #fff; font-size: 0.6rem; font-weight: 900;
     text-transform: uppercase; letter-spacing: 1px;
-    padding: 6px 14px; border-radius: 20px; cursor: pointer;
+    padding: 6px 14px; border-radius: 20px; cursor: pointer; z-index: 5;
+}
+.news-cat-badge {
+    position: absolute; bottom: 20px; left: 14px;
+    font-size: 0.48rem; font-weight: 900;
+    text-transform: uppercase; letter-spacing: 1px;
+    padding: 4px 10px; border-radius: 20px; z-index: 5;
 }
 .article-body { padding: 20px 18px; }
-.article-title {
-    font-size: 1.2rem; font-weight: 900; color: var(--text-main);
-    line-height: 1.4; margin-bottom: 14px;
-}
+.article-title { font-size: 1.2rem; font-weight: 900; color: var(--text-main); line-height: 1.4; margin-bottom: 14px; }
 .article-meta {
     display: flex; align-items: center; gap: 8px; margin-bottom: 18px;
     padding-bottom: 14px; border-bottom: 1px solid var(--border-glass); flex-wrap: wrap;
@@ -458,9 +449,7 @@ input {
 .article-source { font-size: 0.6rem; font-weight: 900; color: var(--pulp-lime); text-transform: uppercase; letter-spacing: 1px; }
 .article-country { font-size: 0.52rem; font-weight: 700; color: var(--text-dim); background: var(--input-bg); padding: 2px 8px; border-radius: 8px; }
 .article-summary-label { font-size: 0.55rem; font-weight: 900; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
-.article-summary-text {
-    font-size: 0.95rem; color: var(--text-dim); line-height: 1.85; margin-bottom: 24px;
-}
+.article-summary-text { font-size: 0.95rem; color: var(--text-dim); line-height: 1.85; margin-bottom: 24px; }
 .article-read-btn {
     background: var(--pulp-lime); color: #000; border: none; border-radius: 100px;
     padding: 15px; font-weight: 900; width: 100%; text-transform: uppercase;
@@ -478,6 +467,8 @@ input {
     font-size: 0.52rem; color: var(--text-dim); text-align: center;
     margin-top: 12px; font-weight: 600; line-height: 1.5; opacity: 0.6;
 }
+.news-dot { width: 3px; height: 3px; border-radius: 50%; background: rgba(255,255,255,0.2); flex-shrink: 0; }
+.news-time { font-size: 0.48rem; font-weight: 700; color: var(--text-dim); }
 
 @keyframes pulse {
     0%, 100% { opacity: 1; }

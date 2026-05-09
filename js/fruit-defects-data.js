@@ -164,10 +164,9 @@ const FRUIT_DEFECTS = {
                 tempRange: '< 13°C',
                 shelfImpact: 'Fruit may not ripen',
                 images: [
-                    'images/defects/banana-chilling-1.jpg',
-                    proxyImg('https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Chilling_injury_banana.jpg/640px-Chilling_injury_banana.jpg'),
-                ],
-                en: {
+    'images/defects/banana-chilling-1.jpg',
+    'images/defects/banana-chilling-2.jpg',
+],                en: {
                     name: 'Chilling Injury',
                     shortDesc: 'Dull grey-yellow skin, streaks, failure to ripen',
                     category: 'Temperature Damage',

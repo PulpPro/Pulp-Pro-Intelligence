@@ -14,10 +14,15 @@ const NewsManager = (() => {
     ];
 
     let allArticles = [];
+    let activeFilter = 'all';
     const articleMap = {};
     let autoRefreshTimer = null;
 
     function init() {
+        activeFilter = 'all';
+        document.querySelectorAll('.news-filter-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.filter === 'all');
+        });
         loadNews();
         startAutoRefresh();
     }
@@ -89,7 +94,6 @@ const NewsManager = (() => {
                 items.forEach(item => {
                     if (articles.find(a => a.link === item.link)) return;
 
-                    // Skip articles older than MAX_AGE_DAYS
                     if (item.pubDate) {
                         const articleDate = new Date(item.pubDate);
                         if (!isNaN(articleDate) && articleDate < cutoffDate) return;
@@ -111,7 +115,6 @@ const NewsManager = (() => {
                 });
             });
 
-            // Deduplicate by title
             const seen = new Set();
             const deduped = articles.filter(a => {
                 const key = (a.title || '').toLowerCase().substring(0, 50);
@@ -120,7 +123,6 @@ const NewsManager = (() => {
                 return true;
             });
 
-            // Always sort newest first
             deduped.sort((a, b) => {
                 const dateA = a.pubDate ? new Date(a.pubDate).getTime() : 0;
                 const dateB = b.pubDate ? new Date(b.pubDate).getTime() : 0;
@@ -183,7 +185,19 @@ const NewsManager = (() => {
         el.style.display = 'flex';
     }
 
-    // Source color per feed
+    function setFilter(filter) {
+        activeFilter = filter;
+        document.querySelectorAll('.news-filter-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.filter === filter);
+        });
+        renderNews();
+    }
+
+    function getFilteredArticles() {
+        if (activeFilter === 'all') return allArticles;
+        return allArticles.filter(a => a.source_id === activeFilter);
+    }
+
     function getSourceColor(source_id) {
         if (source_id === 'AGF.nl') return '#78c830';
         if (source_id === 'FreshPlaza') return '#ff8c00';
@@ -192,7 +206,6 @@ const NewsManager = (() => {
         return '#78c830';
     }
 
-    // Source background per feed (for text-fill cards)
     function getSourceBg(source_id) {
         if (source_id === 'AGF.nl') return 'linear-gradient(135deg, #0d1f0d 0%, #152b10 100%)';
         if (source_id === 'FreshPlaza') return 'linear-gradient(135deg, #1f1200 0%, #2e1c00 100%)';
@@ -240,7 +253,7 @@ const NewsManager = (() => {
     function renderNews() {
         const list = document.getElementById('newsArticleList');
         if (!list) return;
-        const articles = allArticles;
+        const articles = getFilteredArticles();
 
         if (articles.length === 0) {
             list.innerHTML = `
@@ -474,5 +487,5 @@ const NewsManager = (() => {
         </div>`;
     }
 
-    return { init, openArticleById, closeArticle, forceRefresh };
+    return { init, setFilter, openArticleById, closeArticle, forceRefresh };
 })();

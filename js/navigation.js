@@ -4,58 +4,63 @@
 let activeFruit = null;
 let activeBrand = null;
 
-const fruitNames = {
-    'banana': 'Banana',
-    'mango': 'Mango',
-    'avocado': 'Avocado'
-};
-
 // Show fruit hub
 function showHub() {
     document.getElementById('fruit-hub').classList.remove('hidden');
     document.getElementById('middle-hub').classList.add('hidden');
     document.getElementById('brand-hub').classList.add('hidden');
     document.getElementById('appInterface').classList.add('hidden');
-    const defHub = document.getElementById('defect-detector-hub');
+    const defHub = document.getElementById('defect-hub');
     if (defHub) defHub.classList.add('hidden');
 }
 
 // Open middle hub for fruit selection
 function openMiddleHub(fruit) {
     activeFruit = fruit;
+    const fruitNames = {
+        'banana': 'Banana',
+        'mango': 'Mango',
+        'avocado': 'Avocado'
+    };
     document.getElementById('middleHubTitle').innerText = fruitNames[fruit] + ' Menu';
     document.getElementById('fruit-hub').classList.add('hidden');
     document.getElementById('middle-hub').classList.remove('hidden');
     document.getElementById('appInterface').classList.add('hidden');
-    const defHub = document.getElementById('defect-detector-hub');
+    const defHub = document.getElementById('defect-hub');
     if (defHub) defHub.classList.add('hidden');
 }
 
 // Open brands hub
 function openBrands(fruit) {
     activeFruit = fruit;
+    const fruitNames = {
+        'banana': 'Banana',
+        'mango': 'Mango',
+        'avocado': 'Avocado'
+    };
     document.getElementById('brandHubTitle').innerText = 'Select ' + fruitNames[fruit] + ' Brand';
     document.getElementById('fruit-hub').classList.add('hidden');
     document.getElementById('middle-hub').classList.add('hidden');
     document.getElementById('brand-hub').classList.remove('hidden');
     document.getElementById('appInterface').classList.add('hidden');
-    const defHub = document.getElementById('defect-detector-hub');
+    const defHub = document.getElementById('defect-hub');
     if (defHub) defHub.classList.add('hidden');
     renderBrands(fruit);
 }
 
-// Select brand and show calculator — fixed commodityLabel
+// Select brand and show calculator
 function selectBrand(brand) {
     activeBrand = brand;
     document.getElementById('brandName').innerText = brand;
-    // Set label correctly — fruit name + AGE CHECKER (no duplication)
-    const fruitLabel = fruitNames[activeFruit] ? fruitNames[activeFruit].toUpperCase() : '';
+    // Fix: set commodityLabel correctly — no duplication
+    const fruitLabels = { 'banana': 'BANANA', 'mango': 'MANGO', 'avocado': 'AVOCADO' };
+    const fruitLabel = fruitLabels[activeFruit] || '';
     document.getElementById('commodityLabel').innerText = fruitLabel + ' AGE CHECKER';
     document.getElementById('fruit-hub').classList.add('hidden');
     document.getElementById('middle-hub').classList.add('hidden');
     document.getElementById('brand-hub').classList.add('hidden');
     document.getElementById('appInterface').classList.remove('hidden');
-    const defHub = document.getElementById('defect-detector-hub');
+    const defHub = document.getElementById('defect-hub');
     if (defHub) defHub.classList.add('hidden');
 }
 
@@ -64,46 +69,48 @@ function openCalc(brand) {
     selectBrand(brand);
 }
 
-// Open defect detector hub
+// Open defect detector
 function openDefectDetector() {
     document.getElementById('fruit-hub').classList.add('hidden');
     document.getElementById('middle-hub').classList.add('hidden');
     document.getElementById('brand-hub').classList.add('hidden');
     document.getElementById('appInterface').classList.add('hidden');
-    const defHub = document.getElementById('defect-detector-hub');
+    const defHub = document.getElementById('defect-hub');
     if (defHub) defHub.classList.remove('hidden');
 }
 
-// Open specific fruit defect scanner
-function openDefectScanner(fruit) {
-    activeFruit = fruit;
-    const defScanTitle = document.getElementById('defectScannerTitle');
-    if (defScanTitle) defScanTitle.innerText = 'Scan ' + fruitNames[fruit] + ' for Defects';
-    const defHub = document.getElementById('defect-detector-hub');
+// Open colour scanner
+function openColourScanner() {
+    document.getElementById('fruit-hub').classList.add('hidden');
+    document.getElementById('middle-hub').classList.add('hidden');
+    document.getElementById('brand-hub').classList.add('hidden');
+    document.getElementById('appInterface').classList.add('hidden');
+    const defHub = document.getElementById('defect-hub');
     if (defHub) defHub.classList.add('hidden');
-    const defScan = document.getElementById('defect-scanner-view');
-    if (defScan) defScan.classList.remove('hidden');
+    document.getElementById('colour-scanner-view').classList.remove('hidden');
+    if (typeof ColourScanner !== 'undefined') {
+        ColourScanner.init();
+        ColourScanner.setScanMode('single');
+    }
 }
 
-// Back from defect scanner to defect hub
-function backToDefectHub() {
-    const defScan = document.getElementById('defect-scanner-view');
-    if (defScan) defScan.classList.add('hidden');
-    const defHub = document.getElementById('defect-detector-hub');
-    if (defHub) defHub.classList.remove('hidden');
-}
-
-// Back from defect hub to main fruit hub
-function backToFruitHub() {
-    const defHub = document.getElementById('defect-detector-hub');
+// Open news
+function openNews() {
+    document.getElementById('fruit-hub').classList.add('hidden');
+    document.getElementById('middle-hub').classList.add('hidden');
+    document.getElementById('brand-hub').classList.add('hidden');
+    document.getElementById('appInterface').classList.add('hidden');
+    const defHub = document.getElementById('defect-hub');
     if (defHub) defHub.classList.add('hidden');
-    document.getElementById('fruit-hub').classList.remove('hidden');
+    document.getElementById('colour-scanner-view').classList.add('hidden');
+    document.getElementById('news-view').classList.remove('hidden');
+    if (typeof NewsManager !== 'undefined') NewsManager.init();
 }
 
 // Toggle menu drawer
 function toggleMenu() {
-    document.getElementById('menu-drawer').classList.toggle('open');
-    document.getElementById('menu-overlay').classList.toggle('open');
+    document.getElementById('menu-drawer').classList.toggle('hidden');
+    document.getElementById('menu-overlay').classList.toggle('hidden');
 }
 
 // Toggle theme
@@ -114,34 +121,13 @@ function toggleTheme() {
     document.getElementById('themeText').innerText = isLight ? 'Light Mode' : 'Dark Mode';
 }
 
-// Open news
-function openNews() {
-    hideAllViews();
-    document.getElementById('news-view').classList.remove('hidden');
-    if (typeof NewsManager !== 'undefined') NewsManager.init();
-}
+// Toggle language
+function toggleLanguage() {}
 
-// Open colour scanner
-function openColourScanner() {
-    hideAllViews();
-    document.getElementById('colour-scanner-view').classList.remove('hidden');
-    if (typeof ColourScanner !== 'undefined') ColourScanner.init();
-    if (typeof ColourScanner !== 'undefined') ColourScanner.setScanMode('single');
-    if (typeof ColourScanner !== 'undefined') {
-        setTimeout(() => { ColourScanner.init && ColourScanner.init(); }, 100);
-    }
-}
-
-// Hide all views helper
-function hideAllViews() {
-    const views = [
-        'fruit-hub', 'middle-hub', 'brand-hub', 'appInterface',
-        'news-view', 'colour-scanner-view', 'defect-hub',
-        'defect-type-view', 'defect-scan-view', 'defect-info-view',
-        'defect-report-view'
-    ];
-    views.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.add('hidden');
-    });
+// Send feedback
+function sendFeedback() {
+    const theme = document.body.classList.contains('light-theme') ? 'Light' : 'Dark';
+    const subject = encodeURIComponent("Pulp Pro App Feedback");
+    const body = encodeURIComponent(`Hi Team,\n\nFeedback:\n\n[Your feedback here]\n\n---\nTheme: ${theme}\nPlatform: ${navigator.platform}`);
+    window.location.href = `mailto:ar.varma@hotmail.com?subject=${subject}&body=${body}`;
 }

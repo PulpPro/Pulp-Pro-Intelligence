@@ -296,9 +296,8 @@ const FRUIT_DEFECTS = {
                 tempRange: '> 15°C accelerates',
                 shelfImpact: 'Up to 100% loss',
                 images: [
-                    proxyImg('https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Banana-_Anthracnose%2C_crown_rot_and_sugarcane_bud_moth_injury.jpg/640px-Banana-_Anthracnose%2C_crown_rot_and_sugarcane_bud_moth_injury.jpg'),
                     'images/defects/banana-crown-rot-1.jpg',
-                ],
+                    'images/defects/banana-crown-rot-2.jpg',                ],
                 en: {
                     name: 'Crown Rot',
                     shortDesc: 'Black soft rot at the crown — fingers detach',

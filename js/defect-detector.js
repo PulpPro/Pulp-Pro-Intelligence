@@ -1,352 +1,36 @@
 const DefectDetector = (() => {
-    let currentFruit = null;
+
+    let currentFruit = 'banana';
     let currentType = null;
-    let cameraStream = null;
-    let isScanning = false;
+    let currentDefect = null;
 
-    function init() {
-        console.log('Defect Detector ready');
+    // ── SEVERITY HELPERS ─────────────────────────────────────
+    function severityColor(sev) {
+        if (sev === 'critical') return '#ff4d4d';
+        if (sev === 'major') return '#ff8c00';
+        return '#78c830';
     }
 
-    function selectFruit(fruit) {
-        currentFruit = fruit;
-        const fruitNames = { banana: 'Banana', mango: 'Mango', avocado: 'Avocado' };
-        document.getElementById('defectTypeTitle').innerText = fruitNames[fruit] + ' — ' + t('selectType');
-        document.getElementById('defectTypeDesc_external').innerText = t(fruit + 'ExtDesc');
-        document.getElementById('defectTypeDesc_internal').innerText = t(fruit + 'IntDesc');
-        showDefectView('defect-type-view');
+    function severityLabel(sev) {
+        const lang = typeof currentLang !== 'undefined' ? currentLang : 'en';
+        if (sev === 'critical') return lang === 'nl' ? 'Kritiek' : 'Critical';
+        if (sev === 'major') return lang === 'nl' ? 'Groot' : 'Major';
+        return lang === 'nl' ? 'Klein' : 'Minor';
     }
 
-    async function selectType(type) {
-        currentType = type;
-        window.defectActiveFruit = currentFruit;
-        window.defectActiveType = type;
-        const fruitNames = { banana: 'Banana', mango: 'Mango', avocado: 'Avocado' };
-        const typeLabel = type === 'external' ? t('external') : t('internal');
-        document.getElementById('defectScanTitle').innerText = fruitNames[currentFruit] + ' — ' + typeLabel;
-        showDefectView('defect-scan-view');
-        updateDefectFavoriteUI();
-        resetScanUI();
-        await startCamera();
-    }
-
-    async function startCamera() {
-        try {
-            if (cameraStream) stopCamera();
-            cameraStream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    facingMode: 'environment',
-                    width: { ideal: 640 },
-                    height: { ideal: 480 }
-                }
-            });
-            const video = document.getElementById('defectVideo');
-            video.srcObject = cameraStream;
-            await video.play();
-            document.getElementById('cameraPlaceholder').style.display = 'none';
-            video.style.display = 'block';
-        } catch (err) {
-            console.warn('Camera unavailable:', err);
-            document.getElementById('cameraPlaceholder').style.display = 'flex';
-            document.getElementById('defectVideo').style.display = 'none';
+    function t(key) {
+        if (typeof TRANSLATIONS !== 'undefined' && typeof currentLang !== 'undefined') {
+            return TRANSLATIONS[currentLang]?.[key] || TRANSLATIONS['en']?.[key] || key;
         }
+        return key;
     }
 
-    function stopCamera() {
-        if (cameraStream) {
-            cameraStream.getTracks().forEach(t => t.stop());
-            cameraStream = null;
-        }
-        isScanning = false;
-    }
-
-    function captureFrame() {
-        const video = document.getElementById('defectVideo');
-        const canvas = document.getElementById('defectCanvas');
-        if (!video || !video.videoWidth) return null;
-
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0);
-
-        const regions = [
-            { x: canvas.width * 0.25, y: canvas.height * 0.25, size: 60 },
-            { x: canvas.width * 0.5,  y: canvas.height * 0.5,  size: 80 },
-            { x: canvas.width * 0.75, y: canvas.height * 0.75, size: 60 },
-            { x: canvas.width * 0.5,  y: canvas.height * 0.25, size: 60 },
-            { x: canvas.width * 0.25, y: canvas.height * 0.75, size: 60 }
-        ];
-
-        const samples = regions.map(region => {
-            const data = ctx.getImageData(
-                region.x - region.size / 2,
-                region.y - region.size / 2,
-                region.size, region.size
-            ).data;
-            let r = 0, g = 0, b = 0, count = 0;
-            for (let i = 0; i < data.length; i += 4) {
-                r += data[i]; g += data[i + 1]; b += data[i + 2]; count++;
-            }
-            return {
-                r: Math.round(r / count),
-                g: Math.round(g / count),
-                b: Math.round(b / count)
-            };
-        });
-
-        const avgR = samples.reduce((s, c) => s + c.r, 0) / samples.length;
-        const avgG = samples.reduce((s, c) => s + c.g, 0) / samples.length;
-        const avgB = samples.reduce((s, c) => s + c.b, 0) / samples.length;
-
-        const variance = samples.reduce((s, c) =>
-            s + Math.pow(c.r - avgR, 2) + Math.pow(c.g - avgG, 2) + Math.pow(c.b - avgB, 2), 0
-        ) / samples.length;
-
-        return {
-            r: Math.round(avgR),
-            g: Math.round(avgG),
-            b: Math.round(avgB),
-            variance,
-            samples
-        };
-    }
-
-    function doScan() {
-        if (isScanning) return;
-        isScanning = true;
-
-        const btn = document.getElementById('defectScanActionBtn');
-        if (btn) {
-            btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> ' + t('scanning');
-            btn.disabled = true;
-        }
-
-        setTimeout(() => {
-            const frameData = captureFrame();
-            let results;
-
-            if (frameData) {
-                results = analyseFrame(frameData);
-            } else {
-                results = getFallbackResults();
-            }
-
-            if (btn) {
-                btn.innerHTML = '<i class="bi bi-camera-fill"></i> ' + t('scanAgain');
-                btn.disabled = false;
-            }
-
-            isScanning = false;
-            displayResults(results);
-        }, 800);
-    }
-
-    function analyseFrame(frameData) {
-        const defects = DEFECTS_DATA[currentFruit][currentType];
-        const { r, g, b, variance } = frameData;
-
-        const scored = defects.map(defect => {
-            let score = 0;
-            const signatures = getDefectSignature(defect.id);
-            if (!signatures) return { defect, score: Math.random() * 0.3 };
-
-            signatures.forEach(sig => {
-                const dist = colourDistance({ r, g, b }, sig.rgb);
-                const maxDist = 441;
-                const match = 1 - (dist / maxDist);
-                score += match * sig.weight;
-                if (sig.requiresVariance && variance > sig.varianceThreshold) {
-                    score += 0.2;
-                }
-            });
-
-            score = Math.max(0, Math.min(1, score));
-            return { defect, score };
-        });
-
-        scored.sort((a, b) => b.score - a.score);
-
-        const top = scored[0];
-        const confidence = Math.round(50 + top.score * 45);
-        const possibilities = scored.slice(1, 4).filter(s => s.score > 0.2);
-
-        return { primary: top.defect, confidence, possibilities };
-    }
-
-    function getDefectSignature(defectId) {
-        const signatures = {
-            'ban_ext_01': [{ rgb: { r: 60,  g: 40,  b: 20  }, weight: 0.8, requiresVariance: true,  varianceThreshold: 800  }],
-            'ban_ext_02': [{ rgb: { r: 80,  g: 70,  b: 30  }, weight: 0.7, requiresVariance: true,  varianceThreshold: 1200 }],
-            'ban_ext_03': [{ rgb: { r: 70,  g: 80,  b: 60  }, weight: 0.9, requiresVariance: false, varianceThreshold: 0    }],
-            'ban_ext_04': [{ rgb: { r: 130, g: 140, b: 60  }, weight: 0.7, requiresVariance: false, varianceThreshold: 0    }],
-            'ban_ext_05': [{ rgb: { r: 50,  g: 40,  b: 20  }, weight: 0.8, requiresVariance: true,  varianceThreshold: 1500 }],
-            'ban_ext_06': [{ rgb: { r: 80,  g: 60,  b: 20  }, weight: 0.6, requiresVariance: false, varianceThreshold: 0    }],
-            'ban_ext_07': [{ rgb: { r: 100, g: 90,  b: 60  }, weight: 0.6, requiresVariance: true,  varianceThreshold: 600  }],
-            'ban_ext_08': [{ rgb: { r: 180, g: 170, b: 80  }, weight: 0.5, requiresVariance: false, varianceThreshold: 0    }],
-            'ban_ext_09': [{ rgb: { r: 50,  g: 30,  b: 10  }, weight: 0.9, requiresVariance: false, varianceThreshold: 0    }],
-            'ban_ext_10': [{ rgb: { r: 60,  g: 50,  b: 30  }, weight: 0.9, requiresVariance: true,  varianceThreshold: 1000 }],
-            'ban_int_01': [{ rgb: { r: 140, g: 100, b: 60  }, weight: 0.8, requiresVariance: false, varianceThreshold: 0    }],
-            'ban_int_02': [{ rgb: { r: 80,  g: 50,  b: 20  }, weight: 0.9, requiresVariance: true,  varianceThreshold: 800  }],
-            'ban_int_03': [{ rgb: { r: 220, g: 210, b: 150 }, weight: 0.6, requiresVariance: false, varianceThreshold: 0    }],
-            'ban_int_04': [{ rgb: { r: 120, g: 80,  b: 40  }, weight: 0.8, requiresVariance: false, varianceThreshold: 0    }],
-            'ban_int_05': [{ rgb: { r: 160, g: 120, b: 40  }, weight: 0.7, requiresVariance: false, varianceThreshold: 0    }],
-            'ban_int_06': [{ rgb: { r: 40,  g: 30,  b: 20  }, weight: 0.9, requiresVariance: true,  varianceThreshold: 2000 }],
-            'ban_int_07': [{ rgb: { r: 200, g: 180, b: 100 }, weight: 0.5, requiresVariance: false, varianceThreshold: 0    }],
-            'man_ext_01': [{ rgb: { r: 60,  g: 40,  b: 20  }, weight: 0.7, requiresVariance: true,  varianceThreshold: 600  }],
-            'man_ext_02': [{ rgb: { r: 80,  g: 60,  b: 40  }, weight: 0.8, requiresVariance: true,  varianceThreshold: 1000 }],
-            'man_ext_03': [{ rgb: { r: 30,  g: 30,  b: 30  }, weight: 0.9, requiresVariance: true,  varianceThreshold: 800  }],
-            'man_ext_04': [{ rgb: { r: 40,  g: 20,  b: 10  }, weight: 0.9, requiresVariance: false, varianceThreshold: 0    }],
-            'man_ext_05': [{ rgb: { r: 150, g: 130, b: 60  }, weight: 0.5, requiresVariance: false, varianceThreshold: 0    }],
-            'man_ext_06': [{ rgb: { r: 50,  g: 35,  b: 15  }, weight: 0.8, requiresVariance: true,  varianceThreshold: 1200 }],
-            'man_ext_07': [{ rgb: { r: 180, g: 140, b: 60  }, weight: 0.5, requiresVariance: false, varianceThreshold: 0    }],
-            'man_ext_08': [{ rgb: { r: 70,  g: 50,  b: 30  }, weight: 0.7, requiresVariance: true,  varianceThreshold: 500  }],
-            'man_ext_09': [{ rgb: { r: 220, g: 200, b: 140 }, weight: 0.6, requiresVariance: false, varianceThreshold: 0    }],
-            'man_ext_10': [{ rgb: { r: 160, g: 120, b: 60  }, weight: 0.7, requiresVariance: true,  varianceThreshold: 700  }],
-            'man_int_01': [{ rgb: { r: 30,  g: 20,  b: 10  }, weight: 0.9, requiresVariance: true,  varianceThreshold: 2000 }],
-            'man_int_02': [{ rgb: { r: 120, g: 80,  b: 30  }, weight: 0.8, requiresVariance: false, varianceThreshold: 0    }],
-            'man_int_03': [{ rgb: { r: 200, g: 180, b: 100 }, weight: 0.6, requiresVariance: false, varianceThreshold: 0    }],
-            'man_int_04': [{ rgb: { r: 80,  g: 50,  b: 20  }, weight: 0.9, requiresVariance: true,  varianceThreshold: 1000 }],
-            'man_int_05': [{ rgb: { r: 210, g: 170, b: 80  }, weight: 0.5, requiresVariance: false, varianceThreshold: 0    }],
-            'man_int_06': [{ rgb: { r: 230, g: 190, b: 90  }, weight: 0.5, requiresVariance: false, varianceThreshold: 0    }],
-            'man_int_07': [{ rgb: { r: 200, g: 180, b: 90  }, weight: 0.6, requiresVariance: false, varianceThreshold: 0    }],
-            'avo_ext_01': [{ rgb: { r: 30,  g: 25,  b: 15  }, weight: 0.8, requiresVariance: true,  varianceThreshold: 800  }],
-            'avo_ext_02': [{ rgb: { r: 60,  g: 40,  b: 20  }, weight: 0.7, requiresVariance: false, varianceThreshold: 0    }],
-            'avo_ext_03': [{ rgb: { r: 40,  g: 30,  b: 15  }, weight: 0.8, requiresVariance: true,  varianceThreshold: 1500 }],
-            'avo_ext_04': [{ rgb: { r: 70,  g: 80,  b: 60  }, weight: 0.9, requiresVariance: false, varianceThreshold: 0    }],
-            'avo_ext_05': [{ rgb: { r: 50,  g: 40,  b: 20  }, weight: 0.6, requiresVariance: true,  varianceThreshold: 400  }],
-            'avo_ext_06': [{ rgb: { r: 90,  g: 70,  b: 40  }, weight: 0.6, requiresVariance: true,  varianceThreshold: 600  }],
-            'avo_ext_07': [{ rgb: { r: 180, g: 140, b: 60  }, weight: 0.7, requiresVariance: false, varianceThreshold: 0    }],
-            'avo_ext_08': [{ rgb: { r: 40,  g: 30,  b: 15  }, weight: 0.8, requiresVariance: true,  varianceThreshold: 1200 }],
-            'avo_int_01': [{ rgb: { r: 100, g: 70,  b: 30  }, weight: 0.8, requiresVariance: false, varianceThreshold: 0    }],
-            'avo_int_02': [{ rgb: { r: 110, g: 75,  b: 35  }, weight: 0.8, requiresVariance: false, varianceThreshold: 0    }],
-            'avo_int_03': [{ rgb: { r: 70,  g: 80,  b: 60  }, weight: 0.9, requiresVariance: false, varianceThreshold: 0    }],
-            'avo_int_04': [{ rgb: { r: 120, g: 120, b: 100 }, weight: 0.9, requiresVariance: false, varianceThreshold: 0    }],
-            'avo_int_05': [{ rgb: { r: 80,  g: 55,  b: 25  }, weight: 0.8, requiresVariance: true,  varianceThreshold: 700  }],
-            'avo_int_06': [{ rgb: { r: 160, g: 130, b: 80  }, weight: 0.6, requiresVariance: false, varianceThreshold: 0    }],
-            'avo_int_07': [{ rgb: { r: 180, g: 160, b: 100 }, weight: 0.5, requiresVariance: false, varianceThreshold: 0    }],
-            'avo_int_08': [{ rgb: { r: 140, g: 160, b: 80  }, weight: 0.6, requiresVariance: false, varianceThreshold: 0    }]
-        };
-        return signatures[defectId] || null;
-    }
-
-    function colourDistance(rgb1, rgb2) {
-        const rMean = (rgb1.r + rgb2.r) / 2;
-        const dr = rgb1.r - rgb2.r;
-        const dg = rgb1.g - rgb2.g;
-        const db = rgb1.b - rgb2.b;
-        return Math.sqrt(
-            (2 + rMean / 256) * dr * dr +
-            4 * dg * dg +
-            (2 + (255 - rMean) / 256) * db * db
-        );
-    }
-
-    function getFallbackResults() {
-        const defects = DEFECTS_DATA[currentFruit][currentType];
-        const primary = defects[0];
-        const possibilities = defects.slice(1, 4);
-        return { primary, confidence: 55, possibilities: possibilities.map(d => ({ defect: d, score: 0.3 })) };
-    }
-
-    function getSeverityColor(severity) {
-        if (severity === 'minor') return 'var(--pulp-lime)';
-        if (severity === 'major') return 'var(--pulp-amber)';
-        return 'var(--pulp-red)';
-    }
-
-    function displayResults(results) {
-        const container = document.getElementById('defectScanResults');
-        if (!container) return;
-
-        const { primary, confidence, possibilities } = results;
-        const severityColor = getSeverityColor(primary.severity);
-        const severityLabel = t(primary.severity);
-
-        let possibilitiesHtml = '';
-        if (possibilities && possibilities.length > 0) {
-            possibilitiesHtml = `
-            <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border-glass);">
-                <div style="font-size:0.55rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">${t('otherPossibilities')}</div>
-                ${possibilities.map(p => `
-                    <div style="display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:1px solid rgba(255,255,255,0.04);">
-                        <span style="font-size:0.7rem; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px;">${p.defect.name}</span>
-                        <span class="severity-badge ${p.defect.severity}">${t(p.defect.severity)}</span>
-                    </div>
-                `).join('')}
-            </div>`;
-        }
-
-        container.innerHTML = `
-        <div style="background:var(--glass-card); border:1px solid ${severityColor}40; border-radius:24px; padding:18px; margin-bottom:12px;">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
-                <div style="font-size:1.1rem; font-weight:900; color:var(--text-main); text-transform:uppercase; letter-spacing:1px; flex:1;">${primary.name}</div>
-                <span class="severity-badge ${primary.severity}" style="margin-left:10px; flex-shrink:0;">${severityLabel}</span>
-            </div>
-            <div style="font-size:0.68rem; color:var(--text-dim); line-height:1.5; margin-bottom:12px;">${primary.description}</div>
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-top:1px solid var(--border-glass);">
-                <span style="font-size:0.55rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px;">${t('confidence')}</span>
-                <span style="font-size:0.85rem; font-weight:900; color:${severityColor};">${confidence}%</span>
-            </div>
-            ${possibilitiesHtml}
-        </div>
-        <button onclick="DefectDetector.showMoreInfo('${primary.id}')" style="
-            background:rgba(166,226,46,0.1); border:1px solid var(--pulp-lime);
-            color:var(--pulp-lime); border-radius:100px; padding:13px;
-            font-weight:900; width:100%; text-transform:uppercase;
-            cursor:pointer; letter-spacing:1px; font-size:0.82rem;
-            margin-bottom:10px;">
-            <i class="bi bi-info-circle"></i> ${t('moreInfo')}
-        </button>`;
-
-        container.classList.remove('hidden');
-    }
-
-    function showMoreInfo(defectId) {
-        const allDefects = DEFECTS_DATA[currentFruit][currentType];
-        const defect = allDefects.find(d => d.id === defectId);
-        if (!defect) return;
-
-        const severityColor = getSeverityColor(defect.severity);
-
-        document.getElementById('defectInfoContent').innerHTML = `
-        <div style="margin-bottom:20px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                <div style="font-size:1.2rem; font-weight:900; color:var(--text-main); text-transform:uppercase; letter-spacing:1px;">${defect.name}</div>
-                <span class="severity-badge ${defect.severity}">${t(defect.severity)}</span>
-            </div>
-            <div style="font-size:0.6rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:2px;">${currentFruit.toUpperCase()} — ${t(currentType)}</div>
-        </div>
-        <div style="background:var(--glass-card); border:1px solid var(--border-glass); border-radius:20px; padding:16px; margin-bottom:12px;">
-            <div style="font-size:0.55rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">${t('description')}</div>
-            <div style="font-size:0.78rem; color:var(--text-main); line-height:1.6;">${defect.description}</div>
-        </div>
-        <div style="background:rgba(255,77,77,0.06); border:1px solid rgba(255,77,77,0.2); border-radius:20px; padding:16px; margin-bottom:12px;">
-            <div style="font-size:0.55rem; font-weight:900; color:var(--pulp-red); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">${t('severityLevel')}</div>
-            <div style="font-size:0.78rem; color:var(--text-main); line-height:1.6; text-transform:capitalize;">${t(defect.severity)} — ${t(defect.severity + 'Explain')}</div>
-        </div>
-        <div style="background:rgba(166,226,46,0.06); border:1px solid rgba(166,226,46,0.2); border-radius:20px; padding:16px; margin-bottom:12px;">
-            <div style="font-size:0.55rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">${t('recommendedAction')}</div>
-            <div style="font-size:0.78rem; color:var(--text-main); line-height:1.6;">${defect.action}</div>
-        </div>`;
-
-        showDefectView('defect-info-view');
-    }
-
-    function resetScanUI() {
-        const container = document.getElementById('defectScanResults');
-        if (container) container.classList.add('hidden');
-        const btn = document.getElementById('defectScanActionBtn');
-        if (btn) btn.innerHTML = '<i class="bi bi-camera-fill"></i> ' + t('scan');
-    }
-
+    // ── SHOW/HIDE VIEWS ───────────────────────────────────────
     function showDefectView(viewId) {
         const views = [
-            'defect-hub',
-            'defect-type-view',
-            'defect-scan-view',
-            'defect-report-view',
-            'defect-info-view'
+            'defect-hub', 'defect-type-view', 'defect-scan-view',
+            'defect-info-view', 'defect-report-view',
+            'defect-list-view', 'defect-detail-view'
         ];
         views.forEach(id => {
             const el = document.getElementById(id);
@@ -356,23 +40,294 @@ const DefectDetector = (() => {
         if (target) target.classList.remove('hidden');
     }
 
-    function close() {
-        stopCamera();
-        showHub();
+    // ── SELECT FRUIT ──────────────────────────────────────────
+    function selectFruit(fruit) {
+        currentFruit = fruit;
+        showDefectView('defect-type-view');
+        const title = document.getElementById('defectTypeTitle');
+        const names = { banana: t('banana'), mango: t('mango'), avocado: t('avocado') };
+        if (title) title.innerText = (names[fruit] || fruit) + ' — ' + t('selectType');
+
+        // Update descriptions
+        const extDesc = document.getElementById('defectTypeDesc_external');
+        const intDesc = document.getElementById('defectTypeDesc_internal');
+        if (extDesc) extDesc.innerText = t(fruit + 'ExtDesc') || '';
+        if (intDesc) intDesc.innerText = t(fruit + 'IntDesc') || '';
+    }
+
+    // ── SELECT TYPE (external/internal) ───────────────────────
+    function selectType(type) {
+        currentType = type;
+        // For banana show the full defect library
+        if (currentFruit === 'banana') {
+            renderDefectList(type);
+            showDefectView('defect-list-view');
+        } else {
+            // Other fruits still use the scan view
+            showDefectView('defect-scan-view');
+            const title = document.getElementById('defectScanTitle');
+            if (title) {
+                const names = { banana: t('banana'), mango: t('mango'), avocado: t('avocado') };
+                const typeLabel = type === 'external' ? t('externalDefects') : t('internalDefects');
+                title.innerText = (names[currentFruit] || currentFruit) + ' — ' + typeLabel;
+            }
+            startCamera();
+        }
+    }
+
+    // ── RENDER DEFECT LIST ────────────────────────────────────
+    function renderDefectList(type) {
+        const lang = typeof currentLang !== 'undefined' ? currentLang : 'en';
+        const data = DEFECTS_DATA[currentFruit];
+        if (!data) return;
+
+        // Get defects for this type
+        let defects = [];
+        let categoryLabel = '';
+
+        if (type === 'external') {
+            defects = [
+                ...(data.external || []),
+                ...(data.fungal || []),
+            ];
+            categoryLabel = lang === 'nl' ? 'Extern & Schimmel' : 'External & Fungal';
+        } else {
+            defects = [
+                ...(data.internal || []),
+                ...(data.physiological || []),
+            ];
+            categoryLabel = lang === 'nl' ? 'Intern & Fysiologisch' : 'Internal & Physiological';
+        }
+
+        // Build the view if it doesn't exist
+        ensureDefectListView();
+        ensureDefectDetailView();
+
+        const container = document.getElementById('defectListContainer');
+        const titleEl = document.getElementById('defectListTitle');
+        if (titleEl) {
+            const names = { banana: t('banana'), mango: t('mango'), avocado: t('avocado') };
+            titleEl.innerText = (names[currentFruit] || currentFruit) + ' — ' + categoryLabel;
+        }
+
+        if (!container) return;
+
+        container.innerHTML = defects.map(defect => {
+            const d = defect[lang] || defect['en'];
+            const col = severityColor(defect.severity);
+            const sev = severityLabel(defect.severity);
+            return `
+            <div class="defect-list-item" onclick="DefectDetector.openDefect('${defect.id}', '${type}')">
+                <div class="defect-list-icon" style="background:${col}18; border:1px solid ${col}30;">
+                    <span style="font-size:1.2rem;">🍌</span>
+                </div>
+                <div class="defect-list-info">
+                    <div class="defect-list-name">${d.name}</div>
+                    <div class="defect-list-desc">${d.shortDesc}</div>
+                </div>
+                <div class="defect-list-severity" style="background:${col}18; color:${col};">${sev}</div>
+                <div class="defect-list-chevron">›</div>
+            </div>`;
+        }).join('');
+    }
+
+    // ── OPEN DEFECT DETAIL ────────────────────────────────────
+    function openDefect(defectId, type) {
+        const lang = typeof currentLang !== 'undefined' ? currentLang : 'en';
+        const data = DEFECTS_DATA[currentFruit];
+        if (!data) return;
+
+        // Find defect across all categories
+        const allDefects = [
+            ...(data.external || []),
+            ...(data.fungal || []),
+            ...(data.internal || []),
+            ...(data.physiological || []),
+        ];
+        const defect = allDefects.find(d => d.id === defectId);
+        if (!defect) return;
+
+        currentDefect = defect;
+        const d = defect[lang] || defect['en'];
+        const col = severityColor(defect.severity);
+        const sev = severityLabel(defect.severity);
+
+        ensureDefectDetailView();
+
+        // Hero
+        const hero = document.getElementById('defectDetailHero');
+        if (hero) hero.style.background = `linear-gradient(135deg, ${col}22, ${col}10)`;
+
+        // Badge
+        const badge = document.getElementById('defectDetailBadge');
+        if (badge) {
+            badge.innerText = sev;
+            badge.style.background = col + '25';
+            badge.style.borderColor = col + '50';
+            badge.style.color = col;
+        }
+
+        // Image
+        const img = document.getElementById('defectDetailImg');
+        const imgPlaceholder = document.getElementById('defectDetailImgPlaceholder');
+        if (img && imgPlaceholder) {
+            img.onerror = () => { img.style.display = 'none'; imgPlaceholder.style.display = 'flex'; };
+            img.onload = () => { img.style.display = 'block'; imgPlaceholder.style.display = 'none'; };
+            img.src = defect.image;
+            img.style.display = 'block';
+            imgPlaceholder.style.display = 'none';
+        }
+
+        // Title
+        const titleEl = document.getElementById('defectDetailTitle');
+        if (titleEl) titleEl.innerText = d.name;
+        const subtitleEl = document.getElementById('defectDetailSubtitle');
+        if (subtitleEl) subtitleEl.innerText = d.category;
+
+        // Content sections
+        const sections = [
+            { id: 'defectSectionWhat', label: lang === 'nl' ? '🔬 Wat is het?' : '🔬 What is it?', content: d.whatIsIt },
+            { id: 'defectSectionIdentify', label: lang === 'nl' ? '👁️ Hoe te herkennen' : '👁️ How to identify', content: d.howToIdentify },
+            { id: 'defectSectionCauses', label: lang === 'nl' ? '⚙️ Oorzaken' : '⚙️ Causes', content: d.causes },
+            { id: 'defectSectionShipment', label: lang === 'nl' ? '🚢 Impact op transport' : '🚢 Shipment impact', content: d.shipmentImpact },
+            { id: 'defectSectionTemp', label: lang === 'nl' ? '🌡️ Temperatuureffecten' : '🌡️ Temperature effects', content: d.temperatureEffects },
+            { id: 'defectSectionDecision', label: lang === 'nl' ? '✅ Accepteren / Afkeuren' : '✅ Accept / Reject guide', content: d.acceptReject },
+            { id: 'defectSectionPrevention', label: lang === 'nl' ? '🛡️ Preventie' : '🛡️ Prevention', content: d.prevention },
+        ];
+
+        sections.forEach(sec => {
+            const labelEl = document.getElementById(sec.id + 'Label');
+            const contentEl = document.getElementById(sec.id + 'Content');
+            if (labelEl) labelEl.innerText = sec.label;
+            if (contentEl) contentEl.innerText = sec.content || '';
+        });
+
+        showDefectView('defect-detail-view');
+    }
+
+    // ── ENSURE DEFECT LIST VIEW EXISTS ────────────────────────
+    function ensureDefectListView() {
+        if (document.getElementById('defect-list-view')) return;
+        const div = document.createElement('div');
+        div.id = 'defect-list-view';
+        div.className = 'nav-view hidden';
+        div.innerHTML = `
+        <div style="max-width:500px; margin:0 auto;">
+            <div class="hub-title" id="defectListTitle">Banana Defects</div>
+            <div id="defectListContainer" style="display:flex; flex-direction:column; gap:0;"></div>
+            <button class="btn-main btn-back" style="margin-top:14px;" onclick="DefectDetector.backToTypeView()">← ${typeof t !== 'undefined' ? t('back') : 'Back'}</button>
+        </div>`;
+        document.body.appendChild(div);
+    }
+
+    // ── ENSURE DEFECT DETAIL VIEW EXISTS ─────────────────────
+    function ensureDefectDetailView() {
+        if (document.getElementById('defect-detail-view')) return;
+        const div = document.createElement('div');
+        div.id = 'defect-detail-view';
+        div.className = 'nav-view hidden';
+        div.innerHTML = `
+        <div style="max-width:500px; margin:0 auto;">
+            <!-- Hero -->
+            <div id="defectDetailHero" style="position:relative; width:100%; border-radius:0 0 28px 28px; overflow:hidden; margin-bottom:0; min-height:200px; display:flex; align-items:center; justify-content:center;">
+                <img id="defectDetailImg" src="" alt="" style="width:100%; max-height:280px; object-fit:cover; display:none; border-radius:0 0 28px 28px;">
+                <div id="defectDetailImgPlaceholder" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:40px; min-height:200px;">
+                    <span style="font-size:3rem;">🍌</span>
+                    <span style="font-size:0.5rem; font-weight:700; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:2px;">Add photo: images/defects/</span>
+                </div>
+                <div style="position:absolute; top:14px; left:14px;">
+                    <button onclick="DefectDetector.backToList()" style="background:rgba(0,0,0,0.55); border:1px solid rgba(255,255,255,0.15); color:#fff; font-size:0.6rem; font-weight:900; text-transform:uppercase; letter-spacing:1px; padding:6px 14px; border-radius:20px; cursor:pointer;">← Back</button>
+                </div>
+                <div id="defectDetailBadge" style="position:absolute; bottom:14px; left:14px; font-size:0.48rem; font-weight:900; text-transform:uppercase; letter-spacing:1px; padding:4px 12px; border-radius:20px;"></div>
+            </div>
+
+            <!-- Body -->
+            <div style="padding:18px 16px;">
+                <div id="defectDetailTitle" style="font-size:1.4rem; font-weight:900; color:var(--text-main); margin-bottom:3px;"></div>
+                <div id="defectDetailSubtitle" style="font-size:0.55rem; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; margin-bottom:18px;"></div>
+
+                ${[
+                    ['defectSectionWhat', 'What is it?', 'Wat is het?'],
+                    ['defectSectionIdentify', 'How to identify', 'Hoe te herkennen'],
+                    ['defectSectionCauses', 'Causes', 'Oorzaken'],
+                    ['defectSectionShipment', 'Shipment impact', 'Impact op transport'],
+                    ['defectSectionTemp', 'Temperature effects', 'Temperatuureffecten'],
+                    ['defectSectionDecision', 'Accept / Reject guide', 'Accepteren / Afkeuren'],
+                    ['defectSectionPrevention', 'Prevention', 'Preventie'],
+                ].map(([id]) => `
+                <div style="margin-bottom:18px;">
+                    <div id="${id}Label" style="font-size:0.55rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:2px; margin-bottom:7px;"></div>
+                    <div id="${id}Content" style="font-size:0.88rem; color:var(--text-dim); line-height:1.75; font-weight:500;"></div>
+                </div>`).join('')}
+
+                <button class="btn-main btn-back" onclick="DefectDetector.backToList()">← Back</button>
+            </div>
+        </div>`;
+        document.body.appendChild(div);
+    }
+
+    // ── BACK NAVIGATION ───────────────────────────────────────
+    function backToList() {
+        renderDefectList(currentType);
+        showDefectView('defect-list-view');
+    }
+
+    function backToTypeView() {
+        showDefectView('defect-type-view');
+    }
+
+    // ── CAMERA (legacy scan view for non-banana) ──────────────
+    let cameraStream = null;
+
+    function startCamera() {
+        const video = document.getElementById('defectVideo');
+        const placeholder = document.getElementById('cameraPlaceholder');
+        if (!video) return;
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+            .then(stream => {
+                cameraStream = stream;
+                video.srcObject = stream;
+                video.style.display = 'block';
+                if (placeholder) placeholder.style.display = 'none';
+                video.play();
+            })
+            .catch(() => {
+                if (placeholder) placeholder.style.display = 'flex';
+            });
+    }
+
+    function stopCamera() {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(t => t.stop());
+            cameraStream = null;
+        }
+        const video = document.getElementById('defectVideo');
+        if (video) { video.srcObject = null; video.style.display = 'none'; }
+        const placeholder = document.getElementById('cameraPlaceholder');
+        if (placeholder) placeholder.style.display = 'flex';
+    }
+
+    function doScan() {
+        const btn = document.getElementById('defectScanActionBtn');
+        if (btn) btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Scanning...';
+        setTimeout(() => {
+            if (btn) btn.innerHTML = '<i class="bi bi-camera-fill"></i> Scan';
+            const results = document.getElementById('defectScanResults');
+            if (results) {
+                results.classList.remove('hidden');
+                results.innerHTML = `<div style="padding:16px; text-align:center; color:var(--text-dim); font-size:0.7rem;">Camera scan coming soon for this fruit type.</div>`;
+            }
+        }, 1000);
     }
 
     return {
-        init,
         selectFruit,
         selectType,
-        doScan,
-        showMoreInfo,
+        openDefect,
+        backToList,
+        backToTypeView,
         showDefectView,
         stopCamera,
-        close
+        doScan,
     };
 })();
-
-document.addEventListener('DOMContentLoaded', () => {
-    DefectDetector.init();
-});

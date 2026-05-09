@@ -7,31 +7,17 @@ const NewsManager = (() => {
     const PROXY = 'https://corsproxy.io/?url=';
 
     const RSS_FEEDS = [
-        { url: 'https://www.agf.nl/rss.xml/', fruit: 'all', source: 'AGF.nl', hasImages: true, showAll: true },
-        { url: 'https://news.google.com/rss/search?q=banaan+bananen+fruit+handel+-site:agf.nl&hl=nl&gl=NL&ceid=NL:nl', fruit: 'banana', source: 'Google Nieuws', hasImages: false },
-        { url: 'https://news.google.com/rss/search?q=mango+fruit+import+export+europa+-site:agf.nl&hl=nl&gl=NL&ceid=NL:nl', fruit: 'mango', source: 'Google Nieuws', hasImages: false },
-        { url: 'https://news.google.com/rss/search?q=avocado+fruit+import+export+europa+-site:agf.nl&hl=nl&gl=NL&ceid=NL:nl', fruit: 'avocado', source: 'Google Nieuws', hasImages: false },
-        { url: 'https://news.google.com/rss/search?q=banana+fresh+produce+europe+-site:agf.nl&hl=en&gl=NL&ceid=NL:en', fruit: 'banana', source: 'Google News', hasImages: false },
-        { url: 'https://news.google.com/rss/search?q=mango+fresh+produce+europe+-site:agf.nl&hl=en&gl=NL&ceid=NL:en', fruit: 'mango', source: 'Google News', hasImages: false },
-        { url: 'https://news.google.com/rss/search?q=avocado+fresh+produce+europe+-site:agf.nl&hl=en&gl=NL&ceid=NL:en', fruit: 'avocado', source: 'Google News', hasImages: false },
+        { url: 'https://www.agf.nl/rss.xml/', source: 'AGF.nl', hasImages: true },
+        { url: 'https://www.freshplaza.com/rss.xml', source: 'FreshPlaza', hasImages: true },
+        { url: 'https://www.freshfruitportal.com/feed', source: 'Fresh Fruit Portal', hasImages: true },
+        { url: 'https://www.goodfruit.com/feed', source: 'Good Fruit Grower', hasImages: true },
     ];
 
-    const KEYWORDS = {
-        banana: ['banaan', 'bananen', 'banana', 'bananas', 'chiquita', 'fyffes', 'dole', 'del monte', 'rijpcel', 'bananencel', 'ripening'],
-        mango: ['mango', "mango's", 'mangoes', 'mangos'],
-        avocado: ['avocado', "avocado's", 'avocados', 'hass']
-    };
-
     let allArticles = [];
-    let activeFilter = 'all';
     const articleMap = {};
     let autoRefreshTimer = null;
 
     function init() {
-        activeFilter = 'all';
-        document.querySelectorAll('.news-filter-tab').forEach(tab => {
-            tab.classList.toggle('active', tab.dataset.filter === 'all');
-        });
         loadNews();
         startAutoRefresh();
     }
@@ -103,30 +89,10 @@ const NewsManager = (() => {
                 items.forEach(item => {
                     if (articles.find(a => a.link === item.link)) return;
 
+                    // Skip articles older than MAX_AGE_DAYS
                     if (item.pubDate) {
                         const articleDate = new Date(item.pubDate);
                         if (!isNaN(articleDate) && articleDate < cutoffDate) return;
-                    }
-
-                    const text = ((item.title || '') + ' ' + (item.description || '')).toLowerCase();
-                    let fruit = null;
-
-                    if (feed.showAll) {
-                        if (KEYWORDS.banana.some(k => text.includes(k))) fruit = 'banana';
-                        else if (KEYWORDS.mango.some(k => text.includes(k))) fruit = 'mango';
-                        else if (KEYWORDS.avocado.some(k => text.includes(k))) fruit = 'avocado';
-                        else fruit = 'general';
-                    } else if (feed.fruit === 'banana') {
-                        fruit = 'banana';
-                    } else if (feed.fruit === 'mango') {
-                        fruit = 'mango';
-                    } else if (feed.fruit === 'avocado') {
-                        fruit = 'avocado';
-                    } else {
-                        if (KEYWORDS.banana.some(k => text.includes(k))) fruit = 'banana';
-                        else if (KEYWORDS.mango.some(k => text.includes(k))) fruit = 'mango';
-                        else if (KEYWORDS.avocado.some(k => text.includes(k))) fruit = 'avocado';
-                        else return;
                     }
 
                     const cleanDesc = (item.description || '')
@@ -138,14 +104,14 @@ const NewsManager = (() => {
                         title: item.title,
                         description: cleanDesc,
                         link: item.link,
-                        image_url: feed.hasImages ? (item.image || null) : null,
+                        image_url: item.image || null,
                         pubDate: item.pubDate,
                         source_id: feed.source,
-                        fruit
                     });
                 });
             });
 
+            // Deduplicate by title
             const seen = new Set();
             const deduped = articles.filter(a => {
                 const key = (a.title || '').toLowerCase().substring(0, 50);
@@ -154,6 +120,7 @@ const NewsManager = (() => {
                 return true;
             });
 
+            // Always sort newest first
             deduped.sort((a, b) => {
                 const dateA = a.pubDate ? new Date(a.pubDate).getTime() : 0;
                 const dateB = b.pubDate ? new Date(b.pubDate).getTime() : 0;
@@ -216,37 +183,29 @@ const NewsManager = (() => {
         el.style.display = 'flex';
     }
 
-    function setFilter(filter) {
-        activeFilter = filter;
-        document.querySelectorAll('.news-filter-tab').forEach(tab => {
-            tab.classList.toggle('active', tab.dataset.filter === filter);
-        });
-        renderNews();
-    }
-
-    function getFilteredArticles() {
-        if (activeFilter === 'all') return allArticles;
-        return allArticles.filter(a => a.fruit === activeFilter);
-    }
-
-    function getFruitColor(fruit) {
-        if (fruit === 'banana') return '#78c830';
-        if (fruit === 'mango') return '#ff8c00';
-        if (fruit === 'avocado') return '#a6e22e';
+    // Source color per feed
+    function getSourceColor(source_id) {
+        if (source_id === 'AGF.nl') return '#78c830';
+        if (source_id === 'FreshPlaza') return '#ff8c00';
+        if (source_id === 'Fresh Fruit Portal') return '#a6e22e';
+        if (source_id === 'Good Fruit Grower') return '#4db8ff';
         return '#78c830';
     }
 
-    function getFruitBg(fruit) {
-        if (fruit === 'banana') return 'linear-gradient(135deg, #0d1f0d 0%, #152b10 100%)';
-        if (fruit === 'mango') return 'linear-gradient(135deg, #1f1200 0%, #2e1c00 100%)';
-        if (fruit === 'avocado') return 'linear-gradient(135deg, #0a1a0a 0%, #152515 100%)';
+    // Source background per feed (for text-fill cards)
+    function getSourceBg(source_id) {
+        if (source_id === 'AGF.nl') return 'linear-gradient(135deg, #0d1f0d 0%, #152b10 100%)';
+        if (source_id === 'FreshPlaza') return 'linear-gradient(135deg, #1f1200 0%, #2e1c00 100%)';
+        if (source_id === 'Fresh Fruit Portal') return 'linear-gradient(135deg, #0a1a0a 0%, #152515 100%)';
+        if (source_id === 'Good Fruit Grower') return 'linear-gradient(135deg, #001a2e 0%, #002b47 100%)';
         return 'linear-gradient(135deg, #0d1f0d 0%, #152b10 100%)';
     }
 
-    function getFruitEmoji(fruit) {
-        if (fruit === 'banana') return '🍌';
-        if (fruit === 'mango') return '🥭';
-        if (fruit === 'avocado') return '🥑';
+    function getSourceEmoji(source_id) {
+        if (source_id === 'AGF.nl') return '🌿';
+        if (source_id === 'FreshPlaza') return '🍊';
+        if (source_id === 'Fresh Fruit Portal') return '🍇';
+        if (source_id === 'Good Fruit Grower') return '🍎';
         return '🌿';
     }
 
@@ -281,7 +240,7 @@ const NewsManager = (() => {
     function renderNews() {
         const list = document.getElementById('newsArticleList');
         if (!list) return;
-        const articles = getFilteredArticles();
+        const articles = allArticles;
 
         if (articles.length === 0) {
             list.innerHTML = `
@@ -306,8 +265,8 @@ const NewsManager = (() => {
 
     function renderMobileCard(article, index) {
         const id = storeArticle(article);
-        const colour = getFruitColor(article.fruit);
-        const emoji = getFruitEmoji(article.fruit);
+        const colour = getSourceColor(article.source_id);
+        const emoji = getSourceEmoji(article.source_id);
         const time = timeAgo(article.pubDate);
         const size = getTileSize(article, index);
         const badge = `<div class="flip-badge" style="background:${colour}25; border:1px solid ${colour}50; color:${colour};">${emoji} ${article.source_id}</div>`;
@@ -330,7 +289,7 @@ const NewsManager = (() => {
             const minHeight = size === 'large-text' ? '160px' : size === 'medium-text' ? '120px' : '90px';
             const titleClass = size === 'large-text' ? 'flip-title-lg' : 'flip-title-md';
             return `
-            <div class="flip-mobile-card flip-text-fill" style="${getFruitBg(article.fruit)}; min-height:${minHeight};" onclick="NewsManager.openArticleById('${id}')">
+            <div class="flip-mobile-card flip-text-fill" style="${getSourceBg(article.source_id)}; min-height:${minHeight};" onclick="NewsManager.openArticleById('${id}')">
                 ${badge}
                 <div class="flip-text-fill-inner">
                     <div class="${titleClass}">${article.title || ''}</div>
@@ -349,8 +308,8 @@ const NewsManager = (() => {
 
     function renderDesktopHero(article) {
         const id = storeArticle(article);
-        const colour = getFruitColor(article.fruit);
-        const emoji = getFruitEmoji(article.fruit);
+        const colour = getSourceColor(article.source_id);
+        const emoji = getSourceEmoji(article.source_id);
         const time = timeAgo(article.pubDate);
 
         if (article.image_url) {
@@ -368,7 +327,7 @@ const NewsManager = (() => {
             </div>`;
         } else {
             return `
-            <div class="flip-dt-hero flip-dt-hero-text" style="${getFruitBg(article.fruit)};" onclick="NewsManager.openArticleById('${id}')">
+            <div class="flip-dt-hero flip-dt-hero-text" style="${getSourceBg(article.source_id)};" onclick="NewsManager.openArticleById('${id}')">
                 <div class="flip-badge" style="background:${colour}25; border:1px solid ${colour}50; color:${colour}; position:relative; margin-bottom:16px; align-self:flex-start;">${emoji} ${article.source_id}</div>
                 <div class="flip-dt-hero-title">${article.title || ''}</div>
                 ${article.description ? `<div class="flip-dt-hero-excerpt">${article.description}</div>` : ''}
@@ -379,8 +338,8 @@ const NewsManager = (() => {
 
     function renderDesktopTile(article, index) {
         const id = storeArticle(article);
-        const colour = getFruitColor(article.fruit);
-        const emoji = getFruitEmoji(article.fruit);
+        const colour = getSourceColor(article.source_id);
+        const emoji = getSourceEmoji(article.source_id);
         const time = timeAgo(article.pubDate);
         const size = getTileSize(article, index);
         const badge = `<div class="flip-badge" style="background:${colour}25; border:1px solid ${colour}50; color:${colour};">${emoji} ${article.source_id}</div>`;
@@ -403,7 +362,7 @@ const NewsManager = (() => {
             const minH = size === 'large-text' ? '170px' : size === 'medium-text' ? '130px' : '100px';
             const titleClass = size === 'large-text' ? 'flip-title-md' : 'flip-title-sm';
             return `
-            <div class="flip-dt-tile flip-text-fill" style="${getFruitBg(article.fruit)}; min-height:${minH};" onclick="NewsManager.openArticleById('${id}')">
+            <div class="flip-dt-tile flip-text-fill" style="${getSourceBg(article.source_id)}; min-height:${minH};" onclick="NewsManager.openArticleById('${id}')">
                 ${badge}
                 <div class="flip-text-fill-inner">
                     <div class="${titleClass}">${article.title || ''}</div>
@@ -421,8 +380,8 @@ const NewsManager = (() => {
     }
 
     function openArticle(article) {
-        const colour = getFruitColor(article.fruit);
-        const emoji = getFruitEmoji(article.fruit);
+        const colour = getSourceColor(article.source_id);
+        const emoji = getSourceEmoji(article.source_id);
         const time = timeAgo(article.pubDate);
         const date = article.pubDate
             ? new Date(article.pubDate).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()
@@ -433,17 +392,15 @@ const NewsManager = (() => {
         const heroBg = document.getElementById('articleHeroBg');
 
         if (article.image_url) {
-            // Show real image — sizes naturally to content
             heroImg.src = article.image_url;
             heroImg.style.display = 'block';
             heroBg.style.display = 'none';
             heroWrap.classList.add('has-image');
             heroWrap.classList.remove('has-bg');
         } else {
-            // No image — show fruit-colored background
             heroImg.style.display = 'none';
             heroBg.style.display = 'block';
-            heroBg.style.background = getFruitBg(article.fruit);
+            heroBg.style.background = getSourceBg(article.source_id);
             heroWrap.classList.add('has-bg');
             heroWrap.classList.remove('has-image');
         }
@@ -517,5 +474,5 @@ const NewsManager = (() => {
         </div>`;
     }
 
-    return { init, setFilter, openArticleById, closeArticle, forceRefresh };
+    return { init, openArticleById, closeArticle, forceRefresh };
 })();

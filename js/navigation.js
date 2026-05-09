@@ -4,61 +4,59 @@
 let activeFruit = null;
 let activeBrand = null;
 
+const fruitNames = {
+    'banana': 'Banana',
+    'mango': 'Mango',
+    'avocado': 'Avocado'
+};
+
 // Show fruit hub
 function showHub() {
     document.getElementById('fruit-hub').classList.remove('hidden');
     document.getElementById('middle-hub').classList.add('hidden');
     document.getElementById('brand-hub').classList.add('hidden');
     document.getElementById('appInterface').classList.add('hidden');
-    document.getElementById('defect-detector-hub').classList.add('hidden');
+    const defHub = document.getElementById('defect-detector-hub');
+    if (defHub) defHub.classList.add('hidden');
 }
 
 // Open middle hub for fruit selection
 function openMiddleHub(fruit) {
     activeFruit = fruit;
-    const fruitNames = {
-        'banana': 'Banana',
-        'mango': 'Mango',
-        'avocado': 'Avocado'
-    };
-    
     document.getElementById('middleHubTitle').innerText = fruitNames[fruit] + ' Menu';
     document.getElementById('fruit-hub').classList.add('hidden');
     document.getElementById('middle-hub').classList.remove('hidden');
     document.getElementById('appInterface').classList.add('hidden');
-    document.getElementById('defect-detector-hub').classList.add('hidden');
+    const defHub = document.getElementById('defect-detector-hub');
+    if (defHub) defHub.classList.add('hidden');
 }
 
 // Open brands hub
 function openBrands(fruit) {
     activeFruit = fruit;
-    const fruitNames = {
-        'banana': 'Banana',
-        'mango': 'Mango',
-        'avocado': 'Avocado'
-    };
-    
     document.getElementById('brandHubTitle').innerText = 'Select ' + fruitNames[fruit] + ' Brand';
     document.getElementById('fruit-hub').classList.add('hidden');
     document.getElementById('middle-hub').classList.add('hidden');
     document.getElementById('brand-hub').classList.remove('hidden');
     document.getElementById('appInterface').classList.add('hidden');
-    document.getElementById('defect-detector-hub').classList.add('hidden');
-    
+    const defHub = document.getElementById('defect-detector-hub');
+    if (defHub) defHub.classList.add('hidden');
     renderBrands(fruit);
 }
 
-// Select brand and show calculator
+// Select brand and show calculator — fixed commodityLabel
 function selectBrand(brand) {
     activeBrand = brand;
     document.getElementById('brandName').innerText = brand;
-    const fruitLabels = { 'banana': 'BANANA', 'mango': 'MANGO', 'avocado': 'AVOCADO' };
-    document.getElementById('commodityLabel').innerText = (fruitLabels[activeFruit] || '') + ' AGE CHECKER';
+    // Set label correctly — fruit name + AGE CHECKER (no duplication)
+    const fruitLabel = fruitNames[activeFruit] ? fruitNames[activeFruit].toUpperCase() : '';
+    document.getElementById('commodityLabel').innerText = fruitLabel + ' AGE CHECKER';
     document.getElementById('fruit-hub').classList.add('hidden');
     document.getElementById('middle-hub').classList.add('hidden');
     document.getElementById('brand-hub').classList.add('hidden');
     document.getElementById('appInterface').classList.remove('hidden');
-    document.getElementById('defect-detector-hub').classList.add('hidden');
+    const defHub = document.getElementById('defect-detector-hub');
+    if (defHub) defHub.classList.add('hidden');
 }
 
 // openCalc — called from brands.js
@@ -72,32 +70,33 @@ function openDefectDetector() {
     document.getElementById('middle-hub').classList.add('hidden');
     document.getElementById('brand-hub').classList.add('hidden');
     document.getElementById('appInterface').classList.add('hidden');
-    document.getElementById('defect-detector-hub').classList.remove('hidden');
+    const defHub = document.getElementById('defect-detector-hub');
+    if (defHub) defHub.classList.remove('hidden');
 }
 
 // Open specific fruit defect scanner
 function openDefectScanner(fruit) {
-    const fruitNames = {
-        'banana': 'Banana',
-        'mango': 'Mango',
-        'avocado': 'Avocado'
-    };
-    
     activeFruit = fruit;
-    document.getElementById('defectScannerTitle').innerText = 'Scan ' + fruitNames[fruit] + ' for Defects';
-    document.getElementById('defect-detector-hub').classList.add('hidden');
-    document.getElementById('defect-scanner-view').classList.remove('hidden');
+    const defScanTitle = document.getElementById('defectScannerTitle');
+    if (defScanTitle) defScanTitle.innerText = 'Scan ' + fruitNames[fruit] + ' for Defects';
+    const defHub = document.getElementById('defect-detector-hub');
+    if (defHub) defHub.classList.add('hidden');
+    const defScan = document.getElementById('defect-scanner-view');
+    if (defScan) defScan.classList.remove('hidden');
 }
 
 // Back from defect scanner to defect hub
 function backToDefectHub() {
-    document.getElementById('defect-scanner-view').classList.add('hidden');
-    document.getElementById('defect-detector-hub').classList.remove('hidden');
+    const defScan = document.getElementById('defect-scanner-view');
+    if (defScan) defScan.classList.add('hidden');
+    const defHub = document.getElementById('defect-detector-hub');
+    if (defHub) defHub.classList.remove('hidden');
 }
 
 // Back from defect hub to main fruit hub
 function backToFruitHub() {
-    document.getElementById('defect-detector-hub').classList.add('hidden');
+    const defHub = document.getElementById('defect-detector-hub');
+    if (defHub) defHub.classList.add('hidden');
     document.getElementById('fruit-hub').classList.remove('hidden');
 }
 
@@ -110,35 +109,39 @@ function toggleMenu() {
 // Toggle theme
 function toggleTheme() {
     document.body.classList.toggle('light-theme');
-    const themeText = document.getElementById('themeText');
-    themeText.innerText = document.body.classList.contains('light-theme') ? 'Light Mode' : 'Dark Mode';
-    localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
+    const isLight = document.body.classList.contains('light-theme');
+    localStorage.setItem('pulpTheme', isLight ? 'light' : 'dark');
+    document.getElementById('themeText').innerText = isLight ? 'Light Mode' : 'Dark Mode';
 }
 
-// Load saved theme
-function loadTheme() {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'light') {
-        document.body.classList.add('light-theme');
-        document.getElementById('themeText').innerText = 'Light Mode';
+// Open news
+function openNews() {
+    hideAllViews();
+    document.getElementById('news-view').classList.remove('hidden');
+    if (typeof NewsManager !== 'undefined') NewsManager.init();
+}
+
+// Open colour scanner
+function openColourScanner() {
+    hideAllViews();
+    document.getElementById('colour-scanner-view').classList.remove('hidden');
+    if (typeof ColourScanner !== 'undefined') ColourScanner.init();
+    if (typeof ColourScanner !== 'undefined') ColourScanner.setScanMode('single');
+    if (typeof ColourScanner !== 'undefined') {
+        setTimeout(() => { ColourScanner.init && ColourScanner.init(); }, 100);
     }
 }
 
-// Toggle language
-function toggleLanguage() {
-    const langText = document.getElementById('langText');
-    if (langText.innerText.includes('Nederlands')) {
-        langText.innerText = '🇬🇧 English';
-    } else {
-        langText.innerText = '🇳🇱 Nederlands';
-    }
-}
-
-// Send feedback
-function sendFeedback() {
-    const theme = document.body.classList.contains('light-theme') ? 'Light' : 'Dark';
-    const historyCount = (JSON.parse(localStorage.getItem('pulpProHistory')) || []).length;
-    const subject = encodeURIComponent("Pulp Pro App Feedback");
-    const body = encodeURIComponent(`Hi Team,\n\nI have some feedback for Pulp Pro:\n\n[Your feedback here]\n\n---\nApp Stats for Debugging:\nTheme: ${theme}\nLogged Scans: ${historyCount}\nPlatform: ${navigator.platform}`);
-    window.location.href = `mailto:ar.varma@hotmail.com?subject=${subject}&body=${body}`;
+// Hide all views helper
+function hideAllViews() {
+    const views = [
+        'fruit-hub', 'middle-hub', 'brand-hub', 'appInterface',
+        'news-view', 'colour-scanner-view', 'defect-hub',
+        'defect-type-view', 'defect-scan-view', 'defect-info-view',
+        'defect-report-view'
+    ];
+    views.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+    });
 }

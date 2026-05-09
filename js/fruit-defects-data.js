@@ -365,8 +365,8 @@ const FRUIT_DEFECTS = {
                 tempRange: '> 14°C triggers',
                 shelfImpact: '−2 to −3 days post-ripening',
                 images: [
-                    proxyImg('https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Banana-_Prob._anthracnose_-_15774886919.jpg/640px-Banana-_Prob._anthracnose_-_15774886919.jpg'),
                     'images/defects/banana-anthracnose-1.jpg',
+                    'images/defects/banana-anthracnose-2.jpg',
                 ],
                 en: {
                     name: 'Anthracnose',

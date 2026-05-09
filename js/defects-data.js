@@ -2,371 +2,359 @@ const DEFECTS_DATA = {
     banana: {
         external: [
             {
-                id: 'ban_ext_01',
-                name: 'Bruising',
-                description: 'Dark soft patches on skin caused by impact or pressure',
-                severity: 'minor',
-                action: 'Monitor closely. Minor bruising is acceptable for immediate sale.'
-            },
-            {
-                id: 'ban_ext_02',
-                name: 'Skin Splitting',
-                description: 'Longitudinal or transverse cracks in the peel',
+                id: 'impact-bruising',
                 severity: 'major',
-                action: 'Prioritise for immediate sale or processing. Not suitable for long transport.'
+                image: 'images/defects/banana-impact-bruising.jpg',
+                en: {
+                    name: 'Impact Bruising',
+                    category: 'External',
+                    shortDesc: 'Internal flesh browning, skin often intact',
+                    whatIsIt: 'Impact bruising occurs when bananas are dropped or compressed, causing cellular damage beneath the skin. The flesh browns and softens while the skin may remain visually intact, making early detection difficult.',
+                    howToIdentify: 'Look for soft dark areas under the skin. In green fruit bruising is invisible until ripening begins — the bruised area turns dark brown or black and feels soft. Cross-section will show brown discolouration of the flesh.',
+                    causes: 'Dropping during harvest or packing. Compression from stacking boxes too high. Rough handling during transport. Impact against hard surfaces in the packing line.',
+                    shipmentImpact: 'Bruised areas accelerate ripening and create entry points for fungal decay. Can reduce shelf life by 2–4 days. In severe cases bruising spreads throughout the flesh.',
+                    temperatureEffects: 'Chilled fruit is more susceptible to bruising damage. Below 13°C the peel becomes more brittle and bruises more easily. Bruising at low temperature may not show until fruit is moved to warmer conditions.',
+                    acceptReject: 'Minor surface bruising (less than 5% of finger surface): Accept with discount. Moderate bruising affecting more than 10% of surface: Downgrade. Severe bruising with visible softening or multiple fingers affected: Reject.',
+                    prevention: 'Handle boxes with care at all stages. Avoid dropping from heights above 30cm. Do not stack more than the recommended box height. Use padded conveyors and handling equipment. Harvest at correct maturity stage.',
+                },
+                nl: {
+                    name: 'Stootbeschadiging',
+                    category: 'Extern',
+                    shortDesc: 'Intern bruinkleuring vruchtvlees, schil vaak intact',
+                    whatIsIt: 'Stootbeschadiging treedt op wanneer bananen worden gevallen of samengedrukt, wat cellulaire schade onder de schil veroorzaakt. Het vruchtvlees verkleurt bruin en wordt zacht terwijl de schil visueel intact kan blijven, waardoor vroege detectie moeilijk is.',
+                    howToIdentify: 'Zoek naar zachte donkere gebieden onder de schil. Bij groen fruit is beschadiging onzichtbaar totdat het rijpen begint — het beschadigde gebied wordt donkerbruin of zwart en voelt zacht aan. Dwarsdoorsnede toont bruinkleuring van het vruchtvlees.',
+                    causes: 'Vallen tijdens oogst of verpakking. Samendrukking door te hoog stapelen van dozen. Ruw behandelen tijdens transport. Impact tegen harde oppervlakken in de verpakkingslijn.',
+                    shipmentImpact: 'Beschadigde gebieden versnellen rijping en vormen ingangen voor schimmelrot. Kan houdbaarheid met 2–4 dagen verminderen. Bij ernstige gevallen verspreidt beschadiging zich door het vruchtvlees.',
+                    temperatureEffects: 'Gekoeld fruit is gevoeliger voor stootschade. Onder 13°C wordt de schil brozer en beschadigt gemakkelijker. Schade bij lage temperatuur is mogelijk pas zichtbaar nadat fruit naar warmere omstandigheden is verplaatst.',
+                    acceptReject: 'Geringe oppervlakkige beschadiging (minder dan 5% van het vingeroppervlak): Accepteren met korting. Matige beschadiging van meer dan 10% van het oppervlak: Afwaarderen. Ernstige beschadiging met zichtbaar verzachting of meerdere aangetaste vingers: Afkeuren.',
+                    prevention: 'Behandel dozen met zorg in alle stadia. Vermijd vallen van hoogten boven 30cm. Stapel niet hoger dan de aanbevolen dooshoogte. Gebruik gevoerde transportbanden en behandelingsapparatuur. Oogst op het juiste rijpingsstadium.',
+                }
             },
             {
-                id: 'ban_ext_03',
-                name: 'Mould on Skin',
-                description: 'Visible fungal growth on the outer peel surface',
+                id: 'skin-abrasion',
+                severity: 'minor',
+                image: 'images/defects/banana-skin-abrasion.jpg',
+                en: {
+                    name: 'Skin Abrasions',
+                    category: 'External',
+                    shortDesc: 'Brown to black scuffing marks on peel',
+                    whatIsIt: 'Skin abrasions result from the banana peel rubbing or scraping against other fruit, surfaces of handling equipment, or the inside of shipping boxes. The outer cells of the peel are damaged, exposing the tissue beneath to oxidation.',
+                    howToIdentify: 'Flat, discoloured areas on the skin ranging from light brown to black. The affected area feels rougher than the surrounding skin. In early stages appears as a dull grey patch. Can cover large areas if fruit moves excessively in the box.',
+                    causes: 'Fruit movement within boxes during transit. Contact with rough surfaces of conveyor belts or packing equipment. Overfilling of boxes causing friction between fingers. Harvesting with long fingernails or sharp tools.',
+                    shipmentImpact: 'Mainly cosmetic but creates entry points for decay fungi. Under low humidity (below 90% RH) the damaged cells dry out rapidly and turn black. Significantly affects marketability and retail appearance.',
+                    temperatureEffects: 'Low relative humidity accelerates browning of abraded areas. Maintain above 90% RH during storage and transport to minimise discolouration.',
+                    acceptReject: 'Light abrasions covering less than 5% of finger: Accept. Moderate abrasions 5–15%: Accept for processing, downgrade for retail. Severe abrasions over 15% or with dark black discolouration: Reject for retail, accept for processing.',
+                    prevention: 'Line boxes with soft padding. Avoid overfilling boxes. Ensure conveyor belts are smooth and clean. Minimise unnecessary movement of fruit during transport. Use appropriate box sizes for the variety.',
+                },
+                nl: {
+                    name: 'Schuurwonden',
+                    category: 'Extern',
+                    shortDesc: 'Bruin tot zwarte schuursporen op de schil',
+                    whatIsIt: 'Schuurwonden ontstaan doordat de bananenschil schuurt of schaaft langs andere vruchten, oppervlakken van behandelingsapparatuur of de binnenkant van verzenddozen. De buitenste cellen van de schil raken beschadigd, waardoor het weefsel daaronder wordt blootgesteld aan oxidatie.',
+                    howToIdentify: 'Platte, verkleurd gebieden op de schil variërend van lichtbruin tot zwart. Het aangetaste gebied voelt ruwer aan dan de omliggende schil. In vroege stadia verschijnt als een dof grijs vlak. Kan grote gebieden bedekken als fruit overmatig beweegt in de doos.',
+                    causes: 'Fruitbeweging binnen dozen tijdens transport. Contact met ruwe oppervlakken van transportbanden of verpakkingsapparatuur. Overvulling van dozen waardoor wrijving ontstaat tussen vingers. Oogsten met lange nagels of scherpe gereedschappen.',
+                    shipmentImpact: 'Voornamelijk cosmetisch maar creëert ingangen voor rotschimmels. Bij lage luchtvochtigheid (onder 90% RV) drogen de beschadigde cellen snel uit en worden zwart. Heeft significant invloed op verkoopbaarheid en uitstraling in de winkel.',
+                    temperatureEffects: 'Lage relatieve luchtvochtigheid versnelt bruinkleuring van geschuurde gebieden. Handhaven boven 90% RV tijdens opslag en transport om verkleuring te minimaliseren.',
+                    acceptReject: 'Lichte schuurwonden op minder dan 5% van de vinger: Accepteren. Matige schuurwonden 5–15%: Accepteren voor verwerking, afwaarderen voor detailhandel. Ernstige schuurwonden over 15% of met donkere zwarte verkleuring: Afkeuren voor detailhandel, accepteren voor verwerking.',
+                    prevention: 'Bekleed dozen met zachte demping. Vermijd overvulling van dozen. Zorg dat transportbanden glad en schoon zijn. Minimaliseer onnodige beweging van fruit tijdens transport. Gebruik de juiste doosformaten voor de variëteit.',
+                }
+            },
+            {
+                id: 'chilling-injury',
                 severity: 'critical',
-                action: 'Reject immediately. Risk of contamination to surrounding fruit.'
+                image: 'images/defects/banana-chilling-injury.jpg',
+                en: {
+                    name: 'Chilling Injury',
+                    category: 'External',
+                    shortDesc: 'Dull grey-yellow colour, streaked skin, failure to ripen',
+                    whatIsIt: 'Chilling injury is a physiological disorder caused by exposing bananas to temperatures below 13°C (56°F). The cold disrupts cell membranes and metabolic processes. Unlike freezing damage, chilling injury occurs at temperatures well above 0°C and causes irreversible cellular damage.',
+                    howToIdentify: 'Surface discolouration — skin turns dull, smoky grey or greyish-yellow during ripening instead of bright yellow. Subepidermal dark brown streaks visible when skin is cut. In severe cases complete failure to ripen. Skin may feel firm but fruit never softens properly. Brown vascular bundles visible under the skin.',
+                    causes: 'Storage or transit temperatures below 13°C. Accidental exposure to refrigeration units designed for other produce. Poor temperature management in reefer containers. Fruit loaded near cooling vents.',
+                    shipmentImpact: 'Severely affected fruit will not ripen properly and becomes commercially worthless. Even mildly chilled fruit ripens unevenly. Creates entry points for secondary fungal infections. Losses can reach 100% in severely chilled shipments.',
+                    temperatureEffects: 'Critical threshold is 13°C (56°F). Moderate injury from 1 hour at 10°C, 5 hours at 11.7°C, 24 hours at 12.2°C. Severe injury from prolonged exposure. Damage is cumulative and irreversible. Chilled fruit is also more susceptible to bruising and mechanical damage.',
+                    acceptReject: 'Any visible chilling injury symptoms: Reject for retail. Mild symptoms with less than 10% affected: May ripen for processing use only. Severe symptoms, failure to ripen, or widespread streaking: Full rejection of entire pallet.',
+                    prevention: 'Never store below 13°C (56°F). Monitor reefer container temperatures continuously. Keep fruit away from cooling vents in containers. Check temperature loggers on arrival. Do not mix with cold-chain products in same space.',
+                },
+                nl: {
+                    name: 'Kouschade',
+                    category: 'Extern',
+                    shortDesc: 'Dof grijs-gele kleur, gestreepte schil, niet kunnen rijpen',
+                    whatIsIt: 'Kouschade is een fysiologische aandoening veroorzaakt door blootstelling van bananen aan temperaturen onder 13°C. De kou verstoort celmembranen en metabolische processen. In tegenstelling tot vrieschade treedt kouschade op bij temperaturen ruim boven 0°C en veroorzaakt onomkeerbare cellulaire schade.',
+                    howToIdentify: 'Oppervlakteverkleuring — schil wordt dof, rookgrijs of grijsgeel tijdens rijping in plaats van helder geel. Subepidermale donkerbruine strepen zichtbaar wanneer schil wordt gesneden. In ernstige gevallen volledig falen om te rijpen. Schil kan stevig aanvoelen maar fruit wordt nooit goed zacht. Bruine vaatbundels zichtbaar onder de schil.',
+                    causes: 'Opslag- of transporttemperaturen onder 13°C. Onbedoelde blootstelling aan koeleenheden ontworpen voor andere producten. Slecht temperatuurbeheer in koelcontainers. Fruit geladen nabij koelventilatoren.',
+                    shipmentImpact: 'Zwaar aangetast fruit rijpt niet goed en wordt commercieel waardeloos. Zelfs licht gekoeld fruit rijpt ongelijkmatig. Creëert ingangen voor secundaire schimmelinfecties. Verliezen kunnen 100% bereiken bij zwaar gekoelde zendingen.',
+                    temperatureEffects: 'Kritieke drempel is 13°C. Matige schade na 1 uur bij 10°C, 5 uur bij 11,7°C, 24 uur bij 12,2°C. Ernstige schade bij langdurige blootstelling. Schade is cumulatief en onomkeerbaar. Gekoeld fruit is ook gevoeliger voor kneuzing en mechanische schade.',
+                    acceptReject: 'Zichtbare kouschade symptomen: Afkeuren voor detailhandel. Milde symptomen met minder dan 10% aangetast: Mag rijpen voor verwerkingsgebruik. Ernstige symptomen, niet kunnen rijpen, of wijdverspreide streping: Volledige afkeuring van het hele palet.',
+                    prevention: 'Nooit bewaren onder 13°C. Bewaak koelcontainertemperaturen continu. Houd fruit weg van koelventilatoren in containers. Controleer temperatuurloggers bij aankomst. Niet mengen met koelketenproducten in dezelfde ruimte.',
+                }
             },
             {
-                id: 'ban_ext_04',
-                name: 'Colour Deviation',
-                description: 'Uneven yellowing, green patches or abnormal brown discolouration',
+                id: 'latex-staining',
                 severity: 'minor',
-                action: 'Acceptable if minor. Monitor ripening stage carefully.'
+                image: 'images/defects/banana-latex-staining.jpg',
+                en: {
+                    name: 'Latex Staining',
+                    category: 'External',
+                    shortDesc: 'Milky sap stains turning black on skin',
+                    whatIsIt: 'Latex staining occurs when the milky sap (latex) that flows from cut stems or damaged peel contacts and dries on the fruit surface. The latex oxidises and turns dark brown to black, leaving permanent stains on the skin.',
+                    howToIdentify: 'Irregular dark brown or black stains, often near the crown or tip where cuts are made. Stains may have a streaked or dripped appearance. The stain is superficial and does not penetrate the flesh. More visible on ripe yellow fruit than green.',
+                    causes: 'Improper dehanding technique — cuts too close to the crown. Latex dripping from the bunch stem onto lower hands during dehanding. Delay between dehanding and washing the fruit. Not enough water flow in the packing tank.',
+                    shipmentImpact: 'Purely cosmetic — does not affect eating quality or shelf life. However significantly reduces retail appearance and marketability. Can result in rejection by quality-conscious buyers.',
+                    temperatureEffects: 'Temperature does not directly affect latex staining. However latex dries faster in warm, low-humidity conditions, making stains harder to remove if not washed promptly.',
+                    acceptReject: 'Staining on less than 5% of finger surface: Accept. Moderate staining 5–20%: Downgrade, accept for secondary markets. Heavy staining over 20% or affecting crown area prominently: Reject for premium markets.',
+                    prevention: 'Dehand bunches immediately over water tanks to capture latex. Use correct dehanding knives with controlled cut distance. Wash fruit immediately after dehanding. Ensure adequate water flow in packing tanks. Handle cut surfaces carefully.',
+                },
+                nl: {
+                    name: 'Latexvlekken',
+                    category: 'Extern',
+                    shortDesc: 'Melkachtig sap vlekken die zwart worden op schil',
+                    whatIsIt: 'Latexvlekken ontstaan wanneer het melkachtige sap (latex) dat uit gesneden stelen of beschadigde schil stroomt in contact komt met en droogt op het vruchtoppervlak. De latex oxideert en wordt donkerbruin tot zwart, waardoor permanente vlekken op de schil achterblijven.',
+                    howToIdentify: 'Onregelmatige donkerbruine of zwarte vlekken, vaak nabij de kroon of punt waar sneden worden gemaakt. Vlekken kunnen een gestreept of gedruppeld uiterlijk hebben. De vlek is oppervlakkig en dringt niet door in het vruchtvlees. Meer zichtbaar op rijp geel fruit dan groen.',
+                    causes: 'Onjuiste onthanden techniek — sneden te dicht bij de kroon. Latex druipt van de trossteel op lagere handen tijdens onthanden. Vertraging tussen onthanden en wassen van het fruit. Niet genoeg waterstroming in de verpakkingstank.',
+                    shipmentImpact: 'Puur cosmetisch — heeft geen invloed op eetkwaliteit of houdbaarheid. Vermindert echter significant de uitstraling in de winkel en verkoopbaarheid. Kan leiden tot afkeuring door kwaliteitsbewuste kopers.',
+                    temperatureEffects: 'Temperatuur heeft geen directe invloed op latexvlekken. Latex droogt echter sneller in warme, droge omstandigheden, waardoor vlekken moeilijker te verwijderen zijn als ze niet snel worden gewassen.',
+                    acceptReject: 'Vlekken op minder dan 5% van het vingeroppervlak: Accepteren. Matige vlekken 5–20%: Afwaarderen, accepteren voor secundaire markten. Zware vlekken over 20% of prominent de kroonzone aantastend: Afkeuren voor premium markten.',
+                    prevention: 'Onthanden tossen onmiddellijk boven watertanks om latex op te vangen. Gebruik correcte onthanden messen met gecontroleerde snijafstand. Was fruit onmiddellijk na onthanden. Zorg voor voldoende waterstroming in verpakkingstanks. Behandel gesneden oppervlakken voorzichtig.',
+                }
             },
             {
-                id: 'ban_ext_05',
-                name: 'Mechanical Damage',
-                description: 'Cuts, abrasions or punctures on the skin surface',
-                severity: 'major',
-                action: 'Separate from batch. Damaged skin accelerates ripening and decay.'
-            },
-            {
-                id: 'ban_ext_06',
-                name: 'Latex Staining',
-                description: 'Dark sticky residue from latex on skin surface',
+                id: 'scarring',
                 severity: 'minor',
-                action: 'Cosmetic issue only. Does not affect internal quality.'
+                image: 'images/defects/banana-scarring.jpg',
+                en: {
+                    name: 'Scarring',
+                    category: 'External',
+                    shortDesc: 'Healed surface wounds, corky brown marks',
+                    whatIsIt: 'Scarring refers to healed wounds on the banana skin that occurred before or during harvest. The skin forms a corky, brown scar tissue over the damaged area. Unlike active damage, scars are dry and do not progress.',
+                    howToIdentify: 'Dry, brown, slightly raised or sunken areas on the skin. The texture is rough or corky compared to surrounding skin. Scars do not feel soft or wet. May have an irregular shape from insect feeding, hail, leaf rubbing, or equipment contact.',
+                    causes: 'Insect feeding (thrips, spider mites) early in fruit development. Hail damage in growing regions. Leaf or plant parts rubbing against developing fruit. Equipment contact during early growing stages.',
+                    shipmentImpact: 'Purely cosmetic — no effect on eating quality, shelf life, or food safety. However scarred fruit is often downgraded or rejected by retail buyers with strict cosmetic standards.',
+                    temperatureEffects: 'Temperature has no effect on pre-existing scars. The scar tissue is stable and does not change during storage or transport.',
+                    acceptReject: 'Light scarring less than 5% of surface: Accept for all markets. Moderate scarring 5–20%: Accept for standard retail, downgrade for premium. Heavy scarring over 20%: Reject for retail, redirect to processing.',
+                    prevention: 'Scarring is largely a pre-harvest issue. Preharvest pest management reduces insect scarring. Bagging of bunches protects from insect and mechanical damage. Proper plantation management reduces leaf rubbing.',
+                },
+                nl: {
+                    name: 'Littekens',
+                    category: 'Extern',
+                    shortDesc: 'Genezen oppervlaktewonden, kurkerige bruine plekken',
+                    whatIsIt: 'Littekens verwijzen naar genezen wonden op de bananenschil die voor of tijdens de oogst zijn opgetreden. De schil vormt een kurkerig, bruin littekenweefsel over het beschadigde gebied. In tegenstelling tot actieve schade zijn littekens droog en vorderen ze niet.',
+                    howToIdentify: 'Droge, bruine, licht verheven of verzonken gebieden op de schil. De textuur is ruw of kurkerig vergeleken met de omliggende schil. Littekens voelen niet zacht of nat aan. Kunnen een onregelmatige vorm hebben van insectenvraat, hagel, bladwrijving of apparatuurcontact.',
+                    causes: 'Insectenvraat (trips, spintmijten) vroeg in vruchtontwikkeling. Hagelschade in groeigebieden. Blad of plantenonderdelen die wrijven tegen ontwikkelend fruit. Apparatuurcontact tijdens vroege groeistadia.',
+                    shipmentImpact: 'Puur cosmetisch — geen effect op eetkwaliteit, houdbaarheid of voedselveiligheid. Fruit met littekens wordt echter vaak afgewaardeerd of afgekeurd door retailkopers met strenge cosmetische normen.',
+                    temperatureEffects: 'Temperatuur heeft geen effect op reeds bestaande littekens. Het littekenweefsel is stabiel en verandert niet tijdens opslag of transport.',
+                    acceptReject: 'Lichte littekens minder dan 5% van het oppervlak: Accepteren voor alle markten. Matige littekens 5–20%: Accepteren voor standaard detailhandel, afwaarderen voor premium. Zware littekens over 20%: Afkeuren voor detailhandel, doorsturen naar verwerking.',
+                    prevention: 'Littekens zijn grotendeels een pre-oogst probleem. Pre-oogst plaagbeheer vermindert insectenlittekens. Inzakken van trossen beschermt tegen insecten- en mechanische schade. Goed plantagemanagement vermindert bladwrijving.',
+                }
             },
+        ],
+        fungal: [
             {
-                id: 'ban_ext_07',
-                name: 'Scarring',
-                description: 'Healed surface scars from insects or friction',
-                severity: 'minor',
-                action: 'Acceptable unless affecting more than 20% of surface area.'
-            },
-            {
-                id: 'ban_ext_08',
-                name: 'Deformity',
-                description: 'Abnormal shape, curved fingers or missing sections',
-                severity: 'minor',
-                action: 'Cosmetic defect only. Does not affect taste or safety.'
-            },
-            {
-                id: 'ban_ext_09',
-                name: 'Tip Rot',
-                description: 'Dark mushy deterioration at the tip of the finger',
-                severity: 'major',
-                action: 'Remove affected fingers. Check adjacent fruit for spread.'
-            },
-            {
-                id: 'ban_ext_10',
-                name: 'Crown Rot',
-                description: 'Fungal decay at the crown where fingers join the hand',
+                id: 'crown-rot',
                 severity: 'critical',
-                action: 'Reject entire hand. Highly contagious to rest of batch.'
-            }
+                image: 'images/defects/banana-crown-rot.jpg',
+                en: {
+                    name: 'Crown Rot',
+                    category: 'Fungal Disease',
+                    shortDesc: 'Black soft rot at the crown, fingers detach',
+                    whatIsIt: 'Crown rot is the most economically significant postharvest disease of bananas worldwide. It is caused by a complex of fungi — primarily Colletotrichum musae and Fusarium species — that infect the crown tissue (where fingers are attached to the hand). Infection begins at harvest but symptoms develop during transit and ripening.',
+                    howToIdentify: 'Soft, dark brown to black rot at the crown area. White, grey or pink fungal mycelium visible on the crown surface in early stages. The rot progresses from the crown down the peduncles toward the individual fingers. In severe cases fingers detach from the crown prematurely. Internal examination shows soft, discoloured tissue extending from the crown.',
+                    causes: 'Fungal spores present on cut surfaces during dehanding. Contaminated water in packing tanks. Infected floral remnants on the crown. Poor sanitation in packing facilities. Warm temperatures above 15°C accelerate infection. Bruising and wounds increase susceptibility.',
+                    shipmentImpact: 'Major cause of postharvest losses — untreated bananas can have 10–86% loss rates. Infected crowns cause premature and uneven ripening of individual fingers. Severely infected fruit is commercially worthless. Disease spreads rapidly in warm conditions during shipping.',
+                    temperatureEffects: 'Temperature above 15°C accelerates fungal growth dramatically. Prompt cooling to 14°C (57°F) after packing is critical. Cold storage at 13–14°C significantly slows disease progression. Never allow temperature fluctuations which cause condensation on the crown.',
+                    acceptReject: 'Any visible crown rot symptoms: Reject for retail. Mild surface mycelium with no tissue damage: Quarantine, monitor closely. Soft crown tissue or finger detachment: Full rejection. Check entire pallet if crown rot found on any box.',
+                    prevention: 'Hot water treatment (50°C for 5 minutes) after dehanding. Fungicide treatment (Imazalil or Thiabendazole) at packing station. Immediate cooling to 14°C after packing. Clean and sanitise all packing equipment and water tanks daily. Minimise bruising. Remove all floral parts before packing.',
+                },
+                nl: {
+                    name: 'Kroonrot',
+                    category: 'Schimmelziekte',
+                    shortDesc: 'Zwart zacht rot bij de kroon, vingers lossen los',
+                    whatIsIt: 'Kroonrot is de meest economisch significante post-oogst ziekte van bananen wereldwijd. Het wordt veroorzaakt door een complex van schimmels — voornamelijk Colletotrichum musae en Fusarium soorten — die het kroonweefsel infecteren (waar vingers aan de hand zijn bevestigd). Infectie begint bij de oogst maar symptomen ontwikkelen zich tijdens transport en rijping.',
+                    howToIdentify: 'Zacht, donkerbruin tot zwart rot bij het kroongebied. Wit, grijs of roze schimmelmycelium zichtbaar op het kroonoppervlak in vroege stadia. Het rot vordert van de kroon langs de stelen naar de afzonderlijke vingers. In ernstige gevallen lossen vingers vroegtijdig los van de kroon. Intern onderzoek toont zacht, verkleurd weefsel dat zich uitstrekt vanuit de kroon.',
+                    causes: 'Schimmelsporen aanwezig op gesneden oppervlakken tijdens onthanden. Verontreinigd water in verpakkingstanks. Geïnfecteerde bloemresten op de kroon. Slechte sanitaire voorzieningen in verpakkingsfaciliteiten. Warme temperaturen boven 15°C versnellen infectie. Kneuzing en wonden verhogen vatbaarheid.',
+                    shipmentImpact: 'Grootste oorzaak van post-oogst verliezen — onbehandelde bananen kunnen 10–86% verliespercentages hebben. Geïnfecteerde kronen veroorzaken vroegtijdige en ongelijkmatige rijping van afzonderlijke vingers. Zwaar geïnfecteerd fruit is commercieel waardeloos. Ziekte verspreidt zich snel in warme omstandigheden tijdens verzending.',
+                    temperatureEffects: 'Temperatuur boven 15°C versnelt schimmelgroei dramatisch. Snelle koeling tot 14°C na verpakking is essentieel. Koude opslag bij 13–14°C vertraagt ziekteprogressie aanzienlijk. Nooit temperatuurschommelingen toestaan die condensatie op de kroon veroorzaken.',
+                    acceptReject: 'Zichtbare kroonrot symptomen: Afkeuren voor detailhandel. Mild oppervlaktemycelium zonder weefselschade: Quarantaine, nauwlettend monitoren. Zacht kroonweefsel of vingeronthechting: Volledige afkeuring. Controleer het hele palet als kroonrot op een doos wordt gevonden.',
+                    prevention: 'Warmwaterbehandeling (50°C gedurende 5 minuten) na onthanden. Fungicidebehandeling (Imazalil of Thiabendazool) bij verpakkingsstation. Onmiddellijke koeling tot 14°C na verpakking. Reinig en desinfecteer dagelijks alle verpakkingsapparatuur en watertanks. Minimaliseer kneuzing. Verwijder alle bloemdelen voor verpakking.',
+                }
+            },
+            {
+                id: 'anthracnose',
+                severity: 'major',
+                image: 'images/defects/banana-anthracnose.jpg',
+                en: {
+                    name: 'Anthracnose',
+                    category: 'Fungal Disease',
+                    shortDesc: 'Black sunken spots on ripening peel',
+                    whatIsIt: 'Anthracnose is a fungal disease caused primarily by Colletotrichum musae. The fungus infects green fruit in the field but remains latent (dormant) until the fruit begins to ripen. When ripening triggers ethylene production, the dormant fungus activates and visible lesions appear rapidly.',
+                    howToIdentify: 'Black or dark brown, sunken circular spots of varying sizes on the skin. Spots may have angular or triangular edges. In advanced stages spots merge into large irregular patches. Salmon-coloured spore masses may be visible in high humidity. Lesions typically appear as fruit ripens — not on fully green fruit.',
+                    causes: 'Field infection from C. musae spores on flowers and plant debris. Spores spread by rain or insects onto developing fruit. Infection is latent — no visible symptoms until ripening. Warm, humid conditions in the field favour spore production.',
+                    shipmentImpact: 'Lesions appear during and after ripening, reducing retail quality dramatically. Can trigger premature ripening similar to crown rot. Post-ripening losses in affected boxes can be 30–50%. Difficult to detect on green fruit during inspection.',
+                    temperatureEffects: 'Latent infection is triggered by the ripening process and ethylene exposure. Keeping fruit green and below 14°C delays symptom expression. Once ripening begins, symptoms develop rapidly at any temperature. Cold storage delays but does not eliminate the disease.',
+                    acceptReject: 'Green fruit with no visible symptoms: Accept — cannot be detected. Ripened fruit with spots covering less than 10% of surface: Downgrade. Spots covering more than 10% or merging into large patches: Reject. Any fruit showing salmon-coloured spore masses: Reject immediately.',
+                    prevention: 'Preharvest fungicide applications reduce field inoculum. Post-harvest fungicide (Thiabendazole) at packing. Minimise physical damage that activates latent infection. Controlled atmosphere storage reduces disease expression. Rapid market distribution minimises post-ripening symptom development.',
+                },
+                nl: {
+                    name: 'Antracnose',
+                    category: 'Schimmelziekte',
+                    shortDesc: 'Zwarte verzonken vlekken op rijpende schil',
+                    whatIsIt: 'Antracnose is een schimmelziekte veroorzaakt voornamelijk door Colletotrichum musae. De schimmel infecteert groen fruit op het veld maar blijft latent (slapend) totdat het fruit begint te rijpen. Wanneer rijping ethyleenproductie triggert, activeert de slapende schimmel en verschijnen zichtbare letsels snel.',
+                    howToIdentify: 'Zwarte of donkerbruine, verzonken cirkelvormige vlekken van variërende grootte op de schil. Vlekken kunnen hoekige of driehoekige randen hebben. In gevorderde stadia smelten vlekken samen tot grote onregelmatige vlekken. Zalm-gekleurde sporenmassa\'s kunnen zichtbaar zijn bij hoge luchtvochtigheid. Letsels verschijnen doorgaans wanneer fruit rijpt — niet op volledig groen fruit.',
+                    causes: 'Veldbesmetting van C. musae sporen op bloemen en plantenresten. Sporen verspreid door regen of insecten op ontwikkelend fruit. Infectie is latent — geen zichtbare symptomen tot rijping. Warme, vochtige omstandigheden op het veld bevorderen sporenproductie.',
+                    shipmentImpact: 'Letsels verschijnen tijdens en na rijping, waardoor detailhandelskwaliteit drastisch afneemt. Kan vroegtijdige rijping triggeren vergelijkbaar met kroonrot. Post-rijping verliezen in aangetaste dozen kunnen 30–50% zijn. Moeilijk te detecteren op groen fruit tijdens inspectie.',
+                    temperatureEffects: 'Latente infectie wordt getriggerd door het rijpingsproces en ethyleenblootstelling. Fruit groen houden en onder 14°C houden vertraagt symptoomexpressie. Zodra rijping begint, ontwikkelen symptomen zich snel bij elke temperatuur. Koude opslag vertraagt maar elimineert de ziekte niet.',
+                    acceptReject: 'Groen fruit zonder zichtbare symptomen: Accepteren — kan niet worden gedetecteerd. Gerijpt fruit met vlekken op minder dan 10% van het oppervlak: Afwaarderen. Vlekken die meer dan 10% bedekken of samenvoegen tot grote vlekken: Afkeuren. Fruit met zalm-gekleurde sporenmassa\'s: Onmiddellijk afkeuren.',
+                    prevention: 'Pre-oogst fungicideapplicaties verminderen veldbesmetting. Post-oogst fungicide (Thiabendazool) bij verpakking. Minimaliseer fysieke schade die latente infectie activeert. Gecontroleerde atmosferische opslag vermindert ziekte-expressie. Snelle marktverdeling minimaliseert post-rijping symptoomontwikkeling.',
+                }
+            },
+            {
+                id: 'cigar-end-rot',
+                severity: 'major',
+                image: 'images/defects/banana-cigar-end-rot.jpg',
+                en: {
+                    name: 'Cigar End Rot',
+                    category: 'Fungal Disease',
+                    shortDesc: 'Dry grey rot at the tip, like cigar ash',
+                    whatIsIt: 'Cigar end rot is caused by Verticillium theobromae and/or Trachysphaera fructigena. It affects the blossom end (tip) of the banana finger, causing a characteristic dry, grey rot that resembles the ash of a cigar. Unlike crown rot which is wet, cigar end rot is typically dry.',
+                    howToIdentify: 'Dry, grey to brown rot at the very tip (distal end) of banana fingers. The affected tissue is dry and may adhere tightly to neighbouring fruit. Appears similar to the ash end of a cigar — grey, dry, powdery texture. Does not spread to the crown or the rest of the finger in most cases.',
+                    causes: 'Infection occurs at the flower end before or during dehanding. Spores from dead flowers and field debris. Wounds at the tip during harvesting or packing. Wet conditions in the field and packing station.',
+                    shipmentImpact: 'Less severe than crown rot but still reduces marketability. The dry rot at the tip is visible and affects retail appearance. Generally does not spread significantly during transit if temperature is maintained.',
+                    temperatureEffects: 'Warm, moist conditions encourage development. Maintaining proper transport temperatures of 13–14°C limits progression. Unlike crown rot, cigar end rot does not typically spread rapidly in cold storage.',
+                    acceptReject: 'Small dry tip lesion less than 5mm: Accept with note. Lesion greater than 5mm or spreading up the finger: Downgrade. Lesion covering more than 20% of finger tip or with wet areas: Reject.',
+                    prevention: 'Remove all dead flower parts from tips before packing. Careful handling to avoid tip damage. Fungicide treatment at packing station. Keep packing areas clean and dry. Prompt movement to cold storage after packing.',
+                },
+                nl: {
+                    name: 'Sigarenrot',
+                    category: 'Schimmelziekte',
+                    shortDesc: 'Droog grijs rot aan de punt, zoals sigarenas',
+                    whatIsIt: 'Sigarenrot wordt veroorzaakt door Verticillium theobromae en/of Trachysphaera fructigena. Het treft het bloemkant (punt) van de bananenvinger, wat een karakteristiek droog, grijs rot veroorzaakt dat lijkt op de as van een sigaar. In tegenstelling tot kroonrot dat nat is, is sigarenrot doorgaans droog.',
+                    howToIdentify: 'Droog, grijs tot bruin rot aan de uiterste punt (distaal uiteinde) van bananenvingers. Het aangetaste weefsel is droog en kan stevig hechten aan naburige vruchten. Lijkt op het asuiteinde van een sigaar — grijs, droog, poederige textuur. Verspreidt zich in de meeste gevallen niet naar de kroon of de rest van de vinger.',
+                    causes: 'Infectie treedt op bij het bloemkant voor of tijdens onthanden. Sporen van dode bloemen en veldresten. Wonden aan de punt tijdens oogst of verpakking. Natte omstandigheden op het veld en verpakkingsstation.',
+                    shipmentImpact: 'Minder ernstig dan kroonrot maar vermindert nog steeds verkoopbaarheid. Het droge rot aan de punt is zichtbaar en beïnvloedt de uitstraling in de winkel. Verspreidt zich over het algemeen niet significant tijdens transport als de temperatuur gehandhaafd wordt.',
+                    temperatureEffects: 'Warme, vochtige omstandigheden bevorderen ontwikkeling. Handhaven van correcte transporttemperaturen van 13–14°C beperkt voortgang. In tegenstelling tot kroonrot verspreidt sigarenrot zich doorgaans niet snel in koude opslag.',
+                    acceptReject: 'Klein droog puntletsel minder dan 5mm: Accepteren met aantekening. Letsel groter dan 5mm of die de vinger opklimt: Afwaarderen. Letsel dat meer dan 20% van de vingerpunt bedekt of met natte gebieden: Afkeuren.',
+                    prevention: 'Verwijder alle dode bloemdelen van punten voor verpakking. Voorzichtige behandeling om puntschade te vermijden. Fungicidebehandeling bij verpakkingsstation. Houd verpakkingsgebieden schoon en droog. Snel naar koude opslag na verpakking.',
+                }
+            },
         ],
         internal: [
             {
-                id: 'ban_int_01',
-                name: 'Flesh Discolouration',
-                description: 'Brown or grey streaks in the flesh when cut open',
+                id: 'flesh-browning',
                 severity: 'major',
-                action: 'Not suitable for fresh sale. Can be used for processing if minor.'
+                image: 'images/defects/banana-flesh-browning.jpg',
+                en: {
+                    name: 'Internal Flesh Browning',
+                    category: 'Internal',
+                    shortDesc: 'Brown discolouration of flesh, not visible externally',
+                    whatIsIt: 'Internal flesh browning is a physiological disorder where the banana pulp develops brown discolouration without visible external symptoms. It can result from overripeness, chilling injury, or enzymatic oxidation. The flesh loses its cream-white colour and becomes brown, grey, or pink.',
+                    howToIdentify: 'Only visible when fruit is cut open. Brown, grey or pink discolouration of the flesh radiating from the core. Texture may be mushy or watery in affected areas. Odour may be fermented or off. External appearance may be completely normal.',
+                    causes: 'Advanced overripeness. Secondary effect of chilling injury. Enzymatic browning from damaged cell walls. Carbon dioxide injury from improper controlled atmosphere. Ethylene overexposure during artificial ripening.',
+                    shipmentImpact: 'Invisible during inspection of intact fruit. Discovered at retail or consumer level. Major cause of consumer complaints and returns. Cannot be sorted out without cutting each fruit.',
+                    temperatureEffects: 'Temperatures below 13°C can cause chilling injury leading to internal browning. Very high temperatures accelerate overripeness browning. Optimal storage at 13–14°C minimises risk.',
+                    acceptReject: 'Random cut sampling recommended for suspicious lots. Any internal browning in more than 5% of sampled fruit: Reject. Brown discolouration only near core: Downgrade with disclosure. Widespread browning throughout flesh: Full rejection.',
+                    prevention: 'Maintain proper cold chain temperatures above 13°C. Do not overripen in ripening rooms. Monitor CO2 levels in controlled atmosphere storage. Dispatch fruit promptly after ripening. Avoid ethylene overexposure.',
+                },
+                nl: {
+                    name: 'Interne Bruinkleuring',
+                    category: 'Intern',
+                    shortDesc: 'Bruine verkleuring van vruchtvlees, niet extern zichtbaar',
+                    whatIsIt: 'Interne bruinkleuring is een fysiologische aandoening waarbij het bananenvruchtvlees bruine verkleuring ontwikkelt zonder zichtbare externe symptomen. Het kan het gevolg zijn van overrijpheid, kouschade of enzymatische oxidatie. Het vruchtvlees verliest zijn crème-witte kleur en wordt bruin, grijs of roze.',
+                    howToIdentify: 'Alleen zichtbaar wanneer fruit wordt opengesneden. Bruin, grijs of roze verkleuring van het vruchtvlees dat uitstraalt vanaf de kern. Textuur kan moes of waterig zijn in aangetaste gebieden. Geur kan gefermenteerd of afwijkend zijn. Extern uiterlijk kan volledig normaal zijn.',
+                    causes: 'Gevorderde overrijpheid. Secundair effect van kouschade. Enzymatische bruinkleuring van beschadigde celwanden. Koolstofdioxideschade door onjuiste gecontroleerde atmosfeer. Ethyleenoverblootstelling tijdens kunstmatige rijping.',
+                    shipmentImpact: 'Onzichtbaar tijdens inspectie van intact fruit. Ontdekt op retail- of consumentenniveau. Grote oorzaak van consumentenklachten en retouren. Kan niet worden gesorteerd zonder elk stuk fruit te snijden.',
+                    temperatureEffects: 'Temperaturen onder 13°C kunnen kouschade veroorzaken die leidt tot interne bruinkleuring. Zeer hoge temperaturen versnellen overrijpheid bruinkleuring. Optimale opslag bij 13–14°C minimaliseert risico.',
+                    acceptReject: 'Willekeurige snijbemonstering aanbevolen voor verdachte partijen. Interne bruinkleuring in meer dan 5% van bemonsterd fruit: Afkeuren. Bruine verkleuring alleen nabij kern: Afwaarderen met openbaarmaking. Wijdverspreide bruinkleuring door het vruchtvlees: Volledige afkeuring.',
+                    prevention: 'Handhaaf correcte koelketen temperaturen boven 13°C. Niet te lang rijpen in rijpkamers. Bewaak CO2-niveaus bij gecontroleerde atmosferische opslag. Verzend fruit snel na rijping. Vermijd ethyleenoverblootstelling.',
+                }
             },
             {
-                id: 'ban_int_02',
-                name: 'Internal Rot',
-                description: 'Soft mushy areas inside the flesh with fermented smell',
-                severity: 'critical',
-                action: 'Reject immediately. Not fit for consumption.'
-            },
-            {
-                id: 'ban_int_03',
-                name: 'Hard Core',
-                description: 'Firm unripened central core remaining in ripe fruit',
-                severity: 'minor',
-                action: 'Monitor ripening. Allow additional time at room temperature.'
-            },
-            {
-                id: 'ban_int_04',
-                name: 'Vascular Browning',
-                description: 'Brown discolouration along vascular bundles in cross section',
+                id: 'vascular-browning',
                 severity: 'major',
-                action: 'Separate from batch. Indicates chilling injury or disease.'
+                image: 'images/defects/banana-vascular-browning.jpg',
+                en: {
+                    name: 'Vascular Browning',
+                    category: 'Internal',
+                    shortDesc: 'Dark brown streaks along the vascular bundles',
+                    whatIsIt: 'Vascular browning appears as dark brown or black discolouration along the vascular bundles (the "strings") that run lengthwise through the banana. It is often associated with chilling injury but can also result from fungal invasion through the crown. The vascular tissue is the highway for water and nutrients in the fruit.',
+                    howToIdentify: 'Visible as dark brown to black streaks running lengthwise when the banana is cut open. The streaks follow the vascular bundle pattern. Can sometimes be seen through the skin as dark lines below the peel. Associated with fruit that fails to ripen normally or ripens with dull colouration.',
+                    causes: 'Chilling injury — most common cause. Sub-optimal cold chain management. Fusarium wilt (Panama disease) in growing region. Fungal invasion progressing from crown rot down the peduncle. Post-harvest stress from inadequate temperature management.',
+                    shipmentImpact: 'Fruit with vascular browning often ripens abnormally. Associated with poor eating quality and off-flavours. Signals potential underlying disease or cold chain failure. Can be associated with entire pallet failure in chilling injury cases.',
+                    temperatureEffects: 'Directly linked to chilling injury below 13°C. The vascular tissue is particularly sensitive to cold temperatures. Symptoms may not be visible until fruit begins to ripen at higher temperatures.',
+                    acceptReject: 'Any vascular browning visible on cut sample: Flag for investigation. Browning in less than 20% of vascular bundles: Downgrade. Browning in more than 20% of bundles or widespread: Reject. If linked to confirmed chilling injury: Reject entire pallet.',
+                    prevention: 'Strict cold chain management above 13°C at all times. Temperature monitoring throughout transit. Do not load bananas in reefers below 13°C. Investigate source if vascular browning found to determine if preharvest disease is involved.',
+                },
+                nl: {
+                    name: 'Vasculaire Bruinkleuring',
+                    category: 'Intern',
+                    shortDesc: 'Donkerbruine strepen langs de vaatbundels',
+                    whatIsIt: 'Vasculaire bruinkleuring verschijnt als donkerbruine of zwarte verkleuring langs de vaatbundels (de "draden") die lengterichting door de banaan lopen. Het is vaak geassocieerd met kouschade maar kan ook het gevolg zijn van schimmelinvasie via de kroon. Het vasculaire weefsel is de snelweg voor water en voedingsstoffen in het fruit.',
+                    howToIdentify: 'Zichtbaar als donkerbruine tot zwarte strepen die lengterichting lopen wanneer de banaan wordt opengesneden. De strepen volgen het vaatbundelpatroon. Soms zichtbaar door de schil als donkere lijnen onder de schil. Geassocieerd met fruit dat niet normaal rijpt of rijpt met doffe kleuring.',
+                    causes: 'Kouschade — meest voorkomende oorzaak. Suboptimaal koelketen beheer. Fusarium-verwelkingsziekte (Panama-ziekte) in groeigebied. Schimmelinvasie die vordert vanuit kroonrot langs de steel. Post-oogst stress door onvoldoende temperatuurbeheer.',
+                    shipmentImpact: 'Fruit met vasculaire bruinkleuring rijpt vaak abnormaal. Geassocieerd met slechte eetkwaliteit en afwijkende smaken. Signaleert potentiële onderliggende ziekte of koelketen falen. Kan geassocieerd zijn met volledig palet falen in kouschade gevallen.',
+                    temperatureEffects: 'Direct gekoppeld aan kouschade onder 13°C. Het vasculaire weefsel is bijzonder gevoelig voor lage temperaturen. Symptomen zijn mogelijk pas zichtbaar wanneer fruit begint te rijpen bij hogere temperaturen.',
+                    acceptReject: 'Zichtbare vasculaire bruinkleuring bij snijmonster: Markeren voor onderzoek. Bruinkleuring in minder dan 20% van vaatbundels: Afwaarderen. Bruinkleuring in meer dan 20% van bundels of wijdverspreid: Afkeuren. Als gekoppeld aan bevestigde kouschade: Volledig palet afkeuren.',
+                    prevention: 'Strikt koelketen beheer boven 13°C te allen tijde. Temperatuurbewaking tijdens transport. Bananen niet laden in koelcontainers onder 13°C. Onderzoek bron als vasculaire bruinkleuring wordt gevonden om te bepalen of pre-oogst ziekte betrokken is.',
+                }
             },
-            {
-                id: 'ban_int_05',
-                name: 'Overripeness',
-                description: 'Overly soft flesh with fermented or alcoholic smell',
-                severity: 'major',
-                action: 'Use immediately for processing only. Not suitable for fresh sale.'
-            },
-            {
-                id: 'ban_int_06',
-                name: 'Insect Damage',
-                description: 'Tunnels or cavities inside flesh caused by insects',
-                severity: 'critical',
-                action: 'Reject entire batch. Report infestation immediately.'
-            },
-            {
-                id: 'ban_int_07',
-                name: 'Abnormal Flavour',
-                description: 'Off taste, sourness or chemical flavour detected on tasting',
-                severity: 'major',
-                action: 'Reject for fresh sale. Investigate storage and transport conditions.'
-            }
-        ]
-    },
-
-    mango: {
-        external: [
-            {
-                id: 'man_ext_01',
-                name: 'Skin Blemishes',
-                description: 'Dark spots, scabs or surface marks on the skin',
-                severity: 'minor',
-                action: 'Acceptable if covering less than 10% of surface. Grade down if more.'
-            },
-            {
-                id: 'man_ext_02',
-                name: 'Soft Spots',
-                description: 'Localised soft or sunken areas on the skin surface',
-                severity: 'major',
-                action: 'Prioritise for immediate sale. Check for internal decay below spot.'
-            },
-            {
-                id: 'man_ext_03',
-                name: 'Anthracnose',
-                description: 'Black sunken lesions on skin caused by fungal infection',
-                severity: 'critical',
-                action: 'Reject and isolate immediately. Highly contagious fungal disease.'
-            },
-            {
-                id: 'man_ext_04',
-                name: 'Stem End Rot',
-                description: 'Dark watery decay starting at the stem end',
-                severity: 'critical',
-                action: 'Reject immediately. Spreads rapidly through the flesh.'
-            },
-            {
-                id: 'man_ext_05',
-                name: 'Colour Unevenness',
-                description: 'Patchy uneven colour development across the skin',
-                severity: 'minor',
-                action: 'Cosmetic issue. Monitor ripening for further development.'
-            },
-            {
-                id: 'man_ext_06',
-                name: 'Cuts and Abrasions',
-                description: 'Physical damage to skin surface from handling or transport',
-                severity: 'major',
-                action: 'Separate from batch. Broken skin accelerates decay.'
-            },
-            {
-                id: 'man_ext_07',
-                name: 'Resin Tapping Marks',
-                description: 'Dried resin deposits or marks from latex flow on skin',
-                severity: 'minor',
-                action: 'Cosmetic only. Does not affect internal quality.'
-            },
-            {
-                id: 'man_ext_08',
-                name: 'Insect Stings',
-                description: 'Small puncture marks from insect feeding on skin',
-                severity: 'major',
-                action: 'Check for internal damage. Entry points for decay organisms.'
-            },
-            {
-                id: 'man_ext_09',
-                name: 'Sunburn',
-                description: 'Pale or white bleached patches from excessive sun exposure',
-                severity: 'minor',
-                action: 'Cosmetic defect. Check internal flesh for heat damage.'
-            },
-            {
-                id: 'man_ext_10',
-                name: 'Shrivel',
-                description: 'Wrinkled or shrivelled skin indicating moisture loss',
-                severity: 'major',
-                action: 'Prioritise for immediate sale. Indicates poor storage conditions.'
-            }
         ],
-        internal: [
+        physiological: [
             {
-                id: 'man_int_01',
-                name: 'Seed Weevil Damage',
-                description: 'Cavities or tunnels around or inside the seed',
-                severity: 'critical',
-                action: 'Reject entire batch. Quarantine pest — must be reported.'
-            },
-            {
-                id: 'man_int_02',
-                name: 'Flesh Browning',
-                description: 'Brown or oxidised patches in the flesh when cut',
+                id: 'finger-drop',
                 severity: 'major',
-                action: 'Not suitable for fresh sale. Investigate chilling or storage cause.'
+                image: 'images/defects/banana-finger-drop.jpg',
+                en: {
+                    name: 'Finger Drop',
+                    category: 'Physiological',
+                    shortDesc: 'Fingers detach prematurely from the crown',
+                    whatIsIt: 'Finger drop is the premature detachment of individual banana fingers from the crown (hand). The pedicel (stalk connecting the finger to the crown) weakens and breaks, causing fingers to fall off the hand. It can occur at the packing stage, during transit, or at the retail level.',
+                    howToIdentify: 'Individual fingers separated from the crown. Circular scar at the detachment point on both the crown and the finger. In early stages fingers are still attached but very loose and detach with minimal force. More common in overripe fruit.',
+                    causes: 'Overripeness — as fruit ripens the pedicel weakens. Crown rot infection weakening the crown tissue. Rough handling causing physical detachment. Harvesting at too mature a stage. Ethylene overexposure during ripening.',
+                    shipmentImpact: 'Detached fingers have significantly reduced shelf life and retail appeal. A hand with missing fingers is commercially downgraded. Detached fingers bruise easily and rot rapidly. Major quality complaint at retail level.',
+                    temperatureEffects: 'Warm temperatures and advanced ripening increase finger drop incidence. Maintaining fruit at the correct ripening stage minimises risk. Overripe fruit (Color 5–6) is most susceptible.',
+                    acceptReject: 'One detached finger per hand: Downgrade. More than one detached finger per hand: Reject hand, salvage loose fingers for processing. Hands with very loose fingers (drop with handling): Downgrade for immediate sale. Entire box with widespread finger drop: Reject.',
+                    prevention: 'Harvest at correct maturity (Color 1–2). Avoid overripening during ripening room stage. Minimise rough handling especially of ripe fruit. Do not harvest or pack fruit with crown rot. Timely delivery to market after ripening.',
+                },
+                nl: {
+                    name: 'Vingerval',
+                    category: 'Fysiologisch',
+                    shortDesc: 'Vingers lossen vroegtijdig los van de kroon',
+                    whatIsIt: 'Vingerval is het vroegtijdig losmaken van afzonderlijke bananenvingers van de kroon (hand). De steel (stengel die de vinger verbindt met de kroon) verzwakt en breekt, waardoor vingers van de hand vallen. Het kan optreden in het verpakkingsstadium, tijdens transport of op retailniveau.',
+                    howToIdentify: 'Afzonderlijke vingers gescheiden van de kroon. Cirkelvormig litteken op het losmaakpunt op zowel de kroon als de vinger. In vroege stadia zijn vingers nog bevestigd maar zeer los en lossen af met minimale kracht. Vaker voorkomend bij overrijp fruit.',
+                    causes: 'Overrijpheid — naarmate fruit rijpt verzwakt de steel. Kroonrotinfectie die het kroonweefsel verzwakt. Ruw behandelen dat fysieke onthechting veroorzaakt. Oogsten in een te rijp stadium. Ethyleenoverblootstelling tijdens rijping.',
+                    shipmentImpact: 'Losgeraakte vingers hebben aanzienlijk verminderde houdbaarheid en retailaantrekkingskracht. Een hand met ontbrekende vingers wordt commercieel afgewaardeerd. Losgeraakte vingers kneuzen gemakkelijk en rotten snel. Grote kwaliteitsklacht op retailniveau.',
+                    temperatureEffects: 'Warme temperaturen en gevorderde rijping verhogen de incidentie van vingerval. Handhaven van fruit in het correcte rijpingsstadium minimaliseert risico. Overrijp fruit (Kleur 5–6) is het meest vatbaar.',
+                    acceptReject: 'Één losgeraakte vinger per hand: Afwaarderen. Meer dan één losgeraakte vinger per hand: Hand afkeuren, losse vingers salvagen voor verwerking. Handen met zeer losse vingers (vallen los bij behandeling): Afwaarderen voor onmiddellijke verkoop. Hele doos met wijdverspreide vingerval: Afkeuren.',
+                    prevention: 'Oogsten op correct rijpingstadium (Kleur 1–2). Vermijd overrijpen tijdens rijpkamerfase. Minimaliseer ruw behandelen vooral van rijp fruit. Niet oogsten of verpakken van fruit met kroonrot. Tijdige levering aan markt na rijping.',
+                }
             },
             {
-                id: 'man_int_03',
-                name: 'Jelly Seed',
-                description: 'Translucent gel-like breakdown of flesh near the seed',
-                severity: 'minor',
-                action: 'Natural physiological disorder. Acceptable for immediate consumption.'
-            },
-            {
-                id: 'man_int_04',
-                name: 'Internal Breakdown',
-                description: 'Soft watery or fermented flesh inside despite firm exterior',
-                severity: 'critical',
-                action: 'Reject immediately. Not fit for consumption.'
-            },
-            {
-                id: 'man_int_05',
-                name: 'Fibre Excess',
-                description: 'Abnormally high fibre content making flesh stringy and tough',
-                severity: 'minor',
-                action: 'Quality issue only. Suitable for processing not fresh sale.'
-            },
-            {
-                id: 'man_int_06',
-                name: 'Turpentine Flavour',
-                description: 'Strong resinous or turpentine taste in the flesh',
+                id: 'peel-splitting',
                 severity: 'major',
-                action: 'Reject for fresh sale. May indicate variety or harvesting issue.'
+                image: 'images/defects/banana-peel-splitting.jpg',
+                en: {
+                    name: 'Peel Splitting',
+                    category: 'Physiological',
+                    shortDesc: 'Longitudinal cracks in the skin',
+                    whatIsIt: 'Peel splitting occurs when the banana skin develops longitudinal (lengthwise) cracks. The flesh may be exposed through the split. It is caused by a combination of rapid water uptake, overmaturity, and physical stress. Splits create direct entry points for decay microorganisms.',
+                    howToIdentify: 'One or more longitudinal cracks running along the length of the finger. The split may be superficial (skin only) or deep (exposing flesh). Edges of the split may be dry or wet. Wet splits indicate recent occurrence and high decay risk. The split typically follows the natural ridges of the banana.',
+                    causes: 'Overmaturity at harvest. Rapid water uptake after rain or irrigation. Fluctuations in humidity during storage. Physical stress from overpacking in boxes. Rapid temperature changes causing expansion of flesh.',
+                    shipmentImpact: 'Exposed flesh decays rapidly — major risk of fungal and bacterial infection. Severely reduces retail appeal. Shelf life drops to less than 1 day for split ripe fruit. Risk of contaminating adjacent fruit in the box.',
+                    temperatureEffects: 'Rapid temperature increases cause expansion of flesh, worsening splits. High humidity after dry storage can trigger splitting in susceptible fruit. Stable temperature and humidity management prevents onset.',
+                    acceptReject: 'Any split exposing flesh: Reject for retail. Superficial skin crack with no flesh exposure and less than 2cm length: Downgrade. Fruit with multiple splits or large single split: Full rejection. Check adjacent fruit for secondary decay.',
+                    prevention: 'Harvest at correct maturity before overripeness. Avoid overfilling boxes. Maintain stable temperature and humidity in storage and transit. Do not expose fruit to rapid temperature or humidity changes. Handle ripe fruit gently.',
+                },
+                nl: {
+                    name: 'Schilscheuring',
+                    category: 'Fysiologisch',
+                    shortDesc: 'Lengterichting scheuren in de schil',
+                    whatIsIt: 'Schilscheuring treedt op wanneer de bananenschil lengterichtingscheuren (lengterichting) ontwikkelt. Het vruchtvlees kan zichtbaar zijn door de scheuring. Het wordt veroorzaakt door een combinatie van snelle wateropname, overrijpheid en fysieke stress. Scheuringen creëren directe ingangen voor rotveroorzakers.',
+                    howToIdentify: 'Een of meer lengterichtingscheuren die langs de lengte van de vinger lopen. De scheuring kan oppervlakkig (alleen schil) of diep zijn (vruchtvlees blootleggend). Randen van de scheuring kunnen droog of nat zijn. Natte scheuringen duiden op recent optreden en hoog rotrisico. De scheuring volgt doorgaans de natuurlijke richels van de banaan.',
+                    causes: 'Overrijpheid bij oogst. Snelle wateropname na regen of irrigatie. Schommelingen in luchtvochtigheid tijdens opslag. Fysieke stress door oververpakking in dozen. Snelle temperatuurveranderingen die uitzetting van vruchtvlees veroorzaken.',
+                    shipmentImpact: 'Blootgesteld vruchtvlees rot snel — groot risico op schimmel- en bacteriële infectie. Vermindert retailaantrekkingskracht drastisch. Houdbaarheid daalt tot minder dan 1 dag voor gespleten rijp fruit. Risico van besmetting van aangrenzend fruit in de doos.',
+                    temperatureEffects: 'Snelle temperatuurstijgingen veroorzaken uitzetting van vruchtvlees, wat scheuringen verergert. Hoge luchtvochtigheid na droge opslag kan scheuring veroorzaken bij vatbaar fruit. Stabiel temperatuur- en luchtvochtigheidsbeheer voorkomt aanvang.',
+                    acceptReject: 'Scheuring die vruchtvlees blootstelt: Afkeuren voor detailhandel. Oppervlakkige schilscheur zonder vruchtvleesblootstelling en minder dan 2cm lengte: Afwaarderen. Fruit met meerdere scheuringen of grote enkele scheuring: Volledige afkeuring. Controleer aangrenzend fruit op secundair rot.',
+                    prevention: 'Oogsten op correct rijpingstadium voor overrijpheid. Vermijd overvulling van dozen. Handhaaf stabiele temperatuur en luchtvochtigheid in opslag en transport. Fruit niet blootstellen aan snelle temperatuur- of luchtvochtigheidswisselingen. Behandel rijp fruit voorzichtig.',
+                }
             },
-            {
-                id: 'man_int_07',
-                name: 'Uneven Ripening',
-                description: 'Hard unripe patches alongside soft ripe areas inside',
-                severity: 'minor',
-                action: 'Allow additional ripening time. Monitor temperature.'
-            }
-        ]
-    },
-
-    avocado: {
-        external: [
-            {
-                id: 'avo_ext_01',
-                name: 'Skin Bruising',
-                description: 'Soft sunken dark patches on the outer skin surface',
-                severity: 'minor',
-                action: 'Check internal flesh below bruise. Minor bruising acceptable.'
-            },
-            {
-                id: 'avo_ext_02',
-                name: 'Stem Absence',
-                description: 'Missing or dislodged stem button at the top of fruit',
-                severity: 'major',
-                action: 'Entry point for decay. Prioritise for immediate sale.'
-            },
-            {
-                id: 'avo_ext_03',
-                name: 'Skin Cracking',
-                description: 'Surface cracks in the skin exposing flesh underneath',
-                severity: 'major',
-                action: 'Separate from batch. High risk of contamination and decay.'
-            },
-            {
-                id: 'avo_ext_04',
-                name: 'Mould',
-                description: 'Visible fungal growth on skin surface',
-                severity: 'critical',
-                action: 'Reject immediately. Contamination risk to entire batch.'
-            },
-            {
-                id: 'avo_ext_05',
-                name: 'Lenticel Damage',
-                description: 'Darkened or enlarged pores on skin surface',
-                severity: 'minor',
-                action: 'Cosmetic only. Monitor for further development.'
-            },
-            {
-                id: 'avo_ext_06',
-                name: 'Scab',
-                description: 'Rough corky patches or lesions on skin',
-                severity: 'minor',
-                action: 'Cosmetic defect only. Does not affect internal quality.'
-            },
-            {
-                id: 'avo_ext_07',
-                name: 'Sunblotch',
-                description: 'Yellow or red discoloured patches from sun exposure',
-                severity: 'major',
-                action: 'Check internal flesh. May indicate internal quality issues.'
-            },
-            {
-                id: 'avo_ext_08',
-                name: 'Mechanical Damage',
-                description: 'Cuts, gouges or punctures from handling',
-                severity: 'major',
-                action: 'Separate immediately. Broken skin accelerates oxidation and decay.'
-            }
-        ],
-        internal: [
-            {
-                id: 'avo_int_01',
-                name: 'Flesh Browning',
-                description: 'Brown or black discolouration in flesh when cut open',
-                severity: 'major',
-                action: 'Not suitable for fresh sale. Investigate cold chain issues.'
-            },
-            {
-                id: 'avo_int_02',
-                name: 'Vascular Browning',
-                description: 'Brown discolouration along vascular strands in flesh',
-                severity: 'major',
-                action: 'Reject for fresh sale. Indicates chilling injury.'
-            },
-            {
-                id: 'avo_int_03',
-                name: 'Seed Cavity Mould',
-                description: 'Fungal growth inside the seed cavity',
-                severity: 'critical',
-                action: 'Reject immediately. Not fit for consumption.'
-            },
-            {
-                id: 'avo_int_04',
-                name: 'Grey Pulp',
-                description: 'Grey discolouration of flesh indicating physiological disorder',
-                severity: 'critical',
-                action: 'Reject immediately. Not fit for consumption.'
-            },
-            {
-                id: 'avo_int_05',
-                name: 'Internal Bruising',
-                description: 'Dark soft patches in flesh not visible from outside',
-                severity: 'major',
-                action: 'Not suitable for fresh sale. Can be used for processing if limited.'
-            },
-            {
-                id: 'avo_int_06',
-                name: 'Seed Cracking',
-                description: 'Cracked or broken seed causing flesh discolouration',
-                severity: 'minor',
-                action: 'Monitor quality. May affect shelf life.'
-            },
-            {
-                id: 'avo_int_07',
-                name: 'Off Flavour',
-                description: 'Rancid, bitter or abnormal taste in the flesh',
-                severity: 'major',
-                action: 'Reject for fresh sale. Investigate storage and ripening conditions.'
-            },
-            {
-                id: 'avo_int_08',
-                name: 'Uneven Ripening',
-                description: 'Hard unripe patches alongside soft overripe areas',
-                severity: 'minor',
-                action: 'Allow additional ripening time at room temperature.'
-            }
         ]
     }
 };

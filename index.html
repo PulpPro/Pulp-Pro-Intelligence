@@ -218,10 +218,7 @@
 <div style="font-size:0.6rem; font-weight:900; color:var(--pulp-lime); letter-spacing:3px; text-transform:uppercase;">Pulp Pro</div>
 </div>
 <div class="hub-title" id="csScannerTitle">Banana Colour Scanner</div>
-
-<!-- AI Status Line — subtle, top of scanner -->
 <div id="csAIStatus" style="text-align:center; font-size:0.5rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:rgba(255,255,255,0.3); margin-bottom:10px;">📊 Classic Mode</div>
-
 <div style="display:flex; gap:8px; margin-bottom:14px;">
 <div class="cs-toggle-btn active" id="csSingleBtn" onclick="ColourScanner.setScanMode('single')">Single Scan</div>
 <div class="cs-toggle-btn" id="csMultiBtn" onclick="ColourScanner.setScanMode('multi')">Multi Scan</div>
@@ -258,7 +255,6 @@
 <div class="color-bar-wrap" style="margin-top:8px;"><div id="csSingleBar" class="color-bar" style="width:16%; background:#78c830;"></div></div>
 </div>
 </div>
-<!-- AI confidence — only shows when AI model is active -->
 <div id="csAIConfidence" style="display:none; font-size:0.5rem; font-weight:700; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; opacity:0.8;"></div>
 <div class="report-row"><span class="report-key" id="shelfLifeLabel">Shelf Life</span><span class="report-val" id="csSingleShelf">—</span></div>
 <div class="report-row"><span class="report-key" id="statusLabel2">Status</span><span class="report-val" id="csSingleStatus">—</span></div>
@@ -314,11 +310,13 @@
 <div id="news-list-view">
 <div class="hub-title">📰 Fruit Industry News</div>
 <div id="newsCacheStatus"></div>
+<!-- Source-based filter tabs -->
 <div class="news-filter-row">
 <div class="news-filter-tab active" data-filter="all" onclick="NewsManager.setFilter('all')">All</div>
-<div class="news-filter-tab" data-filter="banana" onclick="NewsManager.setFilter('banana')">🍌 Banana</div>
-<div class="news-filter-tab" data-filter="mango" onclick="NewsManager.setFilter('mango')">🥭 Mango</div>
-<div class="news-filter-tab" data-filter="avocado" onclick="NewsManager.setFilter('avocado')">🥑 Avocado</div>
+<div class="news-filter-tab" data-filter="AGF.nl" onclick="NewsManager.setFilter('AGF.nl')">🌿 AGF.nl</div>
+<div class="news-filter-tab" data-filter="FreshPlaza" onclick="NewsManager.setFilter('FreshPlaza')">🍊 FreshPlaza</div>
+<div class="news-filter-tab" data-filter="Fresh Fruit Portal" onclick="NewsManager.setFilter('Fresh Fruit Portal')">🍇 Fresh Fruit Portal</div>
+<div class="news-filter-tab" data-filter="Good Fruit Grower" onclick="NewsManager.setFilter('Good Fruit Grower')">🍎 Good Fruit Grower</div>
 </div>
 <div id="newsArticleList"></div>
 <button class="btn-main btn-back" style="margin-top:10px;" onclick="showHub()">← Back</button>

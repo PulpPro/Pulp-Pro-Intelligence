@@ -10,8 +10,7 @@ function showHub() {
     document.getElementById('middle-hub').classList.add('hidden');
     document.getElementById('brand-hub').classList.add('hidden');
     document.getElementById('appInterface').classList.add('hidden');
-    const defHub = document.getElementById('defect-hub');
-    if (defHub) defHub.classList.add('hidden');
+    document.getElementById('defect-detector-hub').classList.add('hidden');
 }
 
 // Open middle hub for fruit selection
@@ -22,12 +21,12 @@ function openMiddleHub(fruit) {
         'mango': 'Mango',
         'avocado': 'Avocado'
     };
+    
     document.getElementById('middleHubTitle').innerText = fruitNames[fruit] + ' Menu';
     document.getElementById('fruit-hub').classList.add('hidden');
     document.getElementById('middle-hub').classList.remove('hidden');
     document.getElementById('appInterface').classList.add('hidden');
-    const defHub = document.getElementById('defect-hub');
-    if (defHub) defHub.classList.add('hidden');
+    document.getElementById('defect-detector-hub').classList.add('hidden');
 }
 
 // Open brands hub
@@ -38,13 +37,14 @@ function openBrands(fruit) {
         'mango': 'Mango',
         'avocado': 'Avocado'
     };
+    
     document.getElementById('brandHubTitle').innerText = 'Select ' + fruitNames[fruit] + ' Brand';
     document.getElementById('fruit-hub').classList.add('hidden');
     document.getElementById('middle-hub').classList.add('hidden');
     document.getElementById('brand-hub').classList.remove('hidden');
     document.getElementById('appInterface').classList.add('hidden');
-    const defHub = document.getElementById('defect-hub');
-    if (defHub) defHub.classList.add('hidden');
+    document.getElementById('defect-detector-hub').classList.add('hidden');
+    
     renderBrands(fruit);
 }
 
@@ -52,16 +52,13 @@ function openBrands(fruit) {
 function selectBrand(brand) {
     activeBrand = brand;
     document.getElementById('brandName').innerText = brand;
-    // Fix: set commodityLabel correctly — no duplication
     const fruitLabels = { 'banana': 'BANANA', 'mango': 'MANGO', 'avocado': 'AVOCADO' };
-    const fruitLabel = fruitLabels[activeFruit] || '';
-    document.getElementById('commodityLabel').innerText = fruitLabel + ' AGE CHECKER';
+    document.getElementById('commodityLabel').innerText = (fruitLabels[activeFruit] || '') + ' AGE CHECKER';
     document.getElementById('fruit-hub').classList.add('hidden');
     document.getElementById('middle-hub').classList.add('hidden');
     document.getElementById('brand-hub').classList.add('hidden');
     document.getElementById('appInterface').classList.remove('hidden');
-    const defHub = document.getElementById('defect-hub');
-    if (defHub) defHub.classList.add('hidden');
+    document.getElementById('defect-detector-hub').classList.add('hidden');
 }
 
 // openCalc — called from brands.js
@@ -69,65 +66,79 @@ function openCalc(brand) {
     selectBrand(brand);
 }
 
-// Open defect detector
+// Open defect detector hub
 function openDefectDetector() {
     document.getElementById('fruit-hub').classList.add('hidden');
     document.getElementById('middle-hub').classList.add('hidden');
     document.getElementById('brand-hub').classList.add('hidden');
     document.getElementById('appInterface').classList.add('hidden');
-    const defHub = document.getElementById('defect-hub');
-    if (defHub) defHub.classList.remove('hidden');
+    document.getElementById('defect-detector-hub').classList.remove('hidden');
 }
 
-// Open colour scanner
-function openColourScanner() {
-    document.getElementById('fruit-hub').classList.add('hidden');
-    document.getElementById('middle-hub').classList.add('hidden');
-    document.getElementById('brand-hub').classList.add('hidden');
-    document.getElementById('appInterface').classList.add('hidden');
-    const defHub = document.getElementById('defect-hub');
-    if (defHub) defHub.classList.add('hidden');
-    document.getElementById('colour-scanner-view').classList.remove('hidden');
-    if (typeof ColourScanner !== 'undefined') {
-        ColourScanner.init();
-        ColourScanner.setScanMode('single');
-    }
+// Open specific fruit defect scanner
+function openDefectScanner(fruit) {
+    const fruitNames = {
+        'banana': 'Banana',
+        'mango': 'Mango',
+        'avocado': 'Avocado'
+    };
+    
+    activeFruit = fruit;
+    document.getElementById('defectScannerTitle').innerText = 'Scan ' + fruitNames[fruit] + ' for Defects';
+    document.getElementById('defect-detector-hub').classList.add('hidden');
+    document.getElementById('defect-scanner-view').classList.remove('hidden');
 }
 
-// Open news
-function openNews() {
-    document.getElementById('fruit-hub').classList.add('hidden');
-    document.getElementById('middle-hub').classList.add('hidden');
-    document.getElementById('brand-hub').classList.add('hidden');
-    document.getElementById('appInterface').classList.add('hidden');
-    const defHub = document.getElementById('defect-hub');
-    if (defHub) defHub.classList.add('hidden');
-    document.getElementById('colour-scanner-view').classList.add('hidden');
-    document.getElementById('news-view').classList.remove('hidden');
-    if (typeof NewsManager !== 'undefined') NewsManager.init();
+// Back from defect scanner to defect hub
+function backToDefectHub() {
+    document.getElementById('defect-scanner-view').classList.add('hidden');
+    document.getElementById('defect-detector-hub').classList.remove('hidden');
+}
+
+// Back from defect hub to main fruit hub
+function backToFruitHub() {
+    document.getElementById('defect-detector-hub').classList.add('hidden');
+    document.getElementById('fruit-hub').classList.remove('hidden');
 }
 
 // Toggle menu drawer
 function toggleMenu() {
-    document.getElementById('menu-drawer').classList.toggle('hidden');
-    document.getElementById('menu-overlay').classList.toggle('hidden');
+    document.getElementById('menu-drawer').classList.toggle('open');
+    document.getElementById('menu-overlay').classList.toggle('open');
 }
 
 // Toggle theme
 function toggleTheme() {
     document.body.classList.toggle('light-theme');
-    const isLight = document.body.classList.contains('light-theme');
-    localStorage.setItem('pulpTheme', isLight ? 'light' : 'dark');
-    document.getElementById('themeText').innerText = isLight ? 'Light Mode' : 'Dark Mode';
+    const themeText = document.getElementById('themeText');
+    themeText.innerText = document.body.classList.contains('light-theme') ? 'Light Mode' : 'Dark Mode';
+    localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
+}
+
+// Load saved theme
+function loadTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+        document.body.classList.add('light-theme');
+        document.getElementById('themeText').innerText = 'Light Mode';
+    }
 }
 
 // Toggle language
-function toggleLanguage() {}
+function toggleLanguage() {
+    const langText = document.getElementById('langText');
+    if (langText.innerText.includes('Nederlands')) {
+        langText.innerText = '🇬🇧 English';
+    } else {
+        langText.innerText = '🇳🇱 Nederlands';
+    }
+}
 
 // Send feedback
 function sendFeedback() {
     const theme = document.body.classList.contains('light-theme') ? 'Light' : 'Dark';
+    const historyCount = (JSON.parse(localStorage.getItem('pulpProHistory')) || []).length;
     const subject = encodeURIComponent("Pulp Pro App Feedback");
-    const body = encodeURIComponent(`Hi Team,\n\nFeedback:\n\n[Your feedback here]\n\n---\nTheme: ${theme}\nPlatform: ${navigator.platform}`);
+    const body = encodeURIComponent(`Hi Team,\n\nI have some feedback for Pulp Pro:\n\n[Your feedback here]\n\n---\nApp Stats for Debugging:\nTheme: ${theme}\nLogged Scans: ${historyCount}\nPlatform: ${navigator.platform}`);
     window.location.href = `mailto:ar.varma@hotmail.com?subject=${subject}&body=${body}`;
 }

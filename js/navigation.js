@@ -2,14 +2,18 @@
 let activeFruit = null;
 let activeBrand = null;
 
-// Helper — hide all views including dynamically created ones
+// Helper — hide all views including dynamically created ones and app-container
 function hideAllViews() {
     document.querySelectorAll('.nav-view').forEach(el => el.classList.add('hidden'));
+    const app = document.getElementById('appInterface');
+    if (app) app.classList.add('hidden');
 }
 
 // Show Home Hub
 function showHub() {
     document.querySelectorAll('.nav-view').forEach(el => el.classList.add('hidden'));
+    const app = document.getElementById('appInterface');
+    if (app) app.classList.add('hidden');
     document.getElementById('fruit-hub').classList.remove('hidden');
     renderFavorites();
 }

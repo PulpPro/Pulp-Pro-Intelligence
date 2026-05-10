@@ -25,7 +25,7 @@ const TRANSLATIONS = {
         defectsSoon: 'Defects (Soon)',
         ripeningSoon: 'Ripening (Soon)',
         selectBrand: 'Select Brand',
-        bananaAgeChecker: 'BANANA AGE CHECKER',
+        bananaAgeChecker: 'AGE CHECKER',
         calculate: 'Calculate',
         ready: 'READY',
         perfect: 'PERFECT',

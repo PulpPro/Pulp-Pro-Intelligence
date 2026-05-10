@@ -2,24 +2,14 @@
 let activeFruit = null;
 let activeBrand = null;
 
-// Helper — hide all views
+// Helper — hide all views including dynamically created ones
 function hideAllViews() {
-    document.getElementById('fruit-hub').classList.add('hidden');
-    document.getElementById('middle-hub').classList.add('hidden');
-    document.getElementById('brand-hub').classList.add('hidden');
-    document.getElementById('defect-hub').classList.add('hidden');
-    document.getElementById('defect-type-view').classList.add('hidden');
-    document.getElementById('defect-scan-view').classList.add('hidden');
-    document.getElementById('defect-report-view').classList.add('hidden');
-    document.getElementById('defect-info-view').classList.add('hidden');
-    document.getElementById('colour-scanner-view').classList.add('hidden');
-    document.getElementById('news-view').classList.add('hidden');
-    document.getElementById('appInterface').classList.add('hidden');
+    document.querySelectorAll('.nav-view').forEach(el => el.classList.add('hidden'));
 }
 
 // Show Home Hub
 function showHub() {
-    hideAllViews();
+    document.querySelectorAll('.nav-view').forEach(el => el.classList.add('hidden'));
     document.getElementById('fruit-hub').classList.remove('hidden');
     renderFavorites();
 }

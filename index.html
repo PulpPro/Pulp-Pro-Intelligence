@@ -27,8 +27,6 @@
     width: 100%;
     padding-bottom: 20px;
 }
-
-/* Base card */
 .hc {
     position: relative;
     border-radius: 20px;
@@ -42,204 +40,101 @@
 }
 .hc:hover { transform: translateY(-3px); border-color: rgba(166,226,46,0.35); }
 .hc:active { transform: scale(0.98); }
-
-/* Image on top */
 .hc-img {
-    width: 100%;
-    height: 120px;
-    object-fit: cover;
-    display: block;
-    flex-shrink: 0;
+    width: 100%; height: 120px;
+    object-fit: cover; display: block; flex-shrink: 0;
 }
-
-/* Label below image */
 .hc-label {
     padding: 10px 12px 12px;
-    background: #141414;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    background: #141414; flex: 1;
+    display: flex; flex-direction: column; justify-content: center;
 }
 .hc-name {
-    font-size: 0.78rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    color: #fff;
-    display: block;
+    font-size: 0.78rem; font-weight: 900;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: #fff; display: block;
 }
 .hc-sub {
-    font-size: 0.48rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: rgba(255,255,255,0.35);
-    display: block;
-    margin-top: 2px;
+    font-size: 0.48rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: rgba(255,255,255,0.35); display: block; margin-top: 2px;
 }
 .hc-soon {
-    font-size: 0.5rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: #ff8c00;
-    display: block;
-    margin-top: 2px;
+    font-size: 0.5rem; font-weight: 900;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: #ff8c00; display: block; margin-top: 2px;
 }
-
-/* ── BANANA MOBILE — image left, text right ── */
 .hc-banana {
-    grid-column: 1 / -1;
-    flex-direction: row;
-    align-items: stretch;
-    height: 110px;
+    grid-column: 1 / -1; flex-direction: row;
+    align-items: stretch; height: 110px;
     border: 1px solid rgba(166,226,46,0.2);
-    background: #0d1a06;
-    border-radius: 22px;
+    background: #0d1a06; border-radius: 22px;
 }
 .hc-banana .hc-img {
-    width: 38%;
-    height: 110px;
-    object-fit: cover;
-    flex-shrink: 0;
-    border-radius: 0;
+    width: 38%; height: 110px;
+    object-fit: cover; flex-shrink: 0; border-radius: 0;
 }
 .hc-banana .hc-label {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 14px 14px 14px 16px;
+    flex: 1; display: flex; flex-direction: column;
+    justify-content: center; padding: 14px 14px 14px 16px;
     background: transparent;
 }
-.hc-banana .hc-name {
-    font-size: 1.05rem;
-    letter-spacing: 2px;
-    color: #fff;
-}
-.hc-banana .hc-sub {
-    color: rgba(166,226,46,0.6);
-    margin-top: 4px;
-    font-size: 0.5rem;
-}
+.hc-banana .hc-name { font-size: 1.05rem; letter-spacing: 2px; color: #fff; }
+.hc-banana .hc-sub  { color: rgba(166,226,46,0.6); margin-top: 4px; font-size: 0.5rem; }
 .hc-banana-explore {
-    display: inline-block;
-    margin-top: 10px;
+    display: inline-block; margin-top: 10px;
     background: rgba(166,226,46,0.12);
     border: 1px solid rgba(166,226,46,0.25);
-    color: #a6e22e;
-    font-size: 0.52rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    padding: 5px 12px;
-    border-radius: 20px;
-    width: fit-content;
+    color: #a6e22e; font-size: 0.52rem; font-weight: 900;
+    text-transform: uppercase; letter-spacing: 1px;
+    padding: 5px 12px; border-radius: 20px; width: fit-content;
 }
-
-/* ── NEWS — full width bar, no image, emoji icon ── */
 .hc-news {
-    grid-column: 1 / -1;
-    flex-direction: row;
-    align-items: center;
-    min-height: 80px;
+    grid-column: 1 / -1; flex-direction: row;
+    align-items: center; min-height: 80px;
     background: rgba(255,255,255,0.03);
     border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 20px;
-    padding: 0 20px;
-    gap: 16px;
+    border-radius: 20px; padding: 0 20px; gap: 16px;
 }
-.hc-news .hc-img {
-    display: none;
-}
-.hc-news-icon {
-    font-size: 2rem;
-    flex-shrink: 0;
-    line-height: 1;
-}
+.hc-news .hc-img { display: none; }
+.hc-news-icon { font-size: 2rem; flex-shrink: 0; line-height: 1; }
 .hc-news .hc-label {
-    flex: 1;
-    padding: 0;
-    background: transparent;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    flex: 1; padding: 0; background: transparent;
+    display: flex; flex-direction: column; justify-content: center;
 }
-.hc-news .hc-name {
-    font-size: 0.85rem;
-    letter-spacing: 1.5px;
-}
-.hc-news .hc-sub {
-    font-size: 0.52rem;
-    margin-top: 4px;
-    color: rgba(255,255,255,0.3);
-}
-.hc-news-arrow {
-    font-size: 1.3rem;
-    color: rgba(255,255,255,0.2);
-    flex-shrink: 0;
-}
+.hc-news .hc-name { font-size: 0.85rem; letter-spacing: 1.5px; }
+.hc-news .hc-sub  { font-size: 0.52rem; margin-top: 4px; color: rgba(255,255,255,0.3); }
+.hc-news-arrow { font-size: 1.3rem; color: rgba(255,255,255,0.2); flex-shrink: 0; }
 
-/* ── PC BENTO ≥ 900px ── */
 @media (min-width: 900px) {
     .home-grid {
         grid-template-columns: 2fr 1fr 1fr;
         grid-template-rows: 240px 170px 90px;
-        gap: 12px;
-        padding-bottom: 20px;
+        gap: 12px; padding-bottom: 20px;
     }
-
-    /* Banana — big hero, left 2 rows */
     .hc-banana {
-        grid-column: 1 / 2;
-        grid-row: 1 / 3;
-        flex-direction: column;
-        height: 100%;
-        align-items: stretch;
-        border-radius: 26px;
+        grid-column: 1 / 2; grid-row: 1 / 3;
+        flex-direction: column; height: 100%;
+        align-items: stretch; border-radius: 26px;
     }
-    .hc-banana .hc-img {
-        width: 100%;
-        height: 62%;
-        object-fit: cover;
-        flex-shrink: 0;
-        border-radius: 0;
-    }
-    .hc-banana .hc-label {
-        flex: 1;
-        padding: 22px 26px;
-        justify-content: center;
-        background: transparent;
-    }
+    .hc-banana .hc-img { width: 100%; height: 62%; object-fit: cover; flex-shrink: 0; border-radius: 0; }
+    .hc-banana .hc-label { flex: 1; padding: 22px 26px; justify-content: center; background: transparent; }
     .hc-banana .hc-name { font-size: 1.8rem; letter-spacing: 3px; }
     .hc-banana .hc-sub  { font-size: 0.6rem; margin-top: 6px; }
     .hc-banana-explore  { margin-top: 16px; font-size: 0.6rem; padding: 8px 18px; }
-
-    /* Mango */
     .hc:nth-child(2) { grid-column: 2; grid-row: 1; border-radius: 24px; }
-    /* Avocado */
     .hc:nth-child(3) { grid-column: 3; grid-row: 1; border-radius: 24px; }
-    /* Defect */
     .hc:nth-child(4) { grid-column: 2; grid-row: 2; border-radius: 24px; }
-    /* Colour */
     .hc:nth-child(5) { grid-column: 3; grid-row: 2; border-radius: 24px; }
-
-    /* News full width bottom row */
     .hc-news {
-        grid-column: 1 / -1;
-        grid-row: 3;
-        min-height: 90px;
-        border-radius: 20px;
-        padding: 0 32px;
-        gap: 22px;
+        grid-column: 1 / -1; grid-row: 3;
+        min-height: 90px; border-radius: 20px;
+        padding: 0 32px; gap: 22px;
     }
     .hc-news-icon { font-size: 2.2rem; }
     .hc-news .hc-name { font-size: 1rem; }
     .hc-news .hc-sub  { font-size: 0.58rem; }
     .hc-news-arrow { font-size: 1.4rem; }
-
-    /* Regular card PC adjustments */
     .hc:not(.hc-banana):not(.hc-news) .hc-img   { height: 65%; }
     .hc:not(.hc-banana):not(.hc-news) .hc-name  { font-size: 0.88rem; }
     .hc:not(.hc-banana):not(.hc-news) .hc-label { padding: 12px 16px 14px; }
@@ -293,8 +188,6 @@
 <div id="fruit-hub" class="nav-view">
 <div class="hub-title">Select Commodity</div>
 <div class="home-grid">
-
-    <!-- Banana hero -->
     <div class="hc hc-banana" onclick="openMiddleHub('banana')">
         <img class="hc-img" src="banana.png" alt="banana">
         <div class="hc-label">
@@ -303,8 +196,6 @@
             <span class="hc-banana-explore">Explore →</span>
         </div>
     </div>
-
-    <!-- Mango -->
     <div class="hc" onclick="openMiddleHub('mango')">
         <img class="hc-img" src="mango.png" alt="mango">
         <div class="hc-label">
@@ -312,8 +203,6 @@
             <span class="hc-soon">(Soon)</span>
         </div>
     </div>
-
-    <!-- Avocado -->
     <div class="hc" onclick="openMiddleHub('avocado')">
         <img class="hc-img" src="avocado.png" alt="avocado">
         <div class="hc-label">
@@ -321,8 +210,6 @@
             <span class="hc-soon">(Soon)</span>
         </div>
     </div>
-
-    <!-- Defect Detector -->
     <div class="hc" onclick="openDefectDetector()">
         <img class="hc-img" src="rotten.png" alt="defect">
         <div class="hc-label">
@@ -330,8 +217,6 @@
             <span class="hc-sub">Camera · AI scan</span>
         </div>
     </div>
-
-    <!-- Colour Scanner -->
     <div class="hc" onclick="openColourScanner()">
         <img class="hc-img" src="colour.png" alt="colour">
         <div class="hc-label">
@@ -339,8 +224,6 @@
             <span class="hc-sub">Classic · AI model</span>
         </div>
     </div>
-
-    <!-- News — no image, emoji + text -->
     <div class="hc hc-news" onclick="openNews()">
         <span class="hc-news-icon">📰</span>
         <div class="hc-label">
@@ -349,7 +232,6 @@
         </div>
         <span class="hc-news-arrow">›</span>
     </div>
-
 </div>
 <div id="favorites-section" class="hidden">
 <div class="hub-title" style="color:var(--pulp-amber); font-size:0.8rem; margin-top:20px;">Saved Favorites</div>
@@ -357,22 +239,13 @@
 </div>
 </div>
 
-<!-- Middle Hub -->
+<!-- Middle Hub — Banana -->
 <div id="middle-hub" class="nav-view hidden">
 <div class="hub-title" id="middleHubTitle">Banana Menu</div>
-<div class="list-container">
-<div class="list-btn" id="brandsBtn" onclick="openBrands(activeFruit)">Banana Brands</div>
-<div class="list-btn" id="defectsSoonBtn" onclick="FruitDefects.open(activeFruit)">Defects</div>
-<div class="list-btn disabled" id="ripeningSoonBtn">Ripening (Soon)</div>
+<div class="list-container" id="middleHubButtons">
+    <!-- Populated dynamically by openMiddleHub -->
 </div>
 <button class="btn-main btn-back" onclick="showHub()" id="backToHubBtn">&larr; Back</button>
-</div>
-
-<!-- Brand Hub -->
-<div id="brand-hub" class="nav-view hidden">
-<div class="hub-title" id="brandHubTitle">Select Brand</div>
-<div class="list-container" id="brandGrid"></div>
-<button class="btn-main btn-back" onclick="openMiddleHub(activeFruit)">&larr; Back</button>
 </div>
 
 <!-- Defect Hub -->
@@ -628,7 +501,7 @@ Pulp Pro is not affiliated with any news source.
 <div id="dateText" style="font-size:1.3rem; font-weight:900; margin-top:10px;">-- -- ----</div>
 <button class="btn btn-copy" onclick="copyResult()" id="copyBtn"><i class="bi bi-clipboard"></i> COPY</button>
 </div>
-<button class="btn-main btn-back" style="margin-top:25px;" onclick="openBrands(activeFruit)" id="backToBrandsBtn">&larr; Back to Brands</button>
+<button class="btn-main btn-back" style="margin-top:25px;" onclick="openMiddleHub(activeFruit)" id="backToBrandsBtn">&larr; Back</button>
 </div>
 <div id="historySection" class="history-section"><div id="historyList"></div></div>
 </div>
@@ -645,7 +518,6 @@ navigator.serviceWorker.register('sw.js').catch(err => console.log('SW failed', 
 <script src="js/app.js"></script>
 <script src="js/favorites.js"></script>
 <script src="js/history.js"></script>
-<script src="js/brands.js"></script>
 <script src="js/navigation.js"></script>
 <script src="js/calculator.js"></script>
 <script src="js/defects-data.js"></script>

@@ -18,6 +18,218 @@
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/knn-classifier"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+
+<style>
+/* ── HOME GRID ─────────────────────────────────────── */
+.home-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+    padding-bottom: 40px;
+}
+
+/* All cards share base */
+.hc {
+    position: relative;
+    border-radius: 22px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.07);
+    background: #141414;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.hc:hover { transform: translateY(-3px); border-color: rgba(166,226,46,0.35); }
+.hc:active { transform: scale(0.98); }
+
+/* Image fills top of every regular card */
+.hc-img {
+    width: 100%;
+    height: 130px;
+    object-fit: cover;
+    display: block;
+}
+
+/* Name bar at bottom */
+.hc-label {
+    padding: 10px 12px 12px;
+    background: #141414;
+}
+.hc-name {
+    font-size: 0.78rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #fff;
+    display: block;
+}
+.hc-sub {
+    font-size: 0.48rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.35);
+    display: block;
+    margin-top: 2px;
+}
+.hc-soon {
+    font-size: 0.48rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #ff8c00;
+    display: block;
+    margin-top: 2px;
+}
+
+/* ── BANANA FEATURED — full width, landscape ── */
+.hc-banana {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    height: 110px;
+    border: 1px solid rgba(166,226,46,0.18);
+    background: #0f1a08;
+    border-radius: 24px;
+}
+.hc-banana .hc-img {
+    width: 140px;
+    height: 110px;
+    flex-shrink: 0;
+    border-radius: 0;
+    object-fit: cover;
+}
+.hc-banana .hc-label {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 16px;
+    background: transparent;
+}
+.hc-banana .hc-name {
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+}
+.hc-banana .hc-sub {
+    color: rgba(166,226,46,0.55);
+    margin-top: 3px;
+}
+.hc-banana-arrow {
+    font-size: 1.3rem;
+    color: rgba(166,226,46,0.25);
+    padding-right: 16px;
+    align-self: center;
+    flex-shrink: 0;
+}
+
+/* ── NEWS — slim full width bar ── */
+.hc-news {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 62px;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 18px;
+    gap: 0;
+}
+.hc-news .hc-img {
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;
+    border-radius: 0;
+    object-fit: contain;
+    padding: 8px;
+    background: transparent;
+}
+.hc-news .hc-label {
+    flex: 1;
+    padding: 0 10px;
+    background: transparent;
+}
+.hc-news .hc-name { font-size: 0.75rem; }
+.hc-news-arrow {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.15);
+    padding-right: 14px;
+    flex-shrink: 0;
+}
+
+/* ── PC BENTO GRID ≥ 900px ── */
+@media (min-width: 900px) {
+    .home-grid {
+        grid-template-columns: 2fr 1fr 1fr;
+        grid-template-rows: 240px 170px 72px;
+        gap: 12px;
+    }
+
+    /* Banana — big hero, spans 2 rows left */
+    .hc-banana {
+        grid-column: 1 / 2;
+        grid-row: 1 / 3;
+        flex-direction: column;
+        height: 100%;
+        align-items: stretch;
+        border-radius: 26px;
+    }
+    .hc-banana .hc-img {
+        width: 100%;
+        height: 62%;
+        flex-shrink: 0;
+        object-fit: cover;
+        border-radius: 0;
+    }
+    .hc-banana .hc-label {
+        flex: 1;
+        padding: 20px 24px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .hc-banana .hc-name { font-size: 1.7rem; letter-spacing: 3px; }
+    .hc-banana .hc-sub  { font-size: 0.58rem; margin-top: 5px; }
+    .hc-banana-explore {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 14px;
+        background: rgba(166,226,46,0.1);
+        border: 1px solid rgba(166,226,46,0.22);
+        color: #a6e22e;
+        font-size: 0.58rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 8px 18px;
+        border-radius: 20px;
+        width: fit-content;
+    }
+    .hc-banana-arrow { display: none; }
+
+    /* Mango row 1 col 2 */
+    .hc:nth-child(2) { grid-column: 2; grid-row: 1; border-radius: 24px; }
+    /* Avocado row 1 col 3 */
+    .hc:nth-child(3) { grid-column: 3; grid-row: 1; border-radius: 24px; }
+    /* Defect row 2 col 2 */
+    .hc:nth-child(4) { grid-column: 2; grid-row: 2; border-radius: 24px; }
+    /* Colour row 2 col 3 */
+    .hc:nth-child(5) { grid-column: 3; grid-row: 2; border-radius: 24px; }
+    /* News full width row 3 */
+    .hc-news {
+        grid-column: 1 / -1;
+        grid-row: 3;
+        height: 72px;
+        border-radius: 18px;
+    }
+
+    /* Bigger images and labels on PC regular cards */
+    .hc:not(.hc-banana):not(.hc-news) .hc-img { height: 68%; }
+    .hc:not(.hc-banana):not(.hc-news) .hc-name { font-size: 0.88rem; }
+}
+</style>
 </head>
 <body>
 
@@ -65,72 +277,74 @@
 <!-- Fruit Hub -->
 <div id="fruit-hub" class="nav-view">
 <div class="hub-title">Select Commodity</div>
-<div class="selection-grid-container">
-<div class="selection-grid">
 
-    <!-- Banana — featured card -->
-    <div class="selection-card card-featured" onclick="openMiddleHub('banana')">
-        <img src="banana.png" alt="banana">
-        <div class="commodity-name-section">
-            <span>Banana</span>
-            <span class="card-sub">Age checker · Defects · Colour</span>
-            <span class="card-explore">Explore →</span>
+<div class="home-grid">
+
+    <!-- Banana — hero card -->
+    <div class="hc hc-banana" onclick="openMiddleHub('banana')">
+        <img class="hc-img" src="banana.png" alt="banana">
+        <div class="hc-label">
+            <span class="hc-name">Banana</span>
+            <span class="hc-sub">Age checker · Defects · Colour</span>
+            <span class="hc-banana-explore">Explore →</span>
         </div>
-        <span class="card-arrow">›</span>
+        <span class="hc-banana-arrow">›</span>
     </div>
 
     <!-- Mango -->
-    <div class="selection-card" onclick="openMiddleHub('mango')">
-        <img src="mango.png" alt="mango">
-        <div class="commodity-name-section">
-            <span>Mango</span>
-            <span style="color:var(--pulp-amber); font-size:0.55rem; letter-spacing:1px;">(SOON)</span>
+    <div class="hc" onclick="openMiddleHub('mango')">
+        <img class="hc-img" src="mango.png" alt="mango">
+        <div class="hc-label">
+            <span class="hc-name">Mango</span>
+            <span class="hc-soon">(Soon)</span>
         </div>
     </div>
 
     <!-- Avocado -->
-    <div class="selection-card" onclick="openMiddleHub('avocado')">
-        <img src="avocado.png" alt="avocado">
-        <div class="commodity-name-section">
-            <span>Avocado</span>
-            <span style="color:var(--pulp-amber); font-size:0.55rem; letter-spacing:1px;">(SOON)</span>
+    <div class="hc" onclick="openMiddleHub('avocado')">
+        <img class="hc-img" src="avocado.png" alt="avocado">
+        <div class="hc-label">
+            <span class="hc-name">Avocado</span>
+            <span class="hc-soon">(Soon)</span>
         </div>
     </div>
 
     <!-- Defect Detector -->
-    <div class="selection-card" onclick="openDefectDetector()">
-        <img src="rotten.png" alt="defect">
-        <div class="commodity-name-section">
-            <span>Defect Detector</span>
+    <div class="hc" onclick="openDefectDetector()">
+        <img class="hc-img" src="rotten.png" alt="defect">
+        <div class="hc-label">
+            <span class="hc-name">Defect Detector</span>
+            <span class="hc-sub">Camera · AI scan</span>
         </div>
     </div>
 
     <!-- Colour Scanner -->
-    <div class="selection-card" onclick="openColourScanner()">
-        <img src="colour.png" alt="colour">
-        <div class="commodity-name-section">
-            <span>Colour Scanner</span>
+    <div class="hc" onclick="openColourScanner()">
+        <img class="hc-img" src="colour.png" alt="colour">
+        <div class="hc-label">
+            <span class="hc-name">Colour Scanner</span>
+            <span class="hc-sub">Classic · AI model</span>
         </div>
     </div>
 
-    <!-- News — slim bar -->
-    <div class="selection-card card-news" onclick="openNews()">
-        <img src="news.png" alt="news">
-        <div class="commodity-name-section">
-            <span>Industry News</span>
-            <span class="card-sub">AGF · FreshPlaza · Fresh Fruit Portal</span>
+    <!-- News -->
+    <div class="hc hc-news" onclick="openNews()">
+        <img class="hc-img" src="news.png" alt="news">
+        <div class="hc-label">
+            <span class="hc-name">Industry News</span>
+            <span class="hc-sub">AGF · FreshPlaza · Fresh Fruit Portal</span>
         </div>
-        <span class="card-arrow">›</span>
+        <span class="hc-news-arrow">›</span>
     </div>
 
 </div>
-</div>
+
 <div id="favorites-section" class="hidden">
 <div class="hub-title" style="color:var(--pulp-amber); font-size:0.8rem; margin-top:20px;">Saved Favorites</div>
 <div class="fav-grid" id="fav-grid"></div>
 </div>
 </div>
-    
+
 <!-- Middle Hub -->
 <div id="middle-hub" class="nav-view hidden">
 <div class="hub-title" id="middleHubTitle">Banana Menu</div>

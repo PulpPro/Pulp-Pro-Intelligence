@@ -17,6 +17,7 @@ const NewsManager = (() => {
     let activeFilter = 'all';
     const articleMap = {};
     let autoRefreshTimer = null;
+    let savedScrollY = 0; // ← saves scroll position before opening article
 
     function init() {
         activeFilter = 'all';
@@ -393,6 +394,9 @@ const NewsManager = (() => {
     }
 
     function openArticle(article) {
+        // Save scroll position before opening article
+        savedScrollY = window.scrollY;
+
         const colour = getSourceColor(article.source_id);
         const emoji = getSourceEmoji(article.source_id);
         const time = timeAgo(article.pubDate);
@@ -452,11 +456,14 @@ const NewsManager = (() => {
 
         document.getElementById('news-list-view').classList.add('hidden');
         document.getElementById('news-article-view').classList.remove('hidden');
+        window.scrollTo(0, 0);
     }
 
     function closeArticle() {
         document.getElementById('news-article-view').classList.add('hidden');
         document.getElementById('news-list-view').classList.remove('hidden');
+        // Restore scroll position
+        requestAnimationFrame(() => window.scrollTo(0, savedScrollY));
     }
 
     function forceRefresh() {

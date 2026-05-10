@@ -67,36 +67,62 @@
 <div class="hub-title">Select Commodity</div>
 <div class="selection-grid-container">
 <div class="selection-grid">
-<div class="selection-card" onclick="openMiddleHub('banana')">
-<img src="banana.png" alt="banana">
-<div class="commodity-name-section"><span>Banana</span></div>
-</div>
-<div class="selection-card" onclick="openMiddleHub('mango')">
-<img src="mango.png" alt="mango">
-<div class="commodity-name-section">
-<span>Mango</span>
-<span style="color:var(--pulp-amber); font-size:0.6rem; letter-spacing:1px;">(SOON)</span>
-</div>
-</div>
-<div class="selection-card" onclick="openMiddleHub('avocado')">
-<img src="avocado.png" alt="avocado">
-<div class="commodity-name-section">
-<span>Avocado</span>
-<span style="color:var(--pulp-amber); font-size:0.6rem; letter-spacing:1px;">(SOON)</span>
-</div>
-</div>
-<div class="selection-card" onclick="openDefectDetector()">
-<img src="rotten.png" alt="defect">
-<div class="commodity-name-section"><span>Defect Detector</span></div>
-</div>
-<div class="selection-card" onclick="openColourScanner()">
-<img src="colour.png" alt="colour">
-<div class="commodity-name-section"><span>Colour Scanner</span></div>
-</div>
-<div class="selection-card" onclick="openNews()">
-<img src="news.png" alt="news">
-<div class="commodity-name-section"><span>News</span></div>
-</div>
+
+    <!-- Banana — featured card -->
+    <div class="selection-card card-featured" onclick="openMiddleHub('banana')">
+        <img src="banana.png" alt="banana">
+        <div class="commodity-name-section">
+            <span>Banana</span>
+            <span class="card-sub">Age checker · Defects · Colour</span>
+            <span class="card-explore">Explore →</span>
+        </div>
+        <span class="card-arrow">›</span>
+    </div>
+
+    <!-- Mango -->
+    <div class="selection-card" onclick="openMiddleHub('mango')">
+        <img src="mango.png" alt="mango">
+        <div class="commodity-name-section">
+            <span>Mango</span>
+            <span style="color:var(--pulp-amber); font-size:0.55rem; letter-spacing:1px;">(SOON)</span>
+        </div>
+    </div>
+
+    <!-- Avocado -->
+    <div class="selection-card" onclick="openMiddleHub('avocado')">
+        <img src="avocado.png" alt="avocado">
+        <div class="commodity-name-section">
+            <span>Avocado</span>
+            <span style="color:var(--pulp-amber); font-size:0.55rem; letter-spacing:1px;">(SOON)</span>
+        </div>
+    </div>
+
+    <!-- Defect Detector -->
+    <div class="selection-card" onclick="openDefectDetector()">
+        <img src="rotten.png" alt="defect">
+        <div class="commodity-name-section">
+            <span>Defect Detector</span>
+        </div>
+    </div>
+
+    <!-- Colour Scanner -->
+    <div class="selection-card" onclick="openColourScanner()">
+        <img src="colour.png" alt="colour">
+        <div class="commodity-name-section">
+            <span>Colour Scanner</span>
+        </div>
+    </div>
+
+    <!-- News — slim bar -->
+    <div class="selection-card card-news" onclick="openNews()">
+        <img src="news.png" alt="news">
+        <div class="commodity-name-section">
+            <span>Industry News</span>
+            <span class="card-sub">AGF · FreshPlaza · Fresh Fruit Portal</span>
+        </div>
+        <span class="card-arrow">›</span>
+    </div>
+
 </div>
 </div>
 <div id="favorites-section" class="hidden">
@@ -104,7 +130,7 @@
 <div class="fav-grid" id="fav-grid"></div>
 </div>
 </div>
-
+    
 <!-- Middle Hub -->
 <div id="middle-hub" class="nav-view hidden">
 <div class="hub-title" id="middleHubTitle">Banana Menu</div>

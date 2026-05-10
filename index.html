@@ -239,10 +239,12 @@
 </div>
 </div>
 
-<!-- Middle Hub -->
+<!-- Middle Hub — Banana -->
 <div id="middle-hub" class="nav-view hidden">
 <div class="hub-title" id="middleHubTitle">Banana Menu</div>
-<div class="list-container" id="middleHubButtons"></div>
+<div class="list-container" id="middleHubButtons">
+    <!-- Populated dynamically by openMiddleHub -->
+</div>
 <button class="btn-main btn-back" onclick="showHub()" id="backToHubBtn">&larr; Back</button>
 </div>
 
@@ -524,7 +526,6 @@ navigator.serviceWorker.register('sw.js').catch(err => console.log('SW failed', 
 <script src="js/news.js"></script>
 <script src="js/fruit-defects-data.js"></script>
 <script src="js/fruit-defects.js"></script>
-<script src="js/origin-report.js"></script>
 
 </body>
 </html>

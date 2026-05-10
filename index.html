@@ -57,6 +57,9 @@
     padding: 10px 12px 12px;
     background: #141414;
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 .hc-name {
     font-size: 0.78rem;
@@ -85,7 +88,7 @@
     margin-top: 2px;
 }
 
-/* ── BANANA MOBILE — full width, image left, text right ── */
+/* ── BANANA MOBILE — image left, text right ── */
 .hc-banana {
     grid-column: 1 / -1;
     flex-direction: row;
@@ -134,42 +137,47 @@
     border-radius: 20px;
     width: fit-content;
 }
-.hc-banana-arrow {
-    display: none;
-}
 
-/* ── NEWS — slim full width bar ── */
+/* ── NEWS — full width bar, no image, emoji icon ── */
 .hc-news {
     grid-column: 1 / -1;
     flex-direction: row;
     align-items: center;
-    min-height: 70px;
+    min-height: 80px;
     background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 0 20px;
+    gap: 16px;
 }
 .hc-news .hc-img {
-    width: 60px;
-    height: 60px;
+    display: none;
+}
+.hc-news-icon {
+    font-size: 2rem;
     flex-shrink: 0;
-    object-fit: contain;
-    padding: 10px;
-    background: transparent;
-    border-radius: 0;
+    line-height: 1;
 }
 .hc-news .hc-label {
     flex: 1;
-    padding: 0 12px;
+    padding: 0;
     background: transparent;
     display: flex;
     flex-direction: column;
     justify-content: center;
 }
-.hc-news .hc-name { font-size: 0.78rem; }
+.hc-news .hc-name {
+    font-size: 0.85rem;
+    letter-spacing: 1.5px;
+}
+.hc-news .hc-sub {
+    font-size: 0.52rem;
+    margin-top: 4px;
+    color: rgba(255,255,255,0.3);
+}
 .hc-news-arrow {
-    font-size: 1.1rem;
+    font-size: 1.3rem;
     color: rgba(255,255,255,0.2);
-    padding-right: 16px;
     flex-shrink: 0;
 }
 
@@ -177,12 +185,12 @@
 @media (min-width: 900px) {
     .home-grid {
         grid-template-columns: 2fr 1fr 1fr;
-        grid-template-rows: 240px 170px 80px;
+        grid-template-rows: 240px 170px 90px;
         gap: 12px;
         padding-bottom: 20px;
     }
 
-    /* Banana — hero left spanning 2 rows, image top text bottom */
+    /* Banana — big hero, left 2 rows */
     .hc-banana {
         grid-column: 1 / 2;
         grid-row: 1 / 3;
@@ -204,65 +212,37 @@
         justify-content: center;
         background: transparent;
     }
-    .hc-banana .hc-name {
-        font-size: 1.8rem;
-        letter-spacing: 3px;
-    }
-    .hc-banana .hc-sub {
-        font-size: 0.6rem;
-        margin-top: 6px;
-    }
-    .hc-banana-explore {
-        margin-top: 16px;
-        font-size: 0.6rem;
-        padding: 8px 18px;
-    }
+    .hc-banana .hc-name { font-size: 1.8rem; letter-spacing: 3px; }
+    .hc-banana .hc-sub  { font-size: 0.6rem; margin-top: 6px; }
+    .hc-banana-explore  { margin-top: 16px; font-size: 0.6rem; padding: 8px 18px; }
 
     /* Mango */
-    .hc:nth-child(2) {
-        grid-column: 2; grid-row: 1;
-        border-radius: 24px;
-    }
+    .hc:nth-child(2) { grid-column: 2; grid-row: 1; border-radius: 24px; }
     /* Avocado */
-    .hc:nth-child(3) {
-        grid-column: 3; grid-row: 1;
-        border-radius: 24px;
-    }
+    .hc:nth-child(3) { grid-column: 3; grid-row: 1; border-radius: 24px; }
     /* Defect */
-    .hc:nth-child(4) {
-        grid-column: 2; grid-row: 2;
-        border-radius: 24px;
-    }
+    .hc:nth-child(4) { grid-column: 2; grid-row: 2; border-radius: 24px; }
     /* Colour */
-    .hc:nth-child(5) {
-        grid-column: 3; grid-row: 2;
-        border-radius: 24px;
-    }
-    /* News full width */
+    .hc:nth-child(5) { grid-column: 3; grid-row: 2; border-radius: 24px; }
+
+    /* News full width bottom row */
     .hc-news {
         grid-column: 1 / -1;
         grid-row: 3;
-        min-height: 80px;
-        border-radius: 18px;
+        min-height: 90px;
+        border-radius: 20px;
+        padding: 0 32px;
+        gap: 22px;
     }
-    .hc-news .hc-img {
-        width: 70px;
-        height: 70px;
-        padding: 12px;
-    }
-    .hc-news .hc-name { font-size: 0.9rem; }
-    .hc-news .hc-sub  { font-size: 0.55rem; }
+    .hc-news-icon { font-size: 2.2rem; }
+    .hc-news .hc-name { font-size: 1rem; }
+    .hc-news .hc-sub  { font-size: 0.58rem; }
+    .hc-news-arrow { font-size: 1.4rem; }
 
-    /* Regular cards PC */
-    .hc:not(.hc-banana):not(.hc-news) .hc-img {
-        height: 65%;
-    }
-    .hc:not(.hc-banana):not(.hc-news) .hc-name {
-        font-size: 0.88rem;
-    }
-    .hc:not(.hc-banana):not(.hc-news) .hc-label {
-        padding: 12px 16px 14px;
-    }
+    /* Regular card PC adjustments */
+    .hc:not(.hc-banana):not(.hc-news) .hc-img   { height: 65%; }
+    .hc:not(.hc-banana):not(.hc-news) .hc-name  { font-size: 0.88rem; }
+    .hc:not(.hc-banana):not(.hc-news) .hc-label { padding: 12px 16px 14px; }
 }
 </style>
 </head>
@@ -360,12 +340,12 @@
         </div>
     </div>
 
-    <!-- News -->
+    <!-- News — no image, emoji + text -->
     <div class="hc hc-news" onclick="openNews()">
-        <img class="hc-img" src="news.png" alt="news">
+        <span class="hc-news-icon">📰</span>
         <div class="hc-label">
             <span class="hc-name">Industry News</span>
-            <span class="hc-sub">AGF · FreshPlaza · Fresh Fruit Portal</span>
+            <span class="hc-sub">AGF · FreshPlaza · Fresh Fruit Portal · Good Fruit Grower</span>
         </div>
         <span class="hc-news-arrow">›</span>
     </div>

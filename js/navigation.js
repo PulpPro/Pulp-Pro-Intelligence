@@ -18,31 +18,39 @@ function showHub() {
     renderFavorites();
 }
 
-// Open Middle Hub
+// Open Middle Hub — buttons differ per fruit
 function openMiddleHub(fruit) {
     activeFruit = fruit;
-    const fruitNames = { banana:'Banana', mango:'Mango', avocado:'Avocado' };
+    const fruitNames = { banana: 'Banana', mango: 'Mango', avocado: 'Avocado' };
     const name = fruitNames[fruit] || fruit;
     document.getElementById('middleHubTitle').innerText = name + ' ' + t('menu');
-    document.getElementById('brandsBtn').innerText = name + ' ' + t('brands');
+
+    const btns = document.getElementById('middleHubButtons');
+    if (btns) {
+        if (fruit === 'banana') {
+            btns.innerHTML = `
+                <div class="list-btn" onclick="openAgeChecker()">Age Checker <span style="font-size:0.6rem; opacity:0.5;">(Chiquita)</span></div>
+                <div class="list-btn" onclick="FruitDefects.open('banana')">Defects</div>
+                <div class="list-btn disabled">Ripening (Soon)</div>`;
+        } else if (fruit === 'mango') {
+            btns.innerHTML = `
+                <div class="list-btn" onclick="FruitDefects.open('mango')">Defects</div>
+                <div class="list-btn disabled">Ripening (Soon)</div>`;
+        } else if (fruit === 'avocado') {
+            btns.innerHTML = `
+                <div class="list-btn" onclick="FruitDefects.open('avocado')">Defects</div>
+                <div class="list-btn disabled">Ripening (Soon)</div>`;
+        }
+    }
+
     hideAllViews();
     document.getElementById('middle-hub').classList.remove('hidden');
 }
 
-// Open Brand Hub
-function openBrands(fruit) {
-    activeFruit = fruit;
-    const fruitNames = { banana:'Banana', mango:'Mango', avocado:'Avocado' };
-    document.getElementById('brandHubTitle').innerText = t('selectBrand') + ' — ' + (fruitNames[fruit] || fruit);
-    hideAllViews();
-    document.getElementById('brand-hub').classList.remove('hidden');
-    renderBrands(fruit);
-}
-
-// Select Brand — open calculator
-function selectBrand(brand) {
-    activeBrand = brand;
-    document.getElementById('brandName').innerText = brand;
+// Open Age Checker directly (Chiquita only — no brand selection step)
+function openAgeChecker() {
+    activeBrand = 'Chiquita';
+    document.getElementById('brandName').innerText = 'Chiquita';
     document.getElementById('commodityLabel').innerText = (activeFruit || 'fruit').toUpperCase() + ' ' + t('bananaAgeChecker');
     document.getElementById('codeIn').value = '';
     document.getElementById('resBox').classList.add('hidden');
@@ -65,7 +73,7 @@ function openDefectDetectorDirect(fruit, type) {
     window.defectActiveType = type;
     hideAllViews();
     document.getElementById('defect-scan-view').classList.remove('hidden');
-    const fruitNames = { banana:'Banana', mango:'Mango', avocado:'Avocado' };
+    const fruitNames = { banana: 'Banana', mango: 'Mango', avocado: 'Avocado' };
     const typeLabel = type === 'external' ? t('external') : t('internal');
     document.getElementById('defectScanTitle').innerText = fruitNames[fruit] + ' — ' + typeLabel;
     updateDefectFavoriteUI();

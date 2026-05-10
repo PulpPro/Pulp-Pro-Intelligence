@@ -14,46 +14,49 @@
 <link rel="stylesheet" href="css/theme.css">
 <link rel="stylesheet" href="css/layout.css">
 <link rel="stylesheet" href="css/components.css">
-<!-- TensorFlow for AI Colour Scanner -->
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/knn-classifier"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
 
 <style>
-/* ── HOME GRID ─────────────────────────────────────── */
+/* ── HOME GRID ─────────────────────────────── */
 .home-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
     width: 100%;
-    padding-bottom: 40px;
+    padding-bottom: 20px;
 }
 
-/* All cards share base */
+/* Base card */
 .hc {
     position: relative;
-    border-radius: 22px;
+    border-radius: 20px;
     overflow: hidden;
     cursor: pointer;
     border: 1px solid rgba(255,255,255,0.07);
     background: #141414;
     transition: transform 0.2s ease, border-color 0.2s ease;
+    display: flex;
+    flex-direction: column;
 }
 .hc:hover { transform: translateY(-3px); border-color: rgba(166,226,46,0.35); }
 .hc:active { transform: scale(0.98); }
 
-/* Image fills top of every regular card */
+/* Image on top */
 .hc-img {
     width: 100%;
-    height: 130px;
+    height: 120px;
     object-fit: cover;
     display: block;
+    flex-shrink: 0;
 }
 
-/* Name bar at bottom */
+/* Label below image */
 .hc-label {
     padding: 10px 12px 12px;
     background: #141414;
+    flex: 1;
 }
 .hc-name {
     font-size: 0.78rem;
@@ -73,7 +76,7 @@
     margin-top: 2px;
 }
 .hc-soon {
-    font-size: 0.48rem;
+    font-size: 0.5rem;
     font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -82,91 +85,104 @@
     margin-top: 2px;
 }
 
-/* ── BANANA FEATURED — full width, landscape ── */
+/* ── BANANA MOBILE — full width, image left, text right ── */
 .hc-banana {
     grid-column: 1 / -1;
-    display: flex;
     flex-direction: row;
     align-items: stretch;
     height: 110px;
-    border: 1px solid rgba(166,226,46,0.18);
-    background: #0f1a08;
-    border-radius: 24px;
+    border: 1px solid rgba(166,226,46,0.2);
+    background: #0d1a06;
+    border-radius: 22px;
 }
 .hc-banana .hc-img {
-    width: 140px;
+    width: 38%;
     height: 110px;
+    object-fit: cover;
     flex-shrink: 0;
     border-radius: 0;
-    object-fit: cover;
 }
 .hc-banana .hc-label {
     flex: 1;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 0 16px;
+    padding: 14px 14px 14px 16px;
     background: transparent;
 }
 .hc-banana .hc-name {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     letter-spacing: 2px;
+    color: #fff;
 }
 .hc-banana .hc-sub {
-    color: rgba(166,226,46,0.55);
-    margin-top: 3px;
+    color: rgba(166,226,46,0.6);
+    margin-top: 4px;
+    font-size: 0.5rem;
+}
+.hc-banana-explore {
+    display: inline-block;
+    margin-top: 10px;
+    background: rgba(166,226,46,0.12);
+    border: 1px solid rgba(166,226,46,0.25);
+    color: #a6e22e;
+    font-size: 0.52rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    width: fit-content;
 }
 .hc-banana-arrow {
-    font-size: 1.3rem;
-    color: rgba(166,226,46,0.25);
-    padding-right: 16px;
-    align-self: center;
-    flex-shrink: 0;
+    display: none;
 }
 
 /* ── NEWS — slim full width bar ── */
 .hc-news {
     grid-column: 1 / -1;
-    display: flex;
     flex-direction: row;
     align-items: center;
-    height: 62px;
-    background: rgba(255,255,255,0.025);
-    border: 1px solid rgba(255,255,255,0.05);
+    min-height: 70px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
     border-radius: 18px;
-    gap: 0;
 }
 .hc-news .hc-img {
-    width: 52px;
-    height: 52px;
+    width: 60px;
+    height: 60px;
     flex-shrink: 0;
-    border-radius: 0;
     object-fit: contain;
-    padding: 8px;
+    padding: 10px;
     background: transparent;
+    border-radius: 0;
 }
 .hc-news .hc-label {
     flex: 1;
-    padding: 0 10px;
+    padding: 0 12px;
     background: transparent;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
-.hc-news .hc-name { font-size: 0.75rem; }
+.hc-news .hc-name { font-size: 0.78rem; }
 .hc-news-arrow {
-    font-size: 1rem;
-    color: rgba(255,255,255,0.15);
-    padding-right: 14px;
+    font-size: 1.1rem;
+    color: rgba(255,255,255,0.2);
+    padding-right: 16px;
     flex-shrink: 0;
 }
 
-/* ── PC BENTO GRID ≥ 900px ── */
+/* ── PC BENTO ≥ 900px ── */
 @media (min-width: 900px) {
     .home-grid {
         grid-template-columns: 2fr 1fr 1fr;
-        grid-template-rows: 240px 170px 72px;
+        grid-template-rows: 240px 170px 80px;
         gap: 12px;
+        padding-bottom: 20px;
     }
 
-    /* Banana — big hero, spans 2 rows left */
+    /* Banana — hero left spanning 2 rows, image top text bottom */
     .hc-banana {
         grid-column: 1 / 2;
         grid-row: 1 / 3;
@@ -178,56 +194,75 @@
     .hc-banana .hc-img {
         width: 100%;
         height: 62%;
-        flex-shrink: 0;
         object-fit: cover;
+        flex-shrink: 0;
         border-radius: 0;
     }
     .hc-banana .hc-label {
         flex: 1;
-        padding: 20px 24px;
-        display: flex;
-        flex-direction: column;
+        padding: 22px 26px;
         justify-content: center;
+        background: transparent;
     }
-    .hc-banana .hc-name { font-size: 1.7rem; letter-spacing: 3px; }
-    .hc-banana .hc-sub  { font-size: 0.58rem; margin-top: 5px; }
+    .hc-banana .hc-name {
+        font-size: 1.8rem;
+        letter-spacing: 3px;
+    }
+    .hc-banana .hc-sub {
+        font-size: 0.6rem;
+        margin-top: 6px;
+    }
     .hc-banana-explore {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        margin-top: 14px;
-        background: rgba(166,226,46,0.1);
-        border: 1px solid rgba(166,226,46,0.22);
-        color: #a6e22e;
-        font-size: 0.58rem;
-        font-weight: 900;
-        text-transform: uppercase;
-        letter-spacing: 1px;
+        margin-top: 16px;
+        font-size: 0.6rem;
         padding: 8px 18px;
-        border-radius: 20px;
-        width: fit-content;
     }
-    .hc-banana-arrow { display: none; }
 
-    /* Mango row 1 col 2 */
-    .hc:nth-child(2) { grid-column: 2; grid-row: 1; border-radius: 24px; }
-    /* Avocado row 1 col 3 */
-    .hc:nth-child(3) { grid-column: 3; grid-row: 1; border-radius: 24px; }
-    /* Defect row 2 col 2 */
-    .hc:nth-child(4) { grid-column: 2; grid-row: 2; border-radius: 24px; }
-    /* Colour row 2 col 3 */
-    .hc:nth-child(5) { grid-column: 3; grid-row: 2; border-radius: 24px; }
-    /* News full width row 3 */
+    /* Mango */
+    .hc:nth-child(2) {
+        grid-column: 2; grid-row: 1;
+        border-radius: 24px;
+    }
+    /* Avocado */
+    .hc:nth-child(3) {
+        grid-column: 3; grid-row: 1;
+        border-radius: 24px;
+    }
+    /* Defect */
+    .hc:nth-child(4) {
+        grid-column: 2; grid-row: 2;
+        border-radius: 24px;
+    }
+    /* Colour */
+    .hc:nth-child(5) {
+        grid-column: 3; grid-row: 2;
+        border-radius: 24px;
+    }
+    /* News full width */
     .hc-news {
         grid-column: 1 / -1;
         grid-row: 3;
-        height: 72px;
+        min-height: 80px;
         border-radius: 18px;
     }
+    .hc-news .hc-img {
+        width: 70px;
+        height: 70px;
+        padding: 12px;
+    }
+    .hc-news .hc-name { font-size: 0.9rem; }
+    .hc-news .hc-sub  { font-size: 0.55rem; }
 
-    /* Bigger images and labels on PC regular cards */
-    .hc:not(.hc-banana):not(.hc-news) .hc-img { height: 68%; }
-    .hc:not(.hc-banana):not(.hc-news) .hc-name { font-size: 0.88rem; }
+    /* Regular cards PC */
+    .hc:not(.hc-banana):not(.hc-news) .hc-img {
+        height: 65%;
+    }
+    .hc:not(.hc-banana):not(.hc-news) .hc-name {
+        font-size: 0.88rem;
+    }
+    .hc:not(.hc-banana):not(.hc-news) .hc-label {
+        padding: 12px 16px 14px;
+    }
 }
 </style>
 </head>
@@ -277,10 +312,9 @@
 <!-- Fruit Hub -->
 <div id="fruit-hub" class="nav-view">
 <div class="hub-title">Select Commodity</div>
-
 <div class="home-grid">
 
-    <!-- Banana — hero card -->
+    <!-- Banana hero -->
     <div class="hc hc-banana" onclick="openMiddleHub('banana')">
         <img class="hc-img" src="banana.png" alt="banana">
         <div class="hc-label">
@@ -288,7 +322,6 @@
             <span class="hc-sub">Age checker · Defects · Colour</span>
             <span class="hc-banana-explore">Explore →</span>
         </div>
-        <span class="hc-banana-arrow">›</span>
     </div>
 
     <!-- Mango -->
@@ -338,7 +371,6 @@
     </div>
 
 </div>
-
 <div id="favorites-section" class="hidden">
 <div class="hub-title" style="color:var(--pulp-amber); font-size:0.8rem; margin-top:20px;">Saved Favorites</div>
 <div class="fav-grid" id="fav-grid"></div>

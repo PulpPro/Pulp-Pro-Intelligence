@@ -10,6 +10,10 @@ const FruitDefects = (() => {
     let activeType   = null;
     let activeDefect = null;
 
+    // Scroll position memory
+    let scrollBeforeDetail   = 0;  // saved when opening a defect detail
+    let scrollBeforeTypeView = 0;  // saved when opening the defect list
+
     // ── FULLSCREEN VIEWER ─────────────────────────────────────
     let fsImages      = [];
     let fsIndex       = 0;
@@ -137,13 +141,19 @@ const FruitDefects = (() => {
     function showView(id) {
         document.querySelectorAll('.nav-view').forEach(el => el.classList.add('hidden'));
         const target = document.getElementById(id);
-        if (target) { target.classList.remove('hidden'); window.scrollTo(0, 0); }
+        if (target) {
+            target.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
     }
 
     // ── OPEN DEFECT LIBRARY ───────────────────────────────────
     function open(fruit) {
         activeFruit = fruit;
         ensureViews();
+        // Save scroll position before going into defects
+        scrollBeforeTypeView = window.scrollY;
+
         const lang = getLang();
         const nl   = lang === 'nl';
         const fruitNames  = { banana: nl ? 'Banaan' : 'Banana', mango: 'Mango', avocado: 'Avocado' };
@@ -256,6 +266,9 @@ const FruitDefects = (() => {
 
     // ── OPEN DEFECT DETAIL ────────────────────────────────────
     function openDefect(defectId) {
+        // Save scroll position before going into detail
+        scrollBeforeDetail = window.scrollY;
+
         const lang = getLang();
         const nl   = lang === 'nl';
         const data = FRUIT_DEFECTS[activeFruit] || {};
@@ -335,7 +348,6 @@ const FruitDefects = (() => {
             </div>`;
         }
 
-        // ── Images + sections
         renderDetailImages(def.images || [], pc);
         renderSections(d, nl, col, pc);
 
@@ -363,7 +375,6 @@ const FruitDefects = (() => {
         }
 
         if (pc) {
-            // PC: stack vertically in left sticky column
             container.innerHTML = validImages.map((src, i) => `
             <div style="border-radius:16px; overflow:hidden; background:var(--glass-card);
                 cursor:pointer; position:relative; ${i > 0 ? 'margin-top:14px;' : ''}"
@@ -488,8 +499,17 @@ const FruitDefects = (() => {
     }
 
     // ── BACK NAVIGATION ───────────────────────────────────────
-    function backToTypeView() { showView('fd-type-view'); }
-    function backToList()     { selectType(activeType); }
+    function backToTypeView() {
+        showView('fd-type-view');
+        // Restore scroll to where user was in the type view
+        requestAnimationFrame(() => window.scrollTo(0, 0));
+    }
+
+    function backToList() {
+        selectType(activeType);
+        // Restore scroll position to where user was in the list
+        requestAnimationFrame(() => window.scrollTo(0, scrollBeforeDetail));
+    }
 
     function backToMiddleHub() {
         ['fd-type-view','fd-list-view','fd-detail-view'].forEach(v => {
@@ -498,6 +518,8 @@ const FruitDefects = (() => {
         });
         const mh = document.getElementById('middle-hub');
         if (mh) mh.classList.remove('hidden');
+        // Restore scroll to where user was before entering defects
+        requestAnimationFrame(() => window.scrollTo(0, scrollBeforeTypeView));
     }
 
     // ── BUILD VIEWS ───────────────────────────────────────────
@@ -542,45 +564,28 @@ const FruitDefects = (() => {
     }
 
     function buildDetailView() {
-        // Inject responsive CSS once
         if (!document.getElementById('fd-detail-style')) {
             const style = document.createElement('style');
             style.id = 'fd-detail-style';
             style.textContent = `
-                /* Mobile default */
                 #fd-detail-inner { max-width: 520px; margin: 0 auto; padding: 0 16px; }
                 #fd-detail-hero  { overflow: hidden; margin-bottom: 6px; }
                 #fd-quick-facts  { margin: 0 0 16px; background: var(--glass-card); border: 1px solid var(--border-glass); border-radius: 18px; overflow: hidden; }
                 #fd-pc-wrap      { display: block; }
                 #fd-images-container { margin-bottom: 4px; }
 
-                /* PC layout ≥ 900px */
                 @media (min-width: 900px) {
-                    #fd-detail-inner {
-                        max-width: 100%;
-                        padding: 0 32px;
-                    }
-                    #fd-detail-hero {
-                        border-radius: 0 0 32px 32px;
-                        margin-bottom: 8px;
-                    }
-                    #fd-quick-facts {
-                        margin: 0 0 24px;
-                    }
+                    #fd-detail-inner { max-width: 100%; padding: 0 32px; }
+                    #fd-detail-hero  { border-radius: 0 0 32px 32px; margin-bottom: 8px; }
+                    #fd-quick-facts  { margin: 0 0 24px; }
                     #fd-pc-wrap {
                         display: grid;
                         grid-template-columns: 420px 1fr;
                         gap: 36px;
                         align-items: start;
                     }
-                    #fd-images-container {
-                        position: sticky;
-                        top: 24px;
-                        margin-bottom: 0;
-                    }
-                    #fd-sections-container {
-                        padding: 0;
-                    }
+                    #fd-images-container { position: sticky; top: 24px; margin-bottom: 0; }
+                    #fd-sections-container { padding: 0; }
                 }
             `;
             document.head.appendChild(style);

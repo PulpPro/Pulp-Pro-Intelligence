@@ -31,14 +31,17 @@ function openMiddleHub(fruit) {
             btns.innerHTML = `
                 <div class="list-btn" onclick="openAgeChecker()">Age Checker <span style="font-size:0.6rem; opacity:0.5;">(Chiquita)</span></div>
                 <div class="list-btn" onclick="FruitDefects.open('banana')">Defects</div>
+                <div class="list-btn" onclick="OriginReport.open('banana')">🌍 Origin Report</div>
                 <div class="list-btn disabled">Ripening (Soon)</div>`;
         } else if (fruit === 'mango') {
             btns.innerHTML = `
                 <div class="list-btn" onclick="FruitDefects.open('mango')">Defects</div>
+                <div class="list-btn" onclick="OriginReport.open('mango')">🌍 Origin Report</div>
                 <div class="list-btn disabled">Ripening (Soon)</div>`;
         } else if (fruit === 'avocado') {
             btns.innerHTML = `
                 <div class="list-btn" onclick="FruitDefects.open('avocado')">Defects</div>
+                <div class="list-btn" onclick="OriginReport.open('avocado')">🌍 Origin Report</div>
                 <div class="list-btn disabled">Ripening (Soon)</div>`;
         }
     }

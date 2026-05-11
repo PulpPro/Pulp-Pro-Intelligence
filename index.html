@@ -239,12 +239,10 @@
 </div>
 </div>
 
-<!-- Middle Hub — Banana -->
+<!-- Middle Hub -->
 <div id="middle-hub" class="nav-view hidden">
 <div class="hub-title" id="middleHubTitle">Banana Menu</div>
-<div class="list-container" id="middleHubButtons">
-    <!-- Populated dynamically by openMiddleHub -->
-</div>
+<div class="list-container" id="middleHubButtons"></div>
 <button class="btn-main btn-back" onclick="showHub()" id="backToHubBtn">&larr; Back</button>
 </div>
 
@@ -486,7 +484,7 @@ Pulp Pro is not affiliated with any news source.
 <i class="bi bi-star-fill fav-toggle" id="favStar" onclick="toggleFavorite('calculator')"></i>
 <img src="edited-image.png" style="width:50px; margin-bottom:10px;">
 <div id="brandName" style="font-size:1.4rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase;">Chiquita</div>
-<div id="commodityLabel" style="font-weight:900; letter-spacing:4px; opacity:0.5; font-size:0.7rem; margin-bottom:25px; color:var(--text-main);">AGE CHECKER</div>
+<div id="commodityLabel" style="font-weight:900; letter-spacing:4px; opacity:0.5; font-size:0.7rem; margin-bottom:25px; color:var(--text-main);">BANANA AGE CHECKER</div>
 <div style="display:flex; gap:8px; margin-bottom:20px;">
 <div class="scan-toggle-btn active" id="singleCodeBtn" onclick="setScanMode('single')">Single Code</div>
 <div class="scan-toggle-btn" id="batchCodeBtn" onclick="setScanMode('batch')">Batch Scan</div>
@@ -526,6 +524,7 @@ navigator.serviceWorker.register('sw.js').catch(err => console.log('SW failed', 
 <script src="js/news.js"></script>
 <script src="js/fruit-defects-data.js"></script>
 <script src="js/fruit-defects.js"></script>
+<script src="js/origin-report.js"></script>
 
 </body>
 </html>

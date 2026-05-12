@@ -6,9 +6,8 @@
 
 const OriginReport = (() => {
 
-    const GEMINI_KEY = 'AIzaSyBb3rhzr74TfB132GxwOKym3ERKA6EbCBA;
-    const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
-
+    const GEMINI_URL = 'https://pulppro-gemini-proxy.pulprpobrain.workers.dev';
+    
     // ── ORIGINS DATABASE ──────────────────────────────────────
     const ORIGINS = {
         banana: {

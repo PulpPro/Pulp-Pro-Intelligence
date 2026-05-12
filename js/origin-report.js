@@ -6,7 +6,7 @@
 
 const OriginReport = (() => {
 
-    const GEMINI_URL = 'https://pulppro-gemini-proxy.pulprpobrain.workers.dev';
+    const GEMINI_URL = 'https://pulppro-gemini-proxy.pulpprobrain.workers.dev';
     
     // ── ORIGINS DATABASE ──────────────────────────────────────
     const ORIGINS = {

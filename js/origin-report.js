@@ -1,6 +1,6 @@
 // ============================================================
 // PULP PRO — ORIGIN REPORT
-// Live weather data (Open-Meteo) + AI analysis (Gemini API)
+// Live weather data (Open-Meteo) + AI analysis (Groq API)
 // Covers today + last 28 days for transit-accurate reporting
 // ============================================================
 
@@ -207,25 +207,25 @@ const OriginReport = (() => {
             if (!weatherData.daily) throw new Error('Weather data unavailable');
 
             const daily = weatherData.daily;
-            const dates  = daily.time;
+            const dates    = daily.time;
             const maxTemps = daily.temperature_2m_max;
             const minTemps = daily.temperature_2m_min;
-            const precip  = daily.precipitation_sum;
-            const wind    = daily.windspeed_10m_max;
+            const precip   = daily.precipitation_sum;
+            const wind     = daily.windspeed_10m_max;
             const humidity = daily.relative_humidity_2m_max;
 
             // Build weekly summaries for the prompt
             const weeks = [
-                { label: nl ? 'Week 4 geleden (oogstperiode)' : 'Week 4 ago (harvest period)',     days: dates.slice(0, 7),  temps: maxTemps.slice(0, 7),  rain: precip.slice(0, 7),  wind: wind.slice(0, 7),  hum: humidity.slice(0, 7) },
-                { label: nl ? 'Week 3 geleden (verpakkingsperiode)' : 'Week 3 ago (packing period)', days: dates.slice(7, 14), temps: maxTemps.slice(7, 14), rain: precip.slice(7, 14), wind: wind.slice(7, 14), hum: humidity.slice(7, 14) },
-                { label: nl ? 'Week 2 geleden (transport)' : 'Week 2 ago (in transit)',            days: dates.slice(14, 21),temps: maxTemps.slice(14, 21),rain: precip.slice(14, 21),wind: wind.slice(14, 21),hum: humidity.slice(14, 21) },
-                { label: nl ? 'Afgelopen week (aankomst)' : 'Last week (arrival)',                  days: dates.slice(21),    temps: maxTemps.slice(21),    rain: precip.slice(21),    wind: wind.slice(21),    hum: humidity.slice(21) },
+                { label: nl ? 'Week 4 geleden (oogstperiode)' : 'Week 4 ago (harvest period)',       days: dates.slice(0, 7),   temps: maxTemps.slice(0, 7),   rain: precip.slice(0, 7),   wind: wind.slice(0, 7),   hum: humidity.slice(0, 7) },
+                { label: nl ? 'Week 3 geleden (verpakkingsperiode)' : 'Week 3 ago (packing period)', days: dates.slice(7, 14),  temps: maxTemps.slice(7, 14),  rain: precip.slice(7, 14),  wind: wind.slice(7, 14),  hum: humidity.slice(7, 14) },
+                { label: nl ? 'Week 2 geleden (transport)' : 'Week 2 ago (in transit)',              days: dates.slice(14, 21), temps: maxTemps.slice(14, 21), rain: precip.slice(14, 21), wind: wind.slice(14, 21), hum: humidity.slice(14, 21) },
+                { label: nl ? 'Afgelopen week (aankomst)' : 'Last week (arrival)',                   days: dates.slice(21),     temps: maxTemps.slice(21),     rain: precip.slice(21),     wind: wind.slice(21),     hum: humidity.slice(21) },
             ];
 
-            const avgTemp = arr => (arr.filter(Boolean).reduce((a, b) => a + b, 0) / arr.filter(Boolean).length).toFixed(1);
+            const avgTemp   = arr => (arr.filter(Boolean).reduce((a, b) => a + b, 0) / arr.filter(Boolean).length).toFixed(1);
             const totalRain = arr => arr.filter(Boolean).reduce((a, b) => a + b, 0).toFixed(1);
-            const avgWind = arr => (arr.filter(Boolean).reduce((a, b) => a + b, 0) / arr.filter(Boolean).length).toFixed(1);
-            const avgHum = arr => (arr.filter(Boolean).reduce((a, b) => a + b, 0) / arr.filter(Boolean).length).toFixed(0);
+            const avgWind   = arr => (arr.filter(Boolean).reduce((a, b) => a + b, 0) / arr.filter(Boolean).length).toFixed(1);
+            const avgHum    = arr => (arr.filter(Boolean).reduce((a, b) => a + b, 0) / arr.filter(Boolean).length).toFixed(0);
 
             const weatherSummary = weeks.map(w => `
 ${w.label}:
@@ -239,7 +239,7 @@ ${w.label}:
             const currentRain = totalRain(precip.slice(-3));
             const currentHum  = avgHum(humidity.slice(-3));
 
-            // ── Build Gemini prompt
+            // ── Build prompt
             const prompt = `You are a senior postharvest fruit quality specialist with 20+ years of experience in tropical fruit supply chains. A fruit importer needs a practical, professional quality report based on real weather data from the growing region.
 
 FRUIT: ${activeFruit.toUpperCase()}
@@ -271,18 +271,15 @@ FORMAT YOUR RESPONSE AS JSON with this exact structure:
 
 Only respond with the JSON. No extra text.`;
 
-            // ── Call Gemini via proxy
-            const geminiResp = await fetch(GEMINI_URL, {
+            // ── Call Groq via proxy
+            const groqResp = await fetch(GEMINI_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: { temperature: 0.3, maxOutputTokens: 1024 }
-                })
+                body: JSON.stringify({ prompt })
             });
 
-            const geminiData = await geminiResp.json();
-            const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            const groqData = await groqResp.json();
+            const rawText = groqData.choices?.[0]?.message?.content || '';
             const clean = rawText.replace(/```json|```/g, '').trim();
             const report = JSON.parse(clean);
 
@@ -392,10 +389,10 @@ Only respond with the JSON. No extra text.`;
 
         <!-- Sections -->
         ${[
-            { icon: '🌤️', label: nl ? 'Weersomstandigheden' : 'Weather conditions',        text: report.conditions },
-            { icon: '🍑', label: nl ? 'Kwaliteitsimpact' : 'Quality impact',               text: report.quality_impact },
-            { icon: '🚢', label: nl ? 'Fruit dat nu aankomt' : 'Fruit arriving now',        text: report.arriving_now },
-            { icon: '📦', label: nl ? 'Fruit over 4 weken' : 'Fruit arriving in 4 weeks',  text: report.arriving_in_4_weeks },
+            { icon: '🌤️', label: nl ? 'Weersomstandigheden' : 'Weather conditions',       text: report.conditions },
+            { icon: '🍑', label: nl ? 'Kwaliteitsimpact' : 'Quality impact',              text: report.quality_impact },
+            { icon: '🚢', label: nl ? 'Fruit dat nu aankomt' : 'Fruit arriving now',       text: report.arriving_now },
+            { icon: '📦', label: nl ? 'Fruit over 4 weken' : 'Fruit arriving in 4 weeks', text: report.arriving_in_4_weeks },
         ].map(sec => `
         <div style="margin-bottom:18px;">
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;

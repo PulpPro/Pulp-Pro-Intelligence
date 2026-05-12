@@ -7,7 +7,7 @@
 const OriginReport = (() => {
 
     const GEMINI_URL = 'https://pulppro-gemini-proxy.pulpprobrain.workers.dev';
-    
+
     // ── ORIGINS DATABASE ──────────────────────────────────────
     const ORIGINS = {
         banana: {
@@ -271,7 +271,7 @@ FORMAT YOUR RESPONSE AS JSON with this exact structure:
 
 Only respond with the JSON. No extra text.`;
 
-            // ── Call Gemini API
+            // ── Call Gemini via proxy
             const geminiResp = await fetch(GEMINI_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

@@ -9,508 +9,241 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="edited-image.png">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/knn-classifier"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
 <style>
-/* ── RESET BOOTSTRAP BODY ── */
-*,*::before,*::after{box-sizing:border-box}
-html,body{
-    margin:0!important;padding:0!important;
-    background:#050505!important;
-    color:#fff!important;
-    font-family:-apple-system,BlinkMacSystemFont,sans-serif!important;
-    overflow-x:hidden;
-    min-height:100vh;
-}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#050505;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;overflow-x:hidden}
 .hidden{display:none!important}
 .shake{animation:shake 0.4s both}
 @keyframes shake{10%,90%{transform:translate3d(-1px,0,0)}40%,60%{transform:translate3d(4px,0,0)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
 
-/* ── SPLASH ── */
-#splash-screen{
-    position:fixed;inset:0;background:#000;z-index:9999;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
-    transition:opacity 0.4s ease,visibility 0.4s;
-}
-.splash-logo{
-    width:78px;height:78px;object-fit:contain;border-radius:20px;
-    animation:splashPop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
-}
-.splash-text{
-    margin-top:14px;font-size:1rem;font-weight:900;
-    letter-spacing:5px;color:#a6e22e;text-transform:uppercase;
-    opacity:0;animation:splashFade 0.4s ease 0.35s forwards;
-}
-.splash-sub{
-    margin-top:6px;font-size:0.48rem;font-weight:700;
-    letter-spacing:2px;color:rgba(255,255,255,0.22);text-transform:uppercase;
-    opacity:0;animation:splashFade 0.4s ease 0.45s forwards;
-}
+/* SPLASH */
+#splash-screen{position:fixed;inset:0;background:#000;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.4s ease,visibility 0.4s}
+.splash-logo{width:80px;height:80px;object-fit:contain;border-radius:20px;animation:splashPop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards}
+.splash-text{margin-top:14px;font-size:1rem;font-weight:900;letter-spacing:6px;color:#a6e22e;text-transform:uppercase;opacity:0;animation:splashFade 0.4s ease 0.35s forwards}
+.splash-sub{margin-top:6px;font-size:0.45rem;font-weight:700;letter-spacing:2.5px;color:rgba(255,255,255,0.2);text-transform:uppercase;opacity:0;animation:splashFade 0.4s ease 0.48s forwards}
 .loaded #splash-screen{opacity:0;visibility:hidden}
-@keyframes splashPop{0%{transform:scale(0.7);opacity:0}100%{transform:scale(1);opacity:1}}
-@keyframes splashFade{0%{opacity:0;transform:translateY(4px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes splashPop{from{transform:scale(0.65);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes splashFade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 
-/* ── UPDATE BANNER ── */
-#updateBanner{
-    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
-    background:#a6e22e;color:#000;z-index:99999;
-    padding:14px 24px;border-radius:100px;
-    font-weight:900;font-size:0.8rem;text-transform:uppercase;
-    letter-spacing:1px;cursor:pointer;text-align:center;
-    box-shadow:0 10px 40px rgba(166,226,46,0.4);white-space:nowrap;
-}
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:900;display:flex;justify-content:space-between;align-items:center;padding:16px 32px;background:rgba(5,5,5,0.92);border-bottom:1px solid rgba(255,255,255,0.06);backdrop-filter:blur(20px);opacity:0;transition:opacity 0.3s ease 1.4s}
+.loaded .nav{opacity:1}
+.nav-logo{font-size:13px;font-weight:800;letter-spacing:3px;color:#a6e22e;text-transform:uppercase;cursor:pointer}
+.nav-links{display:flex;gap:28px}
+.nav-link{font-size:11px;font-weight:700;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;transition:0.2s}
+.nav-link:hover{color:#fff}
+.nav-cta{background:#a6e22e;color:#000;font-size:11px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;padding:9px 20px;border-radius:100px;border:none;cursor:pointer}
 
-/* ── MENU TRIGGER ── */
-#menu-trigger{
-    position:fixed;top:20px;left:20px;
-    width:44px;height:44px;
-    background:rgba(255,255,255,0.05);
-    border:1px solid rgba(255,255,255,0.08);
-    border-radius:14px;z-index:9900;
-    display:flex;align-items:center;justify-content:center;
-    opacity:0;transition:opacity 0.3s ease 1.4s;cursor:pointer;
-}
-.loaded #menu-trigger{opacity:1}
-#menu-trigger span,
-#menu-trigger span::before,
-#menu-trigger span::after{
-    content:'';display:block;
-    width:18px;height:1.5px;
-    background:#fff;position:absolute;border-radius:2px;
-}
-#menu-trigger span::before{top:-5px}
-#menu-trigger span::after{bottom:-5px}
-
-/* ── SIDE DRAWER ── */
-#menu-drawer{
-    position:fixed;top:0;left:-100%;width:280px;height:100%;
-    background:rgba(14,14,14,0.98);z-index:9995;
-    transition:left 0.4s cubic-bezier(0.15,1,0.3,1);
-    padding:50px 20px 30px;display:flex;flex-direction:column;
-    backdrop-filter:blur(20px);border-right:1px solid rgba(255,255,255,0.06);
-}
+/* DRAWER */
+#menu-drawer{position:fixed;top:0;left:-300px;width:280px;height:100%;background:rgba(10,10,10,0.98);backdrop-filter:blur(20px);border-right:1px solid rgba(255,255,255,0.07);z-index:9000;display:flex;flex-direction:column;padding:52px 20px 30px;transition:left 0.4s cubic-bezier(0.15,1,0.3,1)}
 #menu-drawer.open{left:0}
-#menu-overlay{
-    position:fixed;inset:0;background:rgba(0,0,0,0.65);
-    z-index:9994;display:none;
-}
+#menu-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:8999;display:none}
 #menu-overlay.open{display:block}
-.menu-item{
-    padding:13px 10px;color:rgba(255,255,255,0.5);cursor:pointer;
-    text-transform:uppercase;font-weight:800;font-size:0.72rem;
-    letter-spacing:1px;display:flex;align-items:center;
-    justify-content:space-between;border-radius:10px;transition:0.15s;
-}
-.menu-item:hover{color:#a6e22e;background:rgba(166,226,46,0.05)}
-.settings-label{
-    padding:16px 10px 6px;font-size:0.48rem;font-weight:900;
-    color:#a6e22e;opacity:0.7;letter-spacing:2px;text-transform:uppercase;
-}
-#menu-fav-container{margin-top:16px;border-top:1px solid rgba(255,255,255,0.07);padding-top:10px}
+.d-logo{text-align:center;margin-bottom:28px}
+.d-logo img{width:42px;border-radius:12px}
+.d-logo-name{font-size:0.6rem;font-weight:900;color:#a6e22e;letter-spacing:3px;text-transform:uppercase;margin-top:6px}
+.d-item{padding:13px 10px;color:rgba(255,255,255,0.45);cursor:pointer;font-weight:800;font-size:0.72rem;letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;border-radius:10px;transition:0.15s}
+.d-item:hover{color:#a6e22e;background:rgba(166,226,46,0.05)}
+.d-item.danger{color:rgba(255,77,77,0.6)}
+.d-item.danger:hover{color:#ff4d4d;background:rgba(255,77,77,0.05)}
+.d-sep{font-size:0.45rem;font-weight:900;color:#a6e22e;opacity:0.6;letter-spacing:2px;text-transform:uppercase;padding:14px 10px 5px}
 #menu-fav-list{max-height:0;overflow:hidden;transition:max-height 0.3s ease-out;padding-left:8px}
 #menu-fav-list.show{max-height:400px;overflow-y:auto}
-.menu-fav-item{
-    padding:10px 12px;font-size:0.6rem;font-weight:700;
-    color:rgba(255,255,255,0.45);text-transform:uppercase;cursor:pointer;
-    display:block;border-left:2px solid #a6e22e;margin-bottom:5px;
-    line-height:1.3;border-radius:0 8px 8px 0;transition:0.15s;
-}
+.menu-fav-item{padding:10px 12px;font-size:0.6rem;font-weight:700;color:rgba(255,255,255,0.45);text-transform:uppercase;cursor:pointer;display:block;border-left:2px solid #a6e22e;margin-bottom:5px;line-height:1.3;border-radius:0 8px 8px 0;transition:0.15s}
 .menu-fav-item:hover{color:#fff;background:rgba(166,226,46,0.08)}
 .menu-fav-item span{display:block;color:#a6e22e;font-size:0.48rem;margin-top:2px;font-weight:900}
 
-/* ── PAGE WRAPPER ── */
-.page{
-    width:100%;min-height:100vh;
-    display:flex;flex-direction:column;
-}
+/* SCREENS */
+.screen{display:none;min-height:100vh;padding-top:64px}
+.screen.active{display:block}
+.view{max-width:1200px;margin:0 auto;padding:60px 32px 80px}
 
-/* ── NAV VIEW ── */
-.nav-view{
-    width:100%;max-width:1100px;
-    margin:0 auto;
-    padding:80px 24px 80px;
-    opacity:0;transition:opacity 0.4s ease;
-}
-.loaded .nav-view{opacity:1}
+/* BACK */
+.back-row{display:flex;align-items:center;margin-bottom:20px}
+.back-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);font-size:0.6rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;padding:8px 16px;border-radius:100px;cursor:pointer;transition:0.2s}
+.back-btn:hover{color:#fff;border-color:rgba(255,255,255,0.2)}
+.back-btn i{font-size:0.75rem}
 
-/* ── VIEW NAV (back button row) ── */
-.vn{display:flex;align-items:center;margin-bottom:16px}
-.vn-back{
-    display:inline-flex;align-items:center;gap:6px;
-    background:rgba(255,255,255,0.05);
-    border:1px solid rgba(255,255,255,0.08);
-    color:rgba(255,255,255,0.45);
-    font-size:0.6rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;
-    padding:8px 16px;border-radius:100px;cursor:pointer;transition:0.2s;
-}
-.vn-back:hover{color:#fff;border-color:rgba(255,255,255,0.2)}
-.vn-back i{font-size:0.75rem}
-
-/* ── TITLES ── */
-.pg-title{
-    font-size:clamp(1.8rem,5vw,2.8rem);font-weight:900;
-    color:#fff;letter-spacing:-0.5px;line-height:1.1;
-    margin-bottom:4px;
-}
-.pg-sub{
-    font-size:0.55rem;font-weight:700;color:rgba(255,255,255,0.22);
-    text-transform:uppercase;letter-spacing:2px;margin-bottom:24px;
-}
-
-/* ── FRUIT HUB ── */
-.live-tag{
-    display:inline-flex;align-items:center;gap:7px;
-    background:rgba(166,226,46,0.07);
-    border:1px solid rgba(166,226,46,0.18);
-    border-radius:100px;padding:6px 14px;margin-bottom:22px;
-}
-.live-dot{
-    width:6px;height:6px;border-radius:50%;background:#a6e22e;flex-shrink:0;
-    animation:livePulse 2s infinite;
-}
-@keyframes livePulse{0%,100%{opacity:1}50%{opacity:0.3}}
-.live-tag span{font-size:0.5rem;font-weight:800;color:#a6e22e;letter-spacing:1.5px;text-transform:uppercase}
-
-.hero-h1{
-    font-size:clamp(3rem,8vw,5.5rem);
-    font-weight:900;letter-spacing:-2.5px;line-height:1.0;
-    color:#fff;margin-bottom:16px;
-}
+/* HERO */
+.live-tag{display:inline-flex;align-items:center;gap:8px;background:rgba(166,226,46,0.08);border:1px solid rgba(166,226,46,0.2);border-radius:100px;padding:6px 14px;margin-bottom:28px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#a6e22e;animation:livePulse 2s infinite}
+@keyframes livePulse{0%,100%{opacity:1}50%{opacity:0.25}}
+.live-tag span{font-size:10px;font-weight:800;color:#a6e22e;letter-spacing:2px;text-transform:uppercase}
+.hero-h1{font-size:62px;font-weight:900;line-height:1.05;letter-spacing:-2px;margin-bottom:20px}
 .hero-h1 em{color:#a6e22e;font-style:normal}
-.hero-sub{
-    font-size:0.88rem;color:rgba(255,255,255,0.35);
-    line-height:1.75;margin-bottom:36px;
-    max-width:500px;font-weight:400;
-}
+.hero-sub{font-size:16px;color:rgba(255,255,255,0.45);line-height:1.7;max-width:480px;margin-bottom:36px;font-weight:400}
+.hero-btns{display:flex;gap:12px;align-items:center;margin-bottom:60px}
+.btn-primary{background:#a6e22e;color:#000;font-size:12px;font-weight:900;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;border-radius:100px;border:none;cursor:pointer}
+.btn-ghost{background:transparent;color:rgba(255,255,255,0.5);font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 24px;border-radius:100px;border:1px solid rgba(255,255,255,0.1);cursor:pointer}
+.btn-ghost:hover{color:#fff;border-color:rgba(255,255,255,0.25)}
 
-/* ── FRUIT CHIPS ── */
-.fruit-chips{
-    display:flex;gap:12px;margin-bottom:36px;
-    overflow-x:auto;scrollbar-width:none;
-}
-.fruit-chips::-webkit-scrollbar{display:none}
-.fruit-chip{
-    display:flex;flex-direction:column;align-items:center;gap:10px;
-    background:#111;border:1px solid rgba(255,255,255,0.07);
-    border-radius:20px;padding:18px 24px;
-    cursor:pointer;transition:0.2s;flex-shrink:0;min-width:110px;
-}
-.fruit-chip:hover{border-color:rgba(166,226,46,0.22);transform:translateY(-2px)}
-.fruit-chip:active{transform:scale(0.96)}
-.fruit-chip.active{background:#0a1a06;border-color:rgba(166,226,46,0.35)}
-.chip-img{width:56px;height:56px;object-fit:contain}
-.chip-name{
-    font-size:0.6rem;font-weight:900;text-transform:uppercase;
-    letter-spacing:1.5px;color:rgba(255,255,255,0.28);
-}
-.fruit-chip.active .chip-name{color:#a6e22e}
+/* ═══ BENTO GRID — exact from mockup ═══ */
+.bento{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:220px 160px 70px;gap:12px;margin-bottom:12px}
 
-/* ── SECTION LABEL ── */
-.sec-lbl{
-    font-size:0.48rem;font-weight:900;text-transform:uppercase;
-    letter-spacing:2px;color:rgba(255,255,255,0.2);
-    display:block;margin-bottom:12px;
-}
+/* Card base */
+.hc{border-radius:20px;overflow:hidden;background:#111;border:1px solid rgba(255,255,255,0.07);cursor:pointer;transition:0.2s;position:relative}
+.hc:hover{border-color:rgba(166,226,46,0.3);transform:translateY(-2px)}
+.hc:active{transform:scale(0.99)}
 
-/* ── TOOL GRID ── */
-.tool-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-    gap:10px;
-}
+/* BANANA HERO — left, spans 2 rows */
+.hc-banana{grid-column:1/2;grid-row:1/3;background:linear-gradient(160deg,rgba(166,226,46,0.08) 0%,#111 55%);border-color:rgba(166,226,46,0.14);display:flex;flex-direction:column}
+.hc-banana-img{width:100%;height:62%;object-fit:cover;display:block;flex-shrink:0}
+.hc-banana-body{flex:1;padding:20px 24px;display:flex;flex-direction:column;justify-content:center}
+.hc-banana-label{font-size:8px;font-weight:900;color:rgba(166,226,46,0.6);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:6px}
+.hc-banana-title{font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.5px;margin-bottom:4px;line-height:1.1}
+.hc-banana-sub{font-size:9px;font-weight:700;color:rgba(166,226,46,0.55);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px}
+.hc-explore{display:inline-flex;align-items:center;gap:6px;background:rgba(166,226,46,0.1);border:1px solid rgba(166,226,46,0.22);color:#a6e22e;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1px;padding:8px 18px;border-radius:20px;width:fit-content}
 
-/* ── TOOL CARD ── */
-.tool-card{
-    display:flex;align-items:center;gap:14px;
-    padding:16px 18px;
-    background:#0f0f0f;
-    border:1px solid rgba(255,255,255,0.06);
-    border-radius:16px;cursor:pointer;transition:0.2s;
-}
-.tool-card:hover{border-color:rgba(166,226,46,0.2);background:rgba(166,226,46,0.02)}
-.tool-card:active{transform:scale(0.98)}
+/* MANGO — top right */
+.hc-mango{grid-column:2/3;grid-row:1/2;display:flex;flex-direction:column}
+.hc-mango img{width:100%;height:68%;object-fit:cover;display:block;flex-shrink:0}
+.hc-mango-body{flex:1;padding:10px 14px;display:flex;flex-direction:column;justify-content:center;background:#111}
+.hc-mango-title{font-size:14px;font-weight:900;color:#fff;margin-bottom:2px}
+.hc-soon{font-size:9px;font-weight:900;color:#ff8c00}
 
-/* ── MENU LIST ── */
-.mlist{
-    display:flex;flex-direction:column;gap:0;
-    border-radius:20px;overflow:hidden;
-    border:1px solid rgba(255,255,255,0.06);
-    background:#0f0f0f;
-    max-width:640px;
-    margin-bottom:24px;
-}
-.mrow{
-    display:flex;align-items:center;gap:14px;
-    padding:18px 20px;cursor:pointer;
-    transition:background 0.15s;
-    border-bottom:1px solid rgba(255,255,255,0.04);
-}
+/* AVOCADO — top far right */
+.hc-avocado{grid-column:3/4;grid-row:1/2;display:flex;flex-direction:column}
+.hc-avocado img{width:100%;height:68%;object-fit:cover;display:block;flex-shrink:0}
+.hc-avocado-body{flex:1;padding:10px 14px;display:flex;flex-direction:column;justify-content:center;background:#111}
+.hc-avocado-title{font-size:14px;font-weight:900;color:#fff;margin-bottom:2px}
+
+/* DEFECT DETECTOR — middle right */
+.hc-defect{grid-column:2/3;grid-row:2/3;display:flex;flex-direction:column}
+.hc-defect img{width:100%;height:65%;object-fit:cover;display:block;flex-shrink:0}
+.hc-defect-body{flex:1;padding:10px 14px;display:flex;flex-direction:column;justify-content:center;background:#111}
+.hc-defect-label{font-size:7px;font-weight:900;color:rgba(255,77,77,0.7);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:3px}
+.hc-defect-title{font-size:13px;font-weight:900;color:#fff}
+
+/* COLOUR SCANNER — middle far right */
+.hc-colour{grid-column:3/4;grid-row:2/3;display:flex;flex-direction:column}
+.hc-colour img{width:100%;height:65%;object-fit:cover;display:block;flex-shrink:0}
+.hc-colour-body{flex:1;padding:10px 14px;display:flex;flex-direction:column;justify-content:center;background:#111}
+.hc-colour-label{font-size:7px;font-weight:900;color:rgba(166,226,46,0.6);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:3px}
+.hc-colour-title{font-size:13px;font-weight:900;color:#fff}
+
+/* NEWS BAR — full width bottom */
+.hc-news{grid-column:1/-1;grid-row:3/4;display:flex;align-items:center;gap:20px;padding:0 28px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:18px}
+.hc-news-icon{font-size:1.8rem;flex-shrink:0}
+.hc-news-body{flex:1}
+.hc-news-title{font-size:14px;font-weight:900;color:#fff;margin-bottom:2px}
+.hc-news-sub{font-size:9px;font-weight:700;color:rgba(255,255,255,0.28);text-transform:uppercase;letter-spacing:1px}
+.hc-news-arrow{font-size:1.1rem;color:rgba(255,255,255,0.18);flex-shrink:0}
+
+/* BOTTOM BAR */
+.bottom-bar{display:flex;align-items:center;justify-content:space-between;padding:18px 0;border-top:1px solid rgba(255,255,255,0.05);margin-top:4px}
+.bottom-stats{display:flex;gap:40px}
+.bstat-num{font-size:20px;font-weight:900;color:#a6e22e;letter-spacing:-0.5px}
+.bstat-lbl{font-size:8px;font-weight:700;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+.bottom-right{font-size:9px;color:rgba(255,255,255,0.18);font-weight:700;letter-spacing:1px;text-transform:uppercase}
+
+/* FAV SECTION */
+#favorites-section{margin-top:32px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.05)}
+.fav-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.fav-card{background:#0f0f0f;border:1px solid rgba(255,255,255,0.06);padding:14px 20px;border-radius:16px;cursor:pointer;transition:0.2s;display:flex;flex-direction:column;align-items:center;min-width:120px}
+.fav-card:hover{border-color:rgba(166,226,46,0.22)}
+.fav-card i{color:#a6e22e;font-size:1.1rem;margin-bottom:5px}
+.fav-card span{font-weight:900;font-size:0.65rem;text-transform:uppercase;letter-spacing:1px;color:#fff}
+
+/* MIDDLE HUB */
+.pg-title{font-size:clamp(2rem,5vw,3rem);font-weight:900;color:#fff;letter-spacing:-1px;line-height:1.05;margin-bottom:6px}
+.pg-sub{font-size:9px;font-weight:700;color:rgba(255,255,255,0.22);text-transform:uppercase;letter-spacing:2px;margin-bottom:28px}
+.mlist{background:#0f0f0f;border:1px solid rgba(255,255,255,0.07);border-radius:20px;overflow:hidden;max-width:640px;margin-bottom:24px}
+.mrow{display:flex;align-items:center;gap:14px;padding:18px 22px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);transition:background 0.15s}
 .mrow:last-child{border-bottom:none}
 .mrow:hover{background:rgba(255,255,255,0.03)}
-.mrow:active{background:rgba(255,255,255,0.05)}
 .mrow.acc{background:rgba(166,226,46,0.03)}
-.mrow.acc:hover{background:rgba(166,226,46,0.055)}
-.mrow.dim{opacity:0.32;cursor:default;pointer-events:none}
-
-/* ── ICON BUBBLE ── */
-.ic{
-    width:40px;height:40px;border-radius:12px;
-    display:flex;align-items:center;justify-content:center;
-    flex-shrink:0;font-size:1.05rem;
-}
+.mrow.acc:hover{background:rgba(166,226,46,0.06)}
+.mrow.dim{opacity:0.3;cursor:default;pointer-events:none}
+.ic{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.05rem}
 .ic-lime{background:rgba(166,226,46,0.1);color:#a6e22e}
 .ic-amber{background:rgba(255,140,0,0.1);color:#ff8c00}
 .ic-green{background:rgba(40,180,80,0.1);color:#28b450}
 .ic-red{background:rgba(255,77,77,0.1);color:#ff4d4d}
-.ic-blue{background:rgba(60,130,255,0.1);color:#5b9fff}
-
+.ic-blue{background:rgba(91,159,255,0.1);color:#5b9fff}
+.ic-dim{background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.2)}
 .mb{flex:1;min-width:0}
-.mn{font-size:0.9rem;font-weight:800;color:#fff;margin-bottom:3px}
-.md{font-size:0.6rem;color:rgba(255,255,255,0.27);font-weight:600}
-.ma{font-size:0.85rem;color:rgba(255,255,255,0.14);flex-shrink:0}
+.mn{font-size:15px;font-weight:800;color:#fff;margin-bottom:3px}
+.md{font-size:10px;color:rgba(255,255,255,0.26);font-weight:600}
+.ma{font-size:14px;color:rgba(255,255,255,0.14);flex-shrink:0}
 .mrow.acc .ma{color:rgba(166,226,46,0.3)}
+.soon-pill{font-size:8px;font-weight:900;color:#ff8c00;background:rgba(255,140,0,0.1);border:1px solid rgba(255,140,0,0.18);padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.5px;flex-shrink:0}
 
-.soon-pill{
-    font-size:0.46rem;font-weight:900;color:#ff8c00;
-    background:rgba(255,140,0,0.1);border:1px solid rgba(255,140,0,0.18);
-    padding:3px 10px;border-radius:20px;
-    text-transform:uppercase;letter-spacing:0.5px;flex-shrink:0;
-}
-
-/* ── APP CONTAINER (calculator) ── */
-.app-container{
-    width:100%;max-width:400px;
-    margin:80px auto 0;padding:0 24px 80px;
-    flex-direction:column;gap:30px;
-}
-.app-container.hidden{display:none!important}
-.app-container:not(.hidden){display:flex}
-@media(min-width:992px){
-    .app-container{
-        flex-direction:row;max-width:1100px;
-        align-items:flex-start;justify-content:center;
-        padding:80px 24px 80px;
-    }
-    .app-card{flex:0 0 380px;position:sticky;top:40px}
-    .history-section{
-        flex:1;margin-top:0!important;
-        background:#0f0f0f;padding:2.5rem;
-        border-radius:28px;border:1px solid rgba(255,255,255,0.06);
-        max-height:85vh;overflow-y:auto;display:block!important;
-    }
-}
-
-/* ── APP CARD ── */
-.app-card{
-    background:#0f0f0f;padding:2.5rem 1.5rem;
-    border-radius:28px;text-align:center;
-    border:1px solid rgba(255,255,255,0.06);position:relative;
-}
-.fav-toggle{
-    position:absolute;top:24px;right:28px;
-    font-size:1.4rem;cursor:pointer;
-    color:rgba(255,255,255,0.1);transition:0.3s;
-}
-.fav-toggle.active{color:#a6e22e;text-shadow:0 0 10px rgba(166,226,46,0.4)}
-
-/* ── INPUT ── */
-.input-wrapper{
-    background:rgba(255,255,255,0.03);
-    border:1.5px solid rgba(166,226,46,0.2);
-    border-radius:20px;padding:14px;margin-bottom:20px;
-}
-input{
-    border:none!important;text-align:center;
-    letter-spacing:8px;font-weight:900;
-    font-size:3rem!important;background:transparent!important;
-    color:#fff;width:100%;outline:none;text-transform:uppercase;
-}
-.scan-toggle-btn{
-    flex:1;padding:10px 8px;border-radius:12px;
-    border:1px solid rgba(255,255,255,0.08);
-    background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.4);
-    font-weight:900;font-size:0.62rem;text-transform:uppercase;
-    letter-spacing:1px;cursor:pointer;transition:0.2s;text-align:center;
-}
-.scan-toggle-btn.active{
-    border-color:#a6e22e;color:#a6e22e;background:rgba(166,226,46,0.07);
-}
-
-/* ── BUTTONS ── */
-.btn-main{
-    background:#a6e22e;color:#000;border-radius:100px;padding:15px;
-    font-weight:900;width:100%;border:none;text-transform:uppercase;
-    cursor:pointer;letter-spacing:1px;font-size:0.85rem;transition:0.2s;
-}
-.btn-main:active{transform:scale(0.98);opacity:0.9}
-.btn-back{
-    margin-top:16px;
-    background:transparent!important;
-    border:1px solid rgba(255,255,255,0.1)!important;
-    color:rgba(255,255,255,0.5)!important;
-}
-.btn-copy{
-    background:rgba(166,226,46,0.08);border:1px solid rgba(166,226,46,0.25);
-    color:#a6e22e;border-radius:12px;padding:8px 22px;
-    font-weight:900;font-size:0.72rem;text-transform:uppercase;
-    letter-spacing:1px;margin-top:14px;transition:0.2s;
-    display:inline-flex;align-items:center;gap:8px;cursor:pointer;
-}
+/* APP CARD */
+.app-wrap{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+@media(min-width:992px){.app-wrap{flex-direction:row;align-items:flex-start}}
+.app-card{background:#0f0f0f;padding:2.5rem 1.5rem;border-radius:24px;text-align:center;border:1px solid rgba(255,255,255,0.07);position:relative;max-width:400px;width:100%}
+.fav-toggle{position:absolute;top:24px;right:28px;font-size:1.4rem;cursor:pointer;color:rgba(255,255,255,0.1);transition:0.3s}
+.fav-toggle.active{color:#a6e22e}
+.input-wrapper{background:rgba(255,255,255,0.03);border:1.5px solid rgba(166,226,46,0.2);border-radius:20px;padding:14px;margin-bottom:20px}
+input[type=text]{border:none;text-align:center;letter-spacing:8px;font-weight:900;font-size:3rem;background:transparent;color:#fff;width:100%;outline:none;text-transform:uppercase}
+.scan-toggle-btn{flex:1;padding:10px 8px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.4);font-weight:900;font-size:0.62rem;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:0.2s;text-align:center}
+.scan-toggle-btn.active{border-color:#a6e22e;color:#a6e22e;background:rgba(166,226,46,0.07)}
+.btn-main{background:#a6e22e;color:#000;border-radius:100px;padding:15px;font-weight:900;width:100%;border:none;text-transform:uppercase;cursor:pointer;letter-spacing:1px;font-size:0.85rem;transition:0.2s;display:block;margin-bottom:0}
+.btn-main:active{transform:scale(0.98)}
+.btn-back{background:transparent!important;border:1px solid rgba(255,255,255,0.1)!important;color:rgba(255,255,255,0.5)!important;margin-top:16px}
+.btn-copy{background:rgba(166,226,46,0.08);border:1px solid rgba(166,226,46,0.25);color:#a6e22e;border-radius:12px;padding:8px 22px;font-weight:900;font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;margin-top:14px;transition:0.2s;display:inline-flex;align-items:center;gap:8px;cursor:pointer}
 .btn-copy.success{background:#a6e22e;color:#000}
-
-/* ── RESULT ── */
-.result-display{
-    margin-top:25px;padding:25px 20px;border-radius:24px;
-    background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);
-    position:relative;transition:0.3s;
-}
+.result-display{margin-top:25px;padding:25px 20px;border-radius:24px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);transition:0.3s}
 .bg-perfect{border-color:#a6e22e;color:#a6e22e}
 .bg-acceptable{border-color:#ff8c00;color:#ff8c00}
 .bg-old{border-color:#ff4d4d;color:#ff4d4d}
 #daysValue{font-size:5rem;font-weight:900;line-height:1}
-
-/* ── FAV / HISTORY ── */
-#favorites-section{margin-top:28px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.05)}
-.fav-grid{display:flex;flex-wrap:wrap;gap:10px}
-.fav-card{
-    background:#0f0f0f;border:1px solid rgba(255,255,255,0.06);
-    padding:14px 20px;border-radius:16px;cursor:pointer;transition:0.2s;
-    display:flex;flex-direction:column;align-items:center;min-width:120px;
-}
-.fav-card:hover{border-color:rgba(166,226,46,0.22)}
-.fav-card i{color:#a6e22e;font-size:1.1rem;margin-bottom:5px}
-.fav-card span{font-weight:900;font-size:0.65rem;text-transform:uppercase;letter-spacing:1px;color:#fff}
-.history-section{margin-top:30px;text-align:left;display:none}
-.log-item{
-    display:flex;justify-content:space-between;align-items:center;
-    padding:14px 12px;border-bottom:1px solid rgba(255,255,255,0.06);
-    cursor:pointer;color:#fff;
-}
+.history-section{flex:1;margin-top:0!important;background:#0f0f0f;padding:2.5rem;border-radius:24px;border:1px solid rgba(255,255,255,0.07);max-height:80vh;overflow-y:auto;display:none}
+@media(min-width:992px){.history-section{display:block!important}}
+.log-item{display:flex;justify-content:space-between;align-items:center;padding:14px 12px;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;color:#fff}
 .log-code{font-weight:900;font-family:monospace}
 .log-timestamp{display:block;opacity:0.45;font-size:0.5rem;font-weight:800}
+.batch-item{display:flex;justify-content:space-between;align-items:center;padding:12px 15px;border-bottom:1px solid rgba(255,255,255,0.06)}
 
-/* ── CAMERA ── */
-.camera-wrapper{
-    position:relative;border-radius:20px;overflow:hidden;
-    background:#000;margin-bottom:14px;min-height:200px;
-    display:flex;align-items:center;justify-content:center;
-}
+/* CAMERA */
+.camera-wrapper{position:relative;border-radius:20px;overflow:hidden;background:#000;margin-bottom:14px;min-height:200px;display:flex;align-items:center;justify-content:center}
 #defectVideo,#csVideo{width:100%;border-radius:20px;display:block;max-height:220px;object-fit:cover}
-#cameraPlaceholder{
-    display:none;flex-direction:column;align-items:center;justify-content:center;
-    padding:30px;gap:10px;min-height:200px;
-}
+#cameraPlaceholder{display:none;flex-direction:column;align-items:center;justify-content:center;padding:30px;gap:10px;min-height:200px}
 #cameraPlaceholder i{font-size:2rem;opacity:0.25;color:#fff}
-.capture-btn{
-    position:absolute;bottom:12px;right:12px;
-    background:#a6e22e;color:#000;border:none;border-radius:10px;
-    padding:8px 16px;font-weight:900;font-size:0.62rem;
-    text-transform:uppercase;cursor:pointer;letter-spacing:1px;transition:0.2s;
-}
+.capture-btn{position:absolute;bottom:12px;right:12px;background:#a6e22e;color:#000;border:none;border-radius:10px;padding:8px 16px;font-weight:900;font-size:0.62rem;text-transform:uppercase;cursor:pointer;letter-spacing:1px}
 #defectCanvas{display:none}
-.cs-crosshair{
-    position:absolute;width:64px;height:64px;
-    border:2px solid rgba(166,226,46,0.6);border-radius:10px;
-    top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;
-}
-.cs-toggle-btn{
-    flex:1;padding:10px 8px;border-radius:12px;
-    border:1px solid rgba(255,255,255,0.08);
-    background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.4);
-    font-weight:900;font-size:0.62rem;text-transform:uppercase;
-    letter-spacing:1px;cursor:pointer;transition:0.2s;text-align:center;
-}
+.cs-crosshair{position:absolute;width:64px;height:64px;border:2px solid rgba(166,226,46,0.6);border-radius:10px;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none}
+.cs-toggle-btn{flex:1;padding:10px 8px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.4);font-weight:900;font-size:0.62rem;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:0.2s;text-align:center}
 .cs-toggle-btn.active{border-color:#a6e22e;color:#a6e22e;background:rgba(166,226,46,0.07)}
 .color-bar-wrap{background:rgba(255,255,255,0.05);border-radius:6px;height:4px;margin-top:8px;overflow:hidden}
 .color-bar{height:100%;border-radius:6px}
 
-/* ── SEVERITY ── */
-.severity-badge,.minor,.major,.critical{
-    font-size:0.48rem;font-weight:900;text-transform:uppercase;
-    letter-spacing:1px;padding:3px 9px;border-radius:8px;flex-shrink:0;
-}
-.minor{background:rgba(166,226,46,0.1);color:#a6e22e}
-.major{background:rgba(255,140,0,0.1);color:#ff8c00}
-.critical{background:rgba(255,77,77,0.1);color:#ff4d4d}
+/* SEVERITY */
+.minor{background:rgba(166,226,46,0.1);color:#a6e22e;font-size:0.48rem;font-weight:900;text-transform:uppercase;letter-spacing:1px;padding:3px 9px;border-radius:8px;flex-shrink:0}
+.major{background:rgba(255,140,0,0.1);color:#ff8c00;font-size:0.48rem;font-weight:900;text-transform:uppercase;letter-spacing:1px;padding:3px 9px;border-radius:8px;flex-shrink:0}
+.critical{background:rgba(255,77,77,0.1);color:#ff4d4d;font-size:0.48rem;font-weight:900;text-transform:uppercase;letter-spacing:1px;padding:3px 9px;border-radius:8px;flex-shrink:0}
 
-/* ── REPORT ── */
-.report-card{
-    background:#0f0f0f;border:1px solid rgba(255,255,255,0.06);
-    border-radius:24px;padding:20px;margin-bottom:14px;
-}
-.grade-circle{
-    width:70px;height:70px;border-radius:50%;
-    border:2px solid #a6e22e;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;margin:0 auto 16px;
-}
+/* REPORT */
+.report-card{background:#0f0f0f;border:1px solid rgba(255,255,255,0.07);border-radius:24px;padding:20px;margin-bottom:14px}
+.grade-circle{width:70px;height:70px;border-radius:50%;border:2px solid #a6e22e;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 16px}
 .grade-letter{font-size:1.8rem;font-weight:900;color:#a6e22e;line-height:1}
 .grade-sub{font-size:0.45rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px}
-.report-row{
-    display:flex;justify-content:space-between;align-items:center;
-    padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:0.7rem;
-}
+.report-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:0.7rem}
 .report-row:last-child{border-bottom:none}
 .report-key{color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:1px;font-weight:700}
 .report-val{color:#fff;font-weight:900;text-align:right}
-.report-defects-title{
-    font-size:0.56rem;font-weight:900;color:#a6e22e;text-transform:uppercase;
-    letter-spacing:2px;margin-bottom:10px;padding-bottom:8px;
-    border-bottom:1px solid rgba(255,255,255,0.06);
-}
+.report-defects-title{font-size:0.56rem;font-weight:900;color:#a6e22e;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.06)}
 .report-defects-scroll{max-height:200px;overflow-y:auto}
-#copyReportBtn{
-    background:rgba(166,226,46,0.08);border:1px solid rgba(166,226,46,0.22);
-    color:#a6e22e;border-radius:100px;padding:14px;font-weight:900;width:100%;
-    text-transform:uppercase;cursor:pointer;letter-spacing:1px;font-size:0.8rem;
-    transition:0.2s;margin-bottom:10px;
-}
+#copyReportBtn{background:rgba(166,226,46,0.08);border:1px solid rgba(166,226,46,0.22);color:#a6e22e;border-radius:100px;padding:14px;font-weight:900;width:100%;text-transform:uppercase;cursor:pointer;letter-spacing:1px;font-size:0.8rem;transition:0.2s;margin-bottom:10px}
 #copyReportBtn:hover{background:#a6e22e;color:#000}
-
-/* ── TYPE BTN ── */
-.type-btn{
-    background:#0f0f0f;border:1px solid rgba(255,255,255,0.06);
-    padding:20px;border-radius:18px;cursor:pointer;transition:0.2s;margin-bottom:10px;
-}
+.type-btn{background:#0f0f0f;border:1px solid rgba(255,255,255,0.07);padding:20px;border-radius:18px;cursor:pointer;transition:0.2s;margin-bottom:10px}
 .type-btn:hover{border-color:rgba(166,226,46,0.2)}
-.type-btn-title{
-    font-weight:900;text-transform:uppercase;letter-spacing:1.5px;
-    font-size:0.88rem;color:#fff;margin-bottom:5px;
-}
+.type-btn-title{font-weight:900;text-transform:uppercase;letter-spacing:1.5px;font-size:0.88rem;color:#fff;margin-bottom:5px}
 .type-btn-desc{font-size:0.6rem;color:rgba(255,255,255,0.28);font-weight:600}
 
-/* ── NEWS ── */
-.news-filter-row{
-    display:flex;gap:6px;margin-bottom:16px;
-    overflow-x:auto;padding-bottom:4px;scrollbar-width:none;
-}
+/* NEWS */
+.news-filter-row{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
 .news-filter-row::-webkit-scrollbar{display:none}
-.news-filter-tab{
-    padding:7px 14px;border-radius:100px;font-size:0.56rem;font-weight:900;
-    text-transform:uppercase;letter-spacing:1px;cursor:pointer;white-space:nowrap;
-    border:1px solid rgba(255,255,255,0.07);color:rgba(255,255,255,0.28);
-    background:transparent;flex-shrink:0;transition:0.2s;
-}
-.news-filter-tab.active{
-    background:rgba(166,226,46,0.08);border-color:rgba(166,226,46,0.28);color:#a6e22e;
-}
-#newsCacheStatus{
-    display:none;align-items:center;gap:6px;padding:8px 12px;margin-bottom:14px;
-    background:rgba(255,140,0,0.05);border:1px solid rgba(255,140,0,0.14);
-    border-radius:12px;font-size:0.48rem;font-weight:700;
-    color:#ff8c00;text-transform:uppercase;letter-spacing:1px;
-}
-.flip-badge{
-    position:absolute;top:10px;left:10px;font-size:0.46rem;font-weight:900;
-    text-transform:uppercase;letter-spacing:1px;padding:4px 10px;border-radius:20px;z-index:2;
-}
-.flip-img-overlay{
-    position:absolute;bottom:0;left:0;right:0;height:70px;
-    background:linear-gradient(transparent,rgba(0,0,0,0.8));
-}
+.news-filter-tab{padding:7px 14px;border-radius:100px;font-size:0.56rem;font-weight:900;text-transform:uppercase;letter-spacing:1px;cursor:pointer;white-space:nowrap;border:1px solid rgba(255,255,255,0.07);color:rgba(255,255,255,0.28);background:transparent;flex-shrink:0;transition:0.2s}
+.news-filter-tab.active{background:rgba(166,226,46,0.08);border-color:rgba(166,226,46,0.28);color:#a6e22e}
+#newsCacheStatus{display:none;align-items:center;gap:6px;padding:8px 12px;margin-bottom:14px;background:rgba(255,140,0,0.05);border:1px solid rgba(255,140,0,0.14);border-radius:12px;font-size:0.48rem;font-weight:700;color:#ff8c00;text-transform:uppercase;letter-spacing:1px}
+.flip-badge{position:absolute;top:10px;left:10px;font-size:0.46rem;font-weight:900;text-transform:uppercase;letter-spacing:1px;padding:4px 10px;border-radius:20px;z-index:2}
+.flip-img-overlay{position:absolute;bottom:0;left:0;right:0;height:70px;background:linear-gradient(transparent,rgba(0,0,0,0.8))}
 .flip-body{padding:12px 14px 14px}
 .flip-title-lg{font-size:0.95rem;font-weight:900;color:#fff;line-height:1.4;margin-bottom:6px}
 .flip-title-md{font-size:0.85rem;font-weight:800;color:#fff;line-height:1.4;margin-bottom:5px}
@@ -521,16 +254,9 @@ input{
 .flip-time{font-size:0.48rem;font-weight:700;color:rgba(255,255,255,0.35)}
 .flip-text-fill{position:relative;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.05)}
 .flip-text-fill-inner{padding:40px 14px 14px;display:flex;flex-direction:column;gap:6px;height:100%}
-.flip-mobile-card{
-    border-radius:16px;overflow:hidden;background:#0f0f0f;
-    border:1px solid rgba(255,255,255,0.06);cursor:pointer;transition:0.2s;margin-bottom:10px;
-}
+.flip-mobile-card{border-radius:16px;overflow:hidden;background:#0f0f0f;border:1px solid rgba(255,255,255,0.06);cursor:pointer;transition:0.2s;margin-bottom:10px}
 .flip-mobile-card:hover{border-color:rgba(166,226,46,0.2)}
-.flip-dt-hero{
-    display:flex;border-radius:16px;overflow:hidden;background:#0f0f0f;
-    border:1px solid rgba(255,255,255,0.06);cursor:pointer;transition:0.2s;
-    margin-bottom:14px;min-height:260px;
-}
+.flip-dt-hero{display:flex;border-radius:16px;overflow:hidden;background:#0f0f0f;border:1px solid rgba(255,255,255,0.06);cursor:pointer;transition:0.2s;margin-bottom:14px;min-height:260px}
 .flip-dt-hero:hover{border-color:rgba(166,226,46,0.2)}
 .flip-dt-hero-img{width:50%;min-height:260px;position:relative;flex-shrink:0}
 .flip-dt-hero-body{flex:1;padding:22px 24px;display:flex;flex-direction:column}
@@ -539,10 +265,7 @@ input{
 .flip-dt-hero-text{flex-direction:column;padding:24px}
 .flip-masonry{columns:3;column-gap:12px}
 @media(max-width:1100px){.flip-masonry{columns:2}}
-.flip-dt-tile{
-    break-inside:avoid;margin-bottom:12px;border-radius:14px;overflow:hidden;
-    background:#0f0f0f;border:1px solid rgba(255,255,255,0.06);cursor:pointer;transition:0.2s;
-}
+.flip-dt-tile{break-inside:avoid;margin-bottom:12px;border-radius:14px;overflow:hidden;background:#0f0f0f;border:1px solid rgba(255,255,255,0.06);cursor:pointer;transition:0.2s}
 .flip-dt-tile:hover{border-color:rgba(166,226,46,0.2)}
 .article-hero-wrap{position:relative;width:100%;overflow:hidden;margin-bottom:0}
 .article-hero-wrap.has-image #articleHeroImg{width:100%;height:auto;max-height:60vh;object-fit:cover;display:block;border-radius:0 0 24px 24px}
@@ -563,14 +286,25 @@ input{
 .article-disclaimer{font-size:0.48rem;color:rgba(255,255,255,0.25);text-align:center;margin-top:12px;font-weight:600;line-height:1.5}
 .news-dot{width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,0.2);flex-shrink:0}
 .news-time{font-size:0.46rem;font-weight:700;color:rgba(255,255,255,0.35)}
+#updateBanner{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#a6e22e;color:#000;z-index:99999;padding:14px 24px;border-radius:100px;font-weight:900;font-size:0.8rem;text-transform:uppercase;letter-spacing:1px;cursor:pointer;text-align:center;white-space:nowrap}
 
-/* ── BATCH ── */
-.batch-item{display:flex;justify-content:space-between;align-items:center;padding:12px 15px;border-bottom:1px solid rgba(255,255,255,0.06);transition:background 0.2s}
-.batch-item:hover{background:rgba(255,255,255,0.02)}
-
-/* ── SCAN TOGGLE (age checker) ── */
-.scan-toggle-btn{flex:1;padding:10px 8px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.4);font-weight:900;font-size:0.62rem;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:0.2s;text-align:center}
-.scan-toggle-btn.active{border-color:#a6e22e;color:#a6e22e;background:rgba(166,226,46,0.07)}
+@media(max-width:900px){
+    .nav-links{display:none}
+    .hero-h1{font-size:38px;letter-spacing:-1.5px}
+    .hero-sub{font-size:14px}
+    .bento{grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto auto;gap:8px}
+    .hc-banana{grid-column:1/-1;grid-row:auto;flex-direction:row;height:110px}
+    .hc-banana-img{width:38%;height:110px}
+    .hc-banana-body{padding:14px 16px}
+    .hc-banana-title{font-size:18px}
+    .hc-mango{grid-column:1/2;grid-row:auto}
+    .hc-avocado{grid-column:2/3;grid-row:auto}
+    .hc-defect{grid-column:1/2;grid-row:auto}
+    .hc-colour{grid-column:2/3;grid-row:auto}
+    .hc-news{grid-column:1/-1;grid-row:auto}
+    .view{padding:40px 16px 60px}
+    .bottom-stats{gap:20px}
+}
 </style>
 </head>
 <body>
@@ -582,339 +316,496 @@ input{
 <div class="splash-sub">Intelligence for fruit professionals</div>
 </div>
 
-<!-- Update Banner -->
-<div id="updateBanner" class="hidden" onclick="applyUpdate()">
-&#x2B06; New Update Available — Tap to Refresh
-</div>
+<div id="updateBanner" class="hidden" onclick="applyUpdate()">&#x2B06; New Update Available — Tap to Refresh</div>
 
-<!-- Menu Trigger -->
-<div id="menu-trigger" onclick="toggleMenu()"><span></span></div>
+<!-- NAV -->
+<nav class="nav">
+    <div class="nav-logo" onclick="showScreen('home')">Pulp Pro</div>
+    <div class="nav-links">
+        <div class="nav-link" onclick="showScreen('hub');selectFruit('banana')">Products</div>
+        <div class="nav-link" onclick="showScreen('news')">News</div>
+        <div class="nav-link">About</div>
+    </div>
+    <button class="nav-cta" onclick="showScreen('hub');selectFruit('banana')">Install Free</button>
+</nav>
 
-<!-- Side Drawer -->
+<!-- DRAWER -->
 <div id="menu-drawer">
-<div style="text-align:center;margin-bottom:28px;">
-<img src="edited-image.png" style="width:42px;border-radius:12px;margin-bottom:8px;">
-<div style="font-size:0.62rem;font-weight:900;color:#a6e22e;letter-spacing:3px;text-transform:uppercase;">Pulp Pro</div>
-<div style="font-size:0.45rem;color:rgba(255,255,255,0.2);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-top:3px;">Intelligence</div>
+<div class="d-logo">
+    <img src="edited-image.png" onerror="this.style.display='none'">
+    <div class="d-logo-name">Pulp Pro</div>
 </div>
-<div class="menu-item" onclick="showHub();toggleMenu()"><span>&#x1F3E0; Home</span></div>
-<div class="menu-item" onclick="openNews();toggleMenu()"><span>&#x1F4F0; News</span></div>
-<div class="settings-label">App Settings</div>
-<div class="menu-item" onclick="toggleTheme()"><span>&#x1F313; <span id="themeText">Dark Mode</span></span></div>
-<div class="menu-item" onclick="toggleLanguage()"><span>&#x1F310; <span id="langText">&#x1F1F3;&#x1F1F1; Nederlands</span></span></div>
-<div class="menu-item" onclick="clearHistory()" style="color:#ff4d4d"><span>&#x26A0;&#xFE0F; Clear Logs</span></div>
-<div class="menu-item" onclick="sendFeedback()"><span>&#x1F4AC; Send Feedback</span></div>
-<div id="menu-fav-container">
-<div class="menu-item" onclick="toggleMenuFavs()"><span>&#x2B50; Favorites</span><i class="bi bi-chevron-down" id="favChevron"></i></div>
+<div class="d-item" onclick="showScreen('home');closeDrawer()">&#x1F3E0; Home</div>
+<div class="d-item" onclick="showScreen('news');closeDrawer()">&#x1F4F0; News</div>
+<div class="d-sep">Settings</div>
+<div class="d-item" onclick="toggleTheme()">&#x1F313; <span id="themeText">Dark Mode</span></div>
+<div class="d-item" onclick="toggleLanguage()">&#x1F310; <span id="langText">&#x1F1F3;&#x1F1F1; Nederlands</span></div>
+<div class="d-item danger" onclick="clearHistory()">&#x26A0;&#xFE0F; Clear Logs</div>
+<div class="d-item" onclick="sendFeedback()">&#x1F4AC; Send Feedback</div>
+<div class="d-sep">Favorites</div>
+<div class="d-item" onclick="toggleMenuFavs()">&#x2B50; Favorites <i class="bi bi-chevron-down" id="favChevron"></i></div>
 <div id="menu-fav-list"></div>
 </div>
-</div>
-<div id="menu-overlay" onclick="toggleMenu()"></div>
+<div id="menu-overlay" onclick="closeDrawer()"></div>
 
-<!-- ════════════ FRUIT HUB ════════════ -->
-<div id="fruit-hub" class="nav-view">
-    <div class="live-tag"><div class="live-dot"></div><span>Live fruit intelligence</span></div>
-    <div class="hero-h1">Select<br><em>commodity</em></div>
-    <div class="hero-sub">Age checking, defect detection, origin reports and colour scanning — all in one place.</div>
+<!-- ════════ HOME ════════ -->
+<div id="screen-home" class="screen active">
+<div class="view">
+    <div class="live-tag"><div class="live-dot"></div><span>Live intelligence for fruit professionals</span></div>
+    <div class="hero-h1">Know your fruit.<br><em>Before it arrives.</em></div>
+    <div class="hero-sub">Real-time origin reports, AI-powered colour scanning, defect detection and age checking — all in one tool built for the floor, not the office.</div>
+    <div class="hero-btns">
+        <button class="btn-primary" onclick="showScreen('hub');selectFruit('banana')">Get the App</button>
+        <button class="btn-ghost">Watch Demo</button>
+    </div>
 
-    <div class="fruit-chips">
-        <div class="fruit-chip active" id="chip-banana" onclick="openMiddleHub('banana')">
-            <img src="banana.png" class="chip-img" alt="banana">
-            <div class="chip-name">Banana</div>
+    <!-- BENTO — exact from mockup -->
+    <div class="bento">
+
+        <!-- BANANA HERO -->
+        <div class="hc hc-banana" onclick="showScreen('hub');selectFruit('banana')">
+            <img src="banana.png" class="hc-banana-img" onerror="this.style.display='none';this.nextElementSibling.style.paddingTop='24px'">
+            <div class="hc-banana-body">
+                <div class="hc-banana-label">Colour Intelligence</div>
+                <div class="hc-banana-title">Banana</div>
+                <div class="hc-banana-sub">Age checker · Defects · Colour</div>
+                <div class="hc-explore">Explore →</div>
+            </div>
         </div>
-        <div class="fruit-chip" id="chip-mango" onclick="openMiddleHub('mango')">
-            <img src="mango.png" class="chip-img" alt="mango">
-            <div class="chip-name">Mango</div>
+
+        <!-- MANGO -->
+        <div class="hc hc-mango" onclick="showScreen('hub');selectFruit('mango')">
+            <img src="mango.png" onerror="this.style.minHeight='80px';this.style.display='block'">
+            <div class="hc-mango-body">
+                <div class="hc-mango-title">Mango</div>
+                <div class="hc-soon">(Soon)</div>
+            </div>
         </div>
-        <div class="fruit-chip" id="chip-avocado" onclick="openMiddleHub('avocado')">
-            <img src="avocado.png" class="chip-img" alt="avocado">
-            <div class="chip-name">Avocado</div>
+
+        <!-- AVOCADO -->
+        <div class="hc hc-avocado" onclick="showScreen('hub');selectFruit('avocado')">
+            <img src="avocado.png" onerror="this.style.minHeight='80px';this.style.display='block'">
+            <div class="hc-avocado-body">
+                <div class="hc-avocado-title">Avocado</div>
+                <div class="hc-soon">(Soon)</div>
+            </div>
+        </div>
+
+        <!-- DEFECT DETECTOR -->
+        <div class="hc hc-defect" onclick="showScreen('defect')">
+            <img src="rotten.png" onerror="this.style.minHeight='80px';this.style.display='block'">
+            <div class="hc-defect-body">
+                <div class="hc-defect-label">Camera · AI</div>
+                <div class="hc-defect-title">Defect Detector</div>
+            </div>
+        </div>
+
+        <!-- COLOUR SCANNER -->
+        <div class="hc hc-colour" onclick="showScreen('colour')">
+            <img src="colour.png" onerror="this.style.minHeight='80px';this.style.display='block'">
+            <div class="hc-colour-body">
+                <div class="hc-colour-label">Classic · AI model</div>
+                <div class="hc-colour-title">Colour Scanner</div>
+            </div>
+        </div>
+
+        <!-- NEWS BAR -->
+        <div class="hc hc-news" onclick="showScreen('news')">
+            <div class="hc-news-icon">📰</div>
+            <div class="hc-news-body">
+                <div class="hc-news-title">Industry News</div>
+                <div class="hc-news-sub">AGF · FreshPlaza · Fresh Fruit Portal · Good Fruit Grower</div>
+            </div>
+            <div class="hc-news-arrow">›</div>
         </div>
     </div>
 
-    <span class="sec-lbl">Quick tools</span>
-    <div class="tool-grid">
-        <div class="tool-card" onclick="openDefectDetector()">
-            <div class="ic ic-red"><i class="bi bi-camera"></i></div>
-            <div class="mb"><div class="mn">Defect Detector</div><div class="md">Camera · AI scan</div></div>
-            <i class="bi bi-chevron-right ma"></i>
+    <div class="bottom-bar">
+        <div class="bottom-stats">
+            <div><div class="bstat-num">28d</div><div class="bstat-lbl">Weather history</div></div>
+            <div><div class="bstat-num">3</div><div class="bstat-lbl">Fruit types</div></div>
+            <div><div class="bstat-num">Free</div><div class="bstat-lbl">Always</div></div>
         </div>
-        <div class="tool-card" onclick="openColourScanner()">
-            <div class="ic ic-lime"><i class="bi bi-palette"></i></div>
-            <div class="mb"><div class="mn">Colour Scanner</div><div class="md">Classic · AI model</div></div>
-            <i class="bi bi-chevron-right ma"></i>
-        </div>
-        <div class="tool-card" onclick="openNews()">
-            <div class="ic ic-blue"><i class="bi bi-newspaper"></i></div>
-            <div class="mb"><div class="mn">Industry News</div><div class="md">AGF · FreshPlaza · More</div></div>
-            <i class="bi bi-chevron-right ma"></i>
-        </div>
+        <div class="bottom-right">iOS · Android · Web</div>
     </div>
 
-    <div id="favorites-section" class="hidden" style="margin-top:32px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.05);">
-        <span class="sec-lbl">Saved favorites</span>
+    <div id="favorites-section" class="hidden">
+        <div style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.18);margin-bottom:10px;">Saved favorites</div>
         <div class="fav-grid" id="fav-grid"></div>
     </div>
 </div>
-
-<!-- ════════════ MIDDLE HUB ════════════ -->
-<div id="middle-hub" class="nav-view hidden">
-    <div class="vn"><button class="vn-back" onclick="showHub()"><i class="bi bi-arrow-left"></i> Home</button></div>
-    <div class="pg-title" id="middleHubTitle">Banana</div>
-    <div class="pg-sub" id="middleHubSub">Select a tool</div>
-    <div class="mlist" id="middleHubButtons"></div>
 </div>
 
-<!-- ════════════ DEFECT HUB ════════════ -->
-<div id="defect-hub" class="nav-view hidden">
-    <div class="vn"><button class="vn-back" onclick="showHub()"><i class="bi bi-arrow-left"></i> Home</button></div>
+<!-- ════════ MIDDLE HUB ════════ -->
+<div id="screen-hub" class="screen">
+<div class="view">
+    <div class="back-row"><div class="back-btn" onclick="showScreen('home')"><i class="bi bi-arrow-left"></i> Home</div></div>
+    <div class="pg-title" id="hub-title">Banana</div>
+    <div class="pg-sub">Select a tool</div>
+    <div class="mlist" id="hub-list"></div>
+</div>
+</div>
+
+<!-- ════════ DEFECT HUB ════════ -->
+<div id="screen-defect" class="screen">
+<div class="view">
+    <div class="back-row"><div class="back-btn" onclick="showScreen('home')"><i class="bi bi-arrow-left"></i> Home</div></div>
     <div class="pg-title">Defect Detector</div>
     <div class="pg-sub">Select fruit to scan</div>
     <div class="mlist">
-        <div class="mrow" onclick="DefectDetector.selectFruit('banana')">
-            <div class="ic ic-lime"><span style="font-size:1.1rem">&#x1F34C;</span></div>
+        <div class="mrow" onclick="if(typeof DefectDetector!=='undefined')DefectDetector.selectFruit('banana')">
+            <div class="ic ic-lime"><i class="bi bi-search"></i></div>
             <div class="mb"><div class="mn">Banana</div><div class="md">External &amp; internal defects</div></div>
             <i class="bi bi-chevron-right ma"></i>
         </div>
-        <div class="mrow" onclick="DefectDetector.selectFruit('mango')">
-            <div class="ic ic-amber"><span style="font-size:1.1rem">&#x1F96D;</span></div>
+        <div class="mrow" onclick="if(typeof DefectDetector!=='undefined')DefectDetector.selectFruit('mango')">
+            <div class="ic ic-amber"><i class="bi bi-search"></i></div>
             <div class="mb"><div class="mn">Mango</div><div class="md">External &amp; internal defects</div></div>
             <i class="bi bi-chevron-right ma"></i>
         </div>
-        <div class="mrow" onclick="DefectDetector.selectFruit('avocado')">
-            <div class="ic ic-green"><span style="font-size:1.1rem">&#x1F951;</span></div>
+        <div class="mrow" onclick="if(typeof DefectDetector!=='undefined')DefectDetector.selectFruit('avocado')">
+            <div class="ic ic-green"><i class="bi bi-search"></i></div>
             <div class="mb"><div class="mn">Avocado</div><div class="md">External &amp; internal defects</div></div>
             <i class="bi bi-chevron-right ma"></i>
         </div>
     </div>
-    <button class="btn-main btn-back" onclick="showHub()">&larr; Back</button>
+</div>
 </div>
 
-<!-- Defect Type View -->
-<div id="defect-type-view" class="nav-view hidden">
-<div class="vn"><button class="vn-back" onclick="DefectDetector.showDefectView('defect-hub')"><i class="bi bi-arrow-left"></i> Defects</button></div>
-<div class="pg-title" id="defectTypeTitle">Banana</div>
-<div class="pg-sub">Select defect category</div>
-<div class="mlist">
-    <div class="mrow" onclick="DefectDetector.selectType('external')">
-        <div class="ic ic-lime"><i class="bi bi-eye" style="font-size:1rem"></i></div>
-        <div class="mb"><div class="mn" id="extDefectsBtn">External Defects</div><div class="md" id="defectTypeDesc_external">Skin, colour, bruising, cuts, mould</div></div>
-        <i class="bi bi-chevron-right ma"></i>
+<!-- ════════ DEFECT TYPE ════════ -->
+<div id="screen-defect-type" class="screen">
+<div class="view">
+    <div class="back-row"><div class="back-btn" onclick="showScreen('defect')"><i class="bi bi-arrow-left"></i> Defects</div></div>
+    <div class="pg-title" id="defectTypeTitle">Banana</div>
+    <div class="pg-sub">Select defect category</div>
+    <div class="mlist">
+        <div class="mrow" onclick="if(typeof DefectDetector!=='undefined')DefectDetector.selectType('external')">
+            <div class="ic ic-lime"><i class="bi bi-eye"></i></div>
+            <div class="mb"><div class="mn" id="extDefectsBtn">External Defects</div><div class="md" id="defectTypeDesc_external">Skin, colour, bruising, cuts, mould</div></div>
+            <i class="bi bi-chevron-right ma"></i>
+        </div>
+        <div class="mrow" onclick="if(typeof DefectDetector!=='undefined')DefectDetector.selectType('internal')">
+            <div class="ic ic-amber"><i class="bi bi-search"></i></div>
+            <div class="mb"><div class="mn" id="intDefectsBtn">Internal Defects</div><div class="md" id="defectTypeDesc_internal">Flesh, rot, discolouration, flavour</div></div>
+            <i class="bi bi-chevron-right ma"></i>
+        </div>
     </div>
-    <div class="mrow" onclick="DefectDetector.selectType('internal')">
-        <div class="ic ic-amber"><i class="bi bi-search" style="font-size:1rem"></i></div>
-        <div class="mb"><div class="mn" id="intDefectsBtn">Internal Defects</div><div class="md" id="defectTypeDesc_internal">Flesh, rot, discolouration, flavour</div></div>
-        <i class="bi bi-chevron-right ma"></i>
+</div>
+</div>
+
+<!-- ════════ DEFECT SCAN ════════ -->
+<div id="screen-defect-scan" class="screen">
+<div class="view" style="max-width:500px;position:relative">
+    <i class="bi bi-star-fill fav-toggle" id="defectFavStar" onclick="toggleFavorite('defect')" style="position:absolute;top:60px;right:32px;z-index:10;font-size:1.4rem;cursor:pointer;color:rgba(255,255,255,0.1);transition:0.3s"></i>
+    <div class="back-row"><div class="back-btn" onclick="showScreen('defect-type');if(typeof DefectDetector!=='undefined')DefectDetector.stopCamera()"><i class="bi bi-arrow-left"></i> Back</div></div>
+    <div class="pg-title" id="defectScanTitle">Banana — External</div>
+    <div class="camera-wrapper">
+        <video id="defectVideo" autoplay playsinline muted style="display:none;"></video>
+        <canvas id="defectCanvas" style="display:none;"></canvas>
+        <div id="cameraPlaceholder" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:30px;min-height:200px;">
+            <i class="bi bi-camera" style="font-size:2rem;opacity:0.25;color:#fff;"></i>
+            <span style="font-size:0.52rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.3);">Camera not available</span>
+        </div>
+        <button class="capture-btn" id="defectScanActionBtn" onclick="if(typeof DefectDetector!=='undefined')DefectDetector.doScan()"><i class="bi bi-camera-fill"></i> Scan</button>
+    </div>
+    <div style="margin:10px 0 14px;text-align:center;"><span id="defectDisclaimer" style="font-size:0.5rem;font-weight:700;color:#ff4d4d;text-transform:uppercase;letter-spacing:1px;opacity:0.8;">&#x26A0;&#xFE0F; Colour-based detection. Always verify manually.</span></div>
+    <div id="defectScanResults" class="hidden"></div>
+    <button class="btn-main btn-back" onclick="showScreen('defect-type');if(typeof DefectDetector!=='undefined')DefectDetector.stopCamera();">&larr; Back</button>
+</div>
+</div>
+
+<!-- ════════ DEFECT INFO ════════ -->
+<div id="screen-defect-info" class="screen">
+<div class="view" style="max-width:500px">
+    <div class="pg-title" id="defectInfoTitle">Defect Info</div>
+    <div id="defectInfoContent"></div>
+    <button class="btn-main btn-back" onclick="showScreen('defect-scan')" id="backToScanBtn">&larr; Back to Scan</button>
+</div>
+</div>
+
+<!-- ════════ DEFECT REPORT ════════ -->
+<div id="screen-defect-report" class="screen">
+<div class="view" style="max-width:500px">
+    <div class="pg-title">Defect Report</div>
+    <div class="report-card">
+        <div class="grade-circle" id="reportGradeCircle"><div class="grade-letter" id="reportGradeLetter">A</div><div class="grade-sub">Grade</div></div>
+        <div class="report-row"><span class="report-key">Fruit</span><span class="report-val" id="reportFruit">&mdash;</span></div>
+        <div class="report-row"><span class="report-key">Date</span><span class="report-val" id="reportTimestamp">&mdash;</span></div>
+        <div class="report-row"><span class="report-key">Defects Found</span><span class="report-val" id="reportDefectCount">&mdash;</span></div>
+        <div class="report-row"><span class="report-key">Severity</span><span class="report-val" id="reportSeverity">&mdash;</span></div>
+        <div class="report-row"><span class="report-key">Status</span><span class="report-val" id="reportStatus">&mdash;</span></div>
+    </div>
+    <div class="report-defects-title">Defect Breakdown</div>
+    <div class="report-defects-scroll" id="reportDefectList"></div>
+    <button id="copyReportBtn" onclick="if(typeof DefectDetector!=='undefined'&&DefectDetector.copyReport)DefectDetector.copyReport()"><i class="bi bi-clipboard"></i> Copy Report</button>
+    <button class="btn-main btn-back" onclick="showScreen('defect')">&larr; New Scan</button>
+</div>
+</div>
+
+<!-- ════════ COLOUR SCANNER ════════ -->
+<div id="screen-colour" class="screen">
+<div class="view" style="max-width:500px;position:relative">
+    <i class="bi bi-star-fill fav-toggle" id="colourFavStar" onclick="toggleFavorite('colour')" style="position:absolute;top:60px;right:32px;z-index:10;font-size:1.4rem;cursor:pointer;color:rgba(255,255,255,0.1);transition:0.3s"></i>
+    <div class="back-row"><div class="back-btn" onclick="showScreen('home');if(typeof ColourScanner!=='undefined')ColourScanner.close()"><i class="bi bi-arrow-left"></i> Home</div></div>
+    <div class="pg-title" id="csScannerTitle">Colour Scanner</div>
+    <div id="csAIStatus" style="text-align:center;font-size:0.48rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.25);margin-bottom:10px;">&#x1F4CA; Classic Mode</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <div class="cs-toggle-btn active" id="csSingleBtn" onclick="if(typeof ColourScanner!=='undefined')ColourScanner.setScanMode('single')">Single Scan</div>
+        <div class="cs-toggle-btn" id="csMultiBtn" onclick="if(typeof ColourScanner!=='undefined')ColourScanner.setScanMode('multi')">Multi Scan</div>
+    </div>
+    <div id="cs-scanner">
+        <div class="camera-wrapper">
+            <video id="csVideo" autoplay playsinline muted style="display:none;"></video>
+            <canvas id="csCanvas" style="display:none;"></canvas>
+            <div id="csPlaceholder" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:30px;min-height:200px;">
+                <i class="bi bi-camera" style="font-size:2rem;opacity:0.25;color:#fff;"></i>
+                <span id="csPointCamera" style="font-size:0.52rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.3);">Point camera at banana</span>
+            </div>
+            <div class="cs-crosshair"></div>
+            <button class="capture-btn" id="csScanBtn" onclick="if(typeof ColourScanner!=='undefined')ColourScanner.doScan()">Scan</button>
+        </div>
+        <div id="csOfflineLabel" style="font-size:0.5rem;color:rgba(255,255,255,0.2);text-align:center;text-transform:uppercase;letter-spacing:2px;margin:10px 0;">Works offline — no internet needed</div>
+        <div id="csMultiList" style="margin-bottom:10px;"></div>
+        <button id="csBatchBtn" class="btn-main" style="display:none;margin-bottom:8px;" onclick="if(typeof ColourScanner!=='undefined')ColourScanner.getBatchResult()">Get Batch Result &rarr;</button>
+    </div>
+    <div id="cs-single-result" class="hidden">
+        <div class="camera-wrapper" style="margin-bottom:14px;height:180px;">
+            <img id="csSinglePhoto" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:20px;">
+            <div id="csSinglePhotoPlaceholder" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:30px;"><i class="bi bi-image" style="font-size:2rem;opacity:0.2;color:#fff;"></i></div>
+        </div>
+        <div class="report-card" style="margin-bottom:12px;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+                <div id="csSingleSwatch" style="width:54px;height:54px;border-radius:14px;flex-shrink:0;background:#78c830;"></div>
+                <div style="flex:1;">
+                    <div id="csSingleLabel" style="font-size:1.4rem;font-weight:900;color:#fff;line-height:1;">Color 1</div>
+                    <div id="csSingleName" style="font-size:0.62rem;font-weight:900;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:1px;margin-top:3px;">Full Green</div>
+                    <div class="color-bar-wrap" style="margin-top:8px;"><div id="csSingleBar" class="color-bar" style="width:16%;background:#78c830;"></div></div>
+                </div>
+            </div>
+            <div id="csAIConfidence" style="display:none;font-size:0.48rem;font-weight:700;color:#a6e22e;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;opacity:0.8;"></div>
+            <div class="report-row"><span class="report-key" id="shelfLifeLabel">Shelf Life</span><span class="report-val" id="csSingleShelf">&mdash;</span></div>
+            <div class="report-row"><span class="report-key" id="statusLabel2">Status</span><span class="report-val" id="csSingleStatus">&mdash;</span></div>
+        </div>
+        <button class="btn-main" style="margin-bottom:8px;" onclick="if(typeof ColourScanner!=='undefined')ColourScanner.shareReport()"><i class="bi bi-share-fill"></i> Share Report</button>
+        <button id="csCopySingle" class="btn-copy" style="width:100%;justify-content:center;margin-bottom:10px;" onclick="if(typeof ColourScanner!=='undefined')ColourScanner.copySingleResult()"><i class="bi bi-clipboard"></i> Copy Report</button>
+        <button class="btn-main btn-back" onclick="if(typeof ColourScanner!=='undefined')ColourScanner.resetScanner()" id="csNewScanBtn">&larr; New Scan</button>
+    </div>
+    <div id="cs-batch-result" class="hidden">
+        <div id="csBatchPhotoGrid" style="display:flex;gap:8px;margin-bottom:12px;"></div>
+        <div style="background:rgba(166,226,46,0.06);border:1px solid rgba(166,226,46,0.2);border-radius:16px;padding:14px;margin-bottom:12px;display:flex;align-items:center;gap:12px;">
+            <div id="csBatchSwatch" style="width:48px;height:48px;border-radius:12px;flex-shrink:0;background:#98c428;"></div>
+            <div><div id="batchAvgLabel" style="font-size:0.52rem;font-weight:900;color:#a6e22e;text-transform:uppercase;letter-spacing:2px;margin-bottom:3px;">Batch Average</div><div id="csBatchLabel" style="font-size:0.92rem;font-weight:900;color:#fff;">Color 1.5</div></div>
+        </div>
+        <div class="report-card" style="margin-bottom:12px;">
+            <div id="csBatchBreakdown" style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.06);"></div>
+            <div class="report-row"><span class="report-key" id="boxesScannedLabel">Boxes Scanned</span><span class="report-val" id="csBatchCount">&mdash;</span></div>
+            <div class="report-row"><span class="report-key" id="shelfLifeEstLabel">Shelf Life Est.</span><span class="report-val" id="csBatchShelf">&mdash;</span></div>
+            <div class="report-row"><span class="report-key" id="batchStatusLabel">Batch Status</span><span class="report-val" id="csBatchStatus">&mdash;</span></div>
+        </div>
+        <button class="btn-main" style="margin-bottom:8px;" onclick="if(typeof ColourScanner!=='undefined')ColourScanner.shareBatchReport()"><i class="bi bi-share-fill"></i> Share Batch Report</button>
+        <button id="csCopyBatch" class="btn-copy" style="width:100%;justify-content:center;margin-bottom:10px;" onclick="if(typeof ColourScanner!=='undefined')ColourScanner.copyBatchResult()"><i class="bi bi-clipboard"></i> Copy Report</button>
+        <button class="btn-main btn-back" onclick="if(typeof ColourScanner!=='undefined')ColourScanner.resetScanner()" id="csNewBatchScanBtn">&larr; New Scan</button>
+    </div>
+    <button class="btn-main btn-back" style="margin-top:10px;" onclick="showScreen('home');if(typeof ColourScanner!=='undefined')ColourScanner.close()" id="csBackBtn">&larr; Back</button>
+</div>
+</div>
+
+<!-- ════════ NEWS ════════ -->
+<div id="screen-news" class="screen">
+<div class="view">
+    <div class="back-row"><div class="back-btn" onclick="showScreen('home')"><i class="bi bi-arrow-left"></i> Home</div></div>
+    <div class="pg-title">Industry News</div>
+    <div id="newsCacheStatus"></div>
+    <div class="news-filter-row">
+        <div class="news-filter-tab active" data-filter="all" onclick="if(typeof NewsManager!=='undefined')NewsManager.setFilter('all')">All</div>
+        <div class="news-filter-tab" data-filter="AGF.nl" onclick="if(typeof NewsManager!=='undefined')NewsManager.setFilter('AGF.nl')">&#x1F33F; AGF.nl</div>
+        <div class="news-filter-tab" data-filter="FreshPlaza" onclick="if(typeof NewsManager!=='undefined')NewsManager.setFilter('FreshPlaza')">&#x1F34A; FreshPlaza</div>
+        <div class="news-filter-tab" data-filter="Fresh Fruit Portal" onclick="if(typeof NewsManager!=='undefined')NewsManager.setFilter('Fresh Fruit Portal')">&#x1F347; Fresh Fruit Portal</div>
+        <div class="news-filter-tab" data-filter="Good Fruit Grower" onclick="if(typeof NewsManager!=='undefined')NewsManager.setFilter('Good Fruit Grower')">&#x1F34E; Good Fruit Grower</div>
+    </div>
+    <div id="newsArticleList"></div>
+    <button class="btn-main btn-back" style="margin-top:16px;max-width:200px;" onclick="showScreen('home')">&larr; Back</button>
+</div>
+<div id="news-article-view" class="hidden" style="max-width:800px;margin:0 auto;padding:80px 32px 80px">
+    <div id="articleHero" class="article-hero-wrap">
+        <img id="articleHeroImg" src="" alt="" style="display:none;">
+        <div id="articleHeroBg" class="article-hero-bg"></div>
+        <div class="article-hero-overlay"></div>
+        <div class="article-back-btn" onclick="if(typeof NewsManager!=='undefined')NewsManager.closeArticle()">&larr; Back</div>
+        <div id="articleCatBadge" class="news-cat-badge"></div>
+    </div>
+    <div class="article-body">
+        <div class="article-title" id="articleTitle"></div>
+        <div class="article-meta">
+            <span class="article-source" id="articleSource"></span>
+            <div class="news-dot"></div>
+            <span class="news-time" id="articleTime"></span>
+            <div class="news-dot"></div>
+            <span class="news-time" id="articleDate"></span>
+            <span class="article-country" id="articleCountry"></span>
+        </div>
+        <div class="article-summary-label">Summary</div>
+        <div class="article-summary-text" id="articleSummary"></div>
+        <button class="article-read-btn" id="articleReadBtn"><i class="bi bi-box-arrow-up-right"></i> Read Full Article</button>
+        <button class="article-share-btn" id="articleShareBtn"><i class="bi bi-share-fill"></i> Share Article</button>
+        <div class="article-disclaimer">Full article content is available on the publisher's website.<br>Pulp Pro is not affiliated with any news source.</div>
     </div>
 </div>
-<button class="btn-main btn-back" onclick="DefectDetector.showDefectView('defect-hub')">&larr; Back</button>
 </div>
 
-<!-- Defect Scan View -->
-<div id="defect-scan-view" class="nav-view hidden">
-<div style="max-width:400px;margin:0 auto;position:relative;">
-<i class="bi bi-star-fill fav-toggle" id="defectFavStar" onclick="toggleFavorite('defect')" style="position:absolute;top:0;right:0;z-index:10;"></i>
-<div class="vn"><button class="vn-back" onclick="DefectDetector.showDefectView('defect-type-view');DefectDetector.stopCamera()"><i class="bi bi-arrow-left"></i> Back</button></div>
-<div class="pg-title" id="defectScanTitle">Banana — External</div>
-<div class="camera-wrapper">
-<video id="defectVideo" autoplay playsinline muted style="display:none;"></video>
-<canvas id="defectCanvas" style="display:none;"></canvas>
-<div id="cameraPlaceholder" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:30px;min-height:200px;">
-<i class="bi bi-camera" style="font-size:2rem;opacity:0.25;color:#fff;"></i>
-<span style="font-size:0.52rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.4);">Camera not available</span>
+<!-- ════════ AGE CHECKER ════════ -->
+<div id="screen-calculator" class="screen">
+<div class="view">
+    <div class="back-row"><div class="back-btn" onclick="showScreen('hub')"><i class="bi bi-arrow-left"></i> Back</div></div>
+    <div class="app-wrap">
+        <div class="app-card" id="appCard">
+            <i class="bi bi-star-fill fav-toggle" id="favStar" onclick="toggleFavorite('calculator')"></i>
+            <img src="edited-image.png" style="width:44px;border-radius:12px;margin-bottom:8px;" onerror="this.style.display='none'">
+            <div id="brandName" style="font-size:1.4rem;font-weight:900;color:#a6e22e;text-transform:uppercase;">Chiquita</div>
+            <div id="commodityLabel" style="font-weight:900;letter-spacing:4px;opacity:0.4;font-size:0.68rem;margin-bottom:25px;color:#fff;">BANANA AGE CHECKER</div>
+            <div style="display:flex;gap:8px;margin-bottom:20px;">
+                <div class="scan-toggle-btn active" id="singleCodeBtn" onclick="setScanMode('single')">Single Code</div>
+                <div class="scan-toggle-btn" id="batchCodeBtn" onclick="setScanMode('batch')">Batch Scan</div>
+            </div>
+            <div class="input-wrapper"><input type="text" id="codeIn" placeholder="---" maxlength="3" autofocus></div>
+            <div id="batchList" style="display:none;background:rgba(255,255,255,0.03);border-radius:20px;margin-bottom:15px;max-height:300px;overflow-y:auto;"></div>
+            <button id="batchReportBtn" class="btn-main" style="display:none;margin-bottom:15px;" onclick="showBatchReport()">Get Batch Report &rarr;</button>
+            <button onclick="checkFruit()" class="btn-main" id="calcBtn" style="margin-bottom:0">Calculate</button>
+            <div id="resBox" class="result-display hidden">
+                <div id="statusLabel" style="font-weight:900;">READY</div>
+                <div id="daysValue">--</div>
+                <div id="dateText" style="font-size:1.3rem;font-weight:900;margin-top:10px;">-- -- ----</div>
+                <button class="btn-copy" onclick="copyResult()" id="copyBtn"><i class="bi bi-clipboard"></i> COPY</button>
+            </div>
+        </div>
+        <div id="historySection" class="history-section"><div id="historyList"></div></div>
+    </div>
 </div>
-<button class="capture-btn" id="defectScanActionBtn" onclick="DefectDetector.doScan()"><i class="bi bi-camera-fill"></i> Scan</button>
-</div>
-<div style="margin:10px 0 14px;text-align:center;">
-<span id="defectDisclaimer" style="font-size:0.52rem;font-weight:700;color:#ff4d4d;text-transform:uppercase;letter-spacing:1px;opacity:0.8;">&#x26A0;&#xFE0F; Colour-based detection. Always verify manually.</span>
-</div>
-<div id="defectScanResults" class="hidden"></div>
-<button class="btn-main btn-back" style="margin-top:10px;" onclick="DefectDetector.showDefectView('defect-type-view');DefectDetector.stopCamera();">&larr; Back</button>
-</div>
-</div>
-
-<!-- Defect Info View -->
-<div id="defect-info-view" class="nav-view hidden">
-<div class="pg-title" id="defectInfoTitle">Defect Info</div>
-<div style="max-width:400px;margin:0 auto;">
-<div id="defectInfoContent"></div>
-<button class="btn-main btn-back" onclick="DefectDetector.showDefectView('defect-scan-view')" id="backToScanBtn">&larr; Back to Scan</button>
-</div>
-</div>
-
-<!-- Defect Report View -->
-<div id="defect-report-view" class="nav-view hidden">
-<div class="pg-title">Defect Report</div>
-<div style="max-width:400px;margin:0 auto;">
-<div class="report-card">
-<div class="grade-circle" id="reportGradeCircle"><div class="grade-letter" id="reportGradeLetter">A</div><div class="grade-sub">Grade</div></div>
-<div class="report-row"><span class="report-key">Fruit</span><span class="report-val" id="reportFruit">&mdash;</span></div>
-<div class="report-row"><span class="report-key">Date</span><span class="report-val" id="reportTimestamp">&mdash;</span></div>
-<div class="report-row"><span class="report-key">Defects Found</span><span class="report-val" id="reportDefectCount">&mdash;</span></div>
-<div class="report-row"><span class="report-key">Severity</span><span class="report-val" id="reportSeverity">&mdash;</span></div>
-<div class="report-row"><span class="report-key">Status</span><span class="report-val" id="reportStatus">&mdash;</span></div>
-</div>
-<div class="report-defects-title">Defect Breakdown</div>
-<div class="report-defects-scroll" id="reportDefectList"></div>
-<button id="copyReportBtn" onclick="DefectDetector.copyReport?DefectDetector.copyReport():null"><i class="bi bi-clipboard"></i> Copy Report</button>
-<button class="btn-main btn-back" onclick="DefectDetector.showDefectView('defect-hub')">&larr; New Scan</button>
-</div>
-</div>
-
-<!-- ════════════ COLOUR SCANNER ════════════ -->
-<div id="colour-scanner-view" class="nav-view hidden">
-<div style="max-width:400px;margin:0 auto;position:relative;">
-<i class="bi bi-star-fill fav-toggle" id="colourFavStar" onclick="toggleFavorite('colour')" style="position:absolute;top:0;right:0;z-index:10;"></i>
-<div class="vn"><button class="vn-back" onclick="ColourScanner.close()"><i class="bi bi-arrow-left"></i> Home</button></div>
-<div class="pg-title" id="csScannerTitle">Colour Scanner</div>
-<div id="csAIStatus" style="text-align:center;font-size:0.48rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.25);margin-bottom:10px;">&#x1F4CA; Classic Mode</div>
-<div style="display:flex;gap:8px;margin-bottom:14px;">
-<div class="cs-toggle-btn active" id="csSingleBtn" onclick="ColourScanner.setScanMode('single')">Single Scan</div>
-<div class="cs-toggle-btn" id="csMultiBtn" onclick="ColourScanner.setScanMode('multi')">Multi Scan</div>
-</div>
-<div id="cs-scanner">
-<div class="camera-wrapper">
-<video id="csVideo" autoplay playsinline muted style="display:none;"></video>
-<canvas id="csCanvas" style="display:none;"></canvas>
-<div id="csPlaceholder" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:30px;min-height:200px;">
-<i class="bi bi-camera" style="font-size:2rem;opacity:0.25;color:#fff;"></i>
-<span id="csPointCamera" style="font-size:0.52rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.4);">Point camera at banana</span>
-</div>
-<div class="cs-crosshair"></div>
-<button class="capture-btn" id="csScanBtn" onclick="ColourScanner.doScan()">Scan</button>
-</div>
-<div id="csOfflineLabel" style="font-size:0.52rem;color:rgba(255,255,255,0.25);text-align:center;text-transform:uppercase;letter-spacing:2px;margin:10px 0;opacity:0.4;">Works offline — no internet needed</div>
-<div id="csMultiList" style="margin-bottom:10px;"></div>
-<button id="csBatchBtn" class="btn-main" style="display:none;margin-bottom:8px;" onclick="ColourScanner.getBatchResult()">Get Batch Result &rarr;</button>
-</div>
-<div id="cs-single-result" class="hidden">
-<div class="camera-wrapper" style="margin-bottom:14px;height:180px;">
-<img id="csSinglePhoto" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:20px;">
-<div id="csSinglePhotoPlaceholder" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:30px;">
-<i class="bi bi-image" style="font-size:2rem;opacity:0.2;color:#fff;"></i>
-<span style="font-size:0.52rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.3);">No photo</span>
-</div>
-</div>
-<div class="report-card" style="margin-bottom:12px;">
-<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-<div id="csSingleSwatch" style="width:54px;height:54px;border-radius:14px;flex-shrink:0;background:#78c830;"></div>
-<div style="flex:1;">
-<div id="csSingleLabel" style="font-size:1.4rem;font-weight:900;color:#fff;line-height:1;">Color 1</div>
-<div id="csSingleName" style="font-size:0.62rem;font-weight:900;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:1px;margin-top:3px;">Full Green</div>
-<div class="color-bar-wrap" style="margin-top:8px;"><div id="csSingleBar" class="color-bar" style="width:16%;background:#78c830;"></div></div>
-</div>
-</div>
-<div id="csAIConfidence" style="display:none;font-size:0.48rem;font-weight:700;color:#a6e22e;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;opacity:0.8;"></div>
-<div class="report-row"><span class="report-key" id="shelfLifeLabel">Shelf Life</span><span class="report-val" id="csSingleShelf">&mdash;</span></div>
-<div class="report-row"><span class="report-key" id="statusLabel2">Status</span><span class="report-val" id="csSingleStatus">&mdash;</span></div>
-</div>
-<button class="btn-main" style="margin-bottom:8px;" onclick="ColourScanner.shareReport()"><i class="bi bi-share-fill"></i> Share Report</button>
-<button id="csCopySingle" class="btn-copy" style="width:100%;justify-content:center;margin-bottom:10px;" onclick="ColourScanner.copySingleResult()"><i class="bi bi-clipboard"></i> Copy Report</button>
-<button class="btn-main btn-back" onclick="ColourScanner.resetScanner()" id="csNewScanBtn">&larr; New Scan</button>
-</div>
-<div id="cs-batch-result" class="hidden">
-<div id="csBatchPhotoGrid" style="display:flex;gap:8px;margin-bottom:12px;"></div>
-<div style="background:rgba(166,226,46,0.06);border:1px solid rgba(166,226,46,0.2);border-radius:16px;padding:14px;margin-bottom:12px;display:flex;align-items:center;gap:12px;">
-<div id="csBatchSwatch" style="width:48px;height:48px;border-radius:12px;flex-shrink:0;background:#98c428;"></div>
-<div><div id="batchAvgLabel" style="font-size:0.52rem;font-weight:900;color:#a6e22e;text-transform:uppercase;letter-spacing:2px;margin-bottom:3px;">Batch Average</div><div id="csBatchLabel" style="font-size:0.92rem;font-weight:900;color:#fff;">Color 1.5</div></div>
-</div>
-<div class="report-card" style="margin-bottom:12px;">
-<div id="csBatchBreakdown" style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.06);"></div>
-<div class="report-row"><span class="report-key" id="boxesScannedLabel">Boxes Scanned</span><span class="report-val" id="csBatchCount">&mdash;</span></div>
-<div class="report-row"><span class="report-key" id="shelfLifeEstLabel">Shelf Life Est.</span><span class="report-val" id="csBatchShelf">&mdash;</span></div>
-<div class="report-row"><span class="report-key" id="batchStatusLabel">Batch Status</span><span class="report-val" id="csBatchStatus">&mdash;</span></div>
-</div>
-<button class="btn-main" style="margin-bottom:8px;" onclick="ColourScanner.shareBatchReport()"><i class="bi bi-share-fill"></i> Share Batch Report</button>
-<button id="csCopyBatch" class="btn-copy" style="width:100%;justify-content:center;margin-bottom:10px;" onclick="ColourScanner.copyBatchResult()"><i class="bi bi-clipboard"></i> Copy Report</button>
-<button class="btn-main btn-back" onclick="ColourScanner.resetScanner()" id="csNewBatchScanBtn">&larr; New Scan</button>
-</div>
-<button class="btn-main btn-back" style="margin-top:10px;" onclick="ColourScanner.close()" id="csBackBtn">&larr; Back</button>
-</div>
-</div>
-
-<!-- ════════════ NEWS ════════════ -->
-<div id="news-view" class="nav-view hidden">
-<div style="max-width:1200px;margin:0 auto;">
-<div id="news-list-view">
-<div class="vn"><button class="vn-back" onclick="showHub()"><i class="bi bi-arrow-left"></i> Home</button></div>
-<div class="pg-title">Industry News</div>
-<div id="newsCacheStatus"></div>
-<div class="news-filter-row">
-<div class="news-filter-tab active" data-filter="all" onclick="NewsManager.setFilter('all')">All</div>
-<div class="news-filter-tab" data-filter="AGF.nl" onclick="NewsManager.setFilter('AGF.nl')">&#x1F33F; AGF.nl</div>
-<div class="news-filter-tab" data-filter="FreshPlaza" onclick="NewsManager.setFilter('FreshPlaza')">&#x1F34A; FreshPlaza</div>
-<div class="news-filter-tab" data-filter="Fresh Fruit Portal" onclick="NewsManager.setFilter('Fresh Fruit Portal')">&#x1F347; Fresh Fruit Portal</div>
-<div class="news-filter-tab" data-filter="Good Fruit Grower" onclick="NewsManager.setFilter('Good Fruit Grower')">&#x1F34E; Good Fruit Grower</div>
-</div>
-<div id="newsArticleList"></div>
-<button class="btn-main btn-back" style="margin-top:10px;max-width:400px;" onclick="showHub()">&larr; Back</button>
-</div>
-<div id="news-article-view" class="hidden">
-<div id="articleHero" class="article-hero-wrap">
-<img id="articleHeroImg" src="" alt="" style="display:none;">
-<div id="articleHeroBg" class="article-hero-bg"></div>
-<div class="article-hero-overlay"></div>
-<div class="article-back-btn" onclick="NewsManager.closeArticle()">&larr; Back</div>
-<div id="articleCatBadge" class="news-cat-badge"></div>
-</div>
-<div class="article-body">
-<div class="article-title" id="articleTitle"></div>
-<div class="article-meta">
-<span class="article-source" id="articleSource"></span>
-<div class="news-dot"></div>
-<span class="news-time" id="articleTime"></span>
-<div class="news-dot"></div>
-<span class="news-time" id="articleDate"></span>
-<span class="article-country" id="articleCountry"></span>
-</div>
-<div class="article-summary-label">Summary</div>
-<div class="article-summary-text" id="articleSummary"></div>
-<button class="article-read-btn" id="articleReadBtn"><i class="bi bi-box-arrow-up-right"></i> Read Full Article</button>
-<button class="article-share-btn" id="articleShareBtn"><i class="bi bi-share-fill"></i> Share Article</button>
-<div class="article-disclaimer">Full article content is available on the publisher's website.<br>Pulp Pro is not affiliated with any news source.</div>
-</div>
-</div>
-</div>
-</div>
-
-<!-- ════════════ APP INTERFACE ════════════ -->
-<div class="app-container hidden" id="appInterface">
-<div class="app-card" id="appCard">
-<i class="bi bi-star-fill fav-toggle" id="favStar" onclick="toggleFavorite('calculator')"></i>
-<img src="edited-image.png" style="width:44px;border-radius:12px;margin-bottom:8px;">
-<div id="brandName" style="font-size:1.4rem;font-weight:900;color:#a6e22e;text-transform:uppercase;">Chiquita</div>
-<div id="commodityLabel" style="font-weight:900;letter-spacing:4px;opacity:0.4;font-size:0.68rem;margin-bottom:25px;color:#fff;">BANANA AGE CHECKER</div>
-<div style="display:flex;gap:8px;margin-bottom:20px;">
-<div class="scan-toggle-btn active" id="singleCodeBtn" onclick="setScanMode('single')">Single Code</div>
-<div class="scan-toggle-btn" id="batchCodeBtn" onclick="setScanMode('batch')">Batch Scan</div>
-</div>
-<div class="input-wrapper"><input type="text" id="codeIn" placeholder="---" maxlength="3" autofocus></div>
-<div id="batchList" style="display:none;background:rgba(255,255,255,0.03);border-radius:20px;margin-bottom:15px;max-height:300px;overflow-y:auto;"></div>
-<button id="batchReportBtn" class="btn-main" style="display:none;margin-bottom:15px;" onclick="showBatchReport()">Get Batch Report &rarr;</button>
-<button onclick="checkFruit()" class="btn-main" id="calcBtn">Calculate</button>
-<div id="resBox" class="result-display hidden">
-<div id="statusLabel" style="font-weight:900;">READY</div>
-<div id="daysValue">--</div>
-<div id="dateText" style="font-size:1.3rem;font-weight:900;margin-top:10px;">-- -- ----</div>
-<button class="btn btn-copy" onclick="copyResult()" id="copyBtn"><i class="bi bi-clipboard"></i> COPY</button>
-</div>
-<button class="btn-main btn-back" style="margin-top:25px;" onclick="openMiddleHub(activeFruit)" id="backToBrandsBtn">&larr; Back</button>
-</div>
-<div id="historySection" class="history-section"><div id="historyList"></div></div>
 </div>
 
 <script>
-if('serviceWorker' in navigator){
-window.addEventListener('load',()=>{
-navigator.serviceWorker.register('sw.js').catch(e=>console.log('SW failed',e));
-});
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
+
+// NAVIGATION
+let activeFruit='banana',activeBrand=null;
+
+function showScreen(name){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    const el=document.getElementById('screen-'+name);
+    if(el){el.classList.add('active');window.scrollTo(0,0)}
+    if(name==='news'&&typeof NewsManager!=='undefined') NewsManager.init();
 }
+
+function selectFruit(fruit){
+    activeFruit=fruit;
+    const names={banana:'Banana',mango:'Mango',avocado:'Avocado'};
+    document.getElementById('hub-title').innerText=names[fruit]||fruit;
+    const list=document.getElementById('hub-list');
+    if(!list) return;
+    const rows={
+        banana:`
+        <div class="mrow acc" onclick="openAgeChecker()">
+            <div class="ic ic-lime"><i class="bi bi-calendar3"></i></div>
+            <div class="mb"><div class="mn">Age Checker</div><div class="md">Chiquita code system</div></div>
+            <i class="bi bi-chevron-right ma"></i>
+        </div>
+        <div class="mrow" onclick="if(typeof FruitDefects!=='undefined')FruitDefects.open('banana')">
+            <div class="ic ic-amber"><i class="bi bi-search"></i></div>
+            <div class="mb"><div class="mn">Defects</div><div class="md">8 external · 4 internal</div></div>
+            <i class="bi bi-chevron-right ma"></i>
+        </div>
+        <div class="mrow" onclick="if(typeof OriginReport!=='undefined')OriginReport.open('banana')">
+            <div class="ic ic-blue"><i class="bi bi-globe"></i></div>
+            <div class="mb"><div class="mn">Origin Report</div><div class="md">Live weather · AI analysis</div></div>
+            <i class="bi bi-chevron-right ma"></i>
+        </div>
+        <div class="mrow dim">
+            <div class="ic ic-dim"><i class="bi bi-thermometer-half"></i></div>
+            <div class="mb"><div class="mn">Ripening</div><div class="md">Room calculator</div></div>
+            <div class="soon-pill">Soon</div>
+        </div>`,
+        mango:`
+        <div class="mrow" onclick="if(typeof FruitDefects!=='undefined')FruitDefects.open('mango')">
+            <div class="ic ic-amber"><i class="bi bi-search"></i></div>
+            <div class="mb"><div class="mn">Defects</div><div class="md">6 external · 3 internal</div></div>
+            <i class="bi bi-chevron-right ma"></i>
+        </div>
+        <div class="mrow" onclick="if(typeof OriginReport!=='undefined')OriginReport.open('mango')">
+            <div class="ic ic-blue"><i class="bi bi-globe"></i></div>
+            <div class="mb"><div class="mn">Origin Report</div><div class="md">Live weather · AI analysis</div></div>
+            <i class="bi bi-chevron-right ma"></i>
+        </div>
+        <div class="mrow dim">
+            <div class="ic ic-dim"><i class="bi bi-thermometer-half"></i></div>
+            <div class="mb"><div class="mn">Ripening</div><div class="md">Room calculator</div></div>
+            <div class="soon-pill">Soon</div>
+        </div>`,
+        avocado:`
+        <div class="mrow" onclick="if(typeof FruitDefects!=='undefined')FruitDefects.open('avocado')">
+            <div class="ic ic-green"><i class="bi bi-search"></i></div>
+            <div class="mb"><div class="mn">Defects</div><div class="md">5 external · 4 internal</div></div>
+            <i class="bi bi-chevron-right ma"></i>
+        </div>
+        <div class="mrow" onclick="if(typeof OriginReport!=='undefined')OriginReport.open('avocado')">
+            <div class="ic ic-blue"><i class="bi bi-globe"></i></div>
+            <div class="mb"><div class="mn">Origin Report</div><div class="md">Live weather · AI analysis</div></div>
+            <i class="bi bi-chevron-right ma"></i>
+        </div>
+        <div class="mrow dim">
+            <div class="ic ic-dim"><i class="bi bi-thermometer-half"></i></div>
+            <div class="mb"><div class="mn">Ripening</div><div class="md">Room calculator</div></div>
+            <div class="soon-pill">Soon</div>
+        </div>`
+    };
+    list.innerHTML=rows[fruit]||'';
+    showScreen('hub');
+}
+
+function openAgeChecker(){
+    activeBrand='Chiquita';
+    document.getElementById('brandName').innerText='Chiquita';
+    document.getElementById('commodityLabel').innerText=activeFruit.toUpperCase()+' AGE CHECKER';
+    document.getElementById('codeIn').value='';
+    document.getElementById('resBox').classList.add('hidden');
+    showScreen('calculator');
+    if(typeof updateFavoriteUI==='function') updateFavoriteUI();
+    if(typeof renderHistory==='function') renderHistory();
+    setTimeout(()=>document.getElementById('codeIn').focus(),100);
+}
+
+// Legacy compat for existing JS files
+function showHub(){showScreen('home');if(typeof renderFavorites==='function')renderFavorites()}
+function openMiddleHub(fruit){selectFruit(fruit)}
+function openDefectDetector(){showScreen('defect')}
+function openColourScanner(){
+    showScreen('colour');
+    if(typeof ColourScanner!=='undefined'){ColourScanner.init();ColourScanner.setScanMode('single')}
+    if(typeof updateColourFavoriteUI==='function') updateColourFavoriteUI();
+}
+function openNews(){showScreen('news')}
+function hideAllViews(){}
+function openBrands(){}
+
+// DRAWER
+function openDrawer(){document.getElementById('menu-drawer').classList.add('open');document.getElementById('menu-overlay').classList.add('open')}
+function closeDrawer(){document.getElementById('menu-drawer').classList.remove('open');document.getElementById('menu-overlay').classList.remove('open')}
+function toggleMenu(){document.getElementById('menu-drawer').classList.contains('open')?closeDrawer():openDrawer()}
+
+// SPLASH
+setTimeout(()=>{document.getElementById('splash-screen').classList.add('hidden');document.body.classList.add('loaded')},1500);
+
+function toggleTheme(){}
+function toggleLanguage(){}
+function clearHistory(){if(typeof localStorage!=='undefined'){localStorage.clear()}}
+function sendFeedback(){window.open('mailto:feedback@pulppro.app','_blank')}
+function toggleMenuFavs(){document.getElementById('menu-fav-list').classList.toggle('show')}
+function applyUpdate(){window.location.reload(true)}
 </script>
+
 <script src="js/translations.js"></script>
 <script src="js/app.js"></script>
 <script src="js/favorites.js"></script>
 <script src="js/history.js"></script>
-<script src="js/navigation.js"></script>
 <script src="js/calculator.js"></script>
 <script src="js/defects-data.js"></script>
 <script src="js/defect-detector.js"></script>

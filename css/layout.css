@@ -1,98 +1,266 @@
-/* Splash Screen */
+/* ─── SPLASH — fast 1.4s total ───────────────────────────── */
 #splash-screen {
     position: fixed; top: 0; left: 0;
     width: 100%; height: 100%;
     background: #000; z-index: 9999;
     display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    transition: opacity 1s ease-in-out, visibility 1s;
+    align-items: center; justify-content: center; gap: 0;
+    transition: opacity 0.4s ease, visibility 0.4s;
 }
 .splash-logo {
-    width: auto; height: auto;
-    max-width: 80%; max-height: 40vh;
-    object-fit: contain;
-    animation: heroFade 2.6s ease-in-out forwards;
+    width: 80px; height: 80px;
+    object-fit: contain; border-radius: 20px;
+    animation: splashPop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
 }
 .splash-text {
-    margin-top: 20px; font-size: 2rem; font-weight: 900;
-    letter-spacing: 6px; color: var(--pulp-lime);
+    margin-top: 14px; font-size: 1.1rem; font-weight: 900;
+    letter-spacing: 5px; color: var(--pulp-lime);
     text-transform: uppercase;
-    text-shadow: 0 0 15px rgba(166, 226, 46, 0.5);
-    opacity: 0; animation: textFade 2.6s ease-in-out forwards;
+    opacity: 0; animation: splashFade 0.4s ease 0.3s forwards;
+}
+.splash-sub {
+    margin-top: 6px; font-size: 0.52rem; font-weight: 700;
+    letter-spacing: 2px; color: rgba(255,255,255,0.25);
+    text-transform: uppercase;
+    opacity: 0; animation: splashFade 0.4s ease 0.4s forwards;
 }
 .loaded #splash-screen { opacity: 0; visibility: hidden; }
 
-@keyframes heroFade {
-    0%   { transform: scale(0.8); opacity: 0; filter: blur(15px); }
-    35%  { transform: scale(1);   opacity: 1; filter: blur(0px); }
-    75%  { transform: scale(1);   opacity: 1; }
-    100% { transform: scale(1.05); opacity: 0; filter: blur(10px); }
+@keyframes splashPop {
+    0%   { transform: scale(0.7); opacity: 0; }
+    100% { transform: scale(1);   opacity: 1; }
 }
-@keyframes textFade {
-    0%   { transform: translateY(10px); opacity: 0; }
-    35%  { transform: translateY(0);    opacity: 1; }
-    75%  { opacity: 1; }
-    100% { opacity: 0; }
+@keyframes splashFade {
+    0%   { opacity: 0; transform: translateY(4px); }
+    100% { opacity: 1; transform: translateY(0); }
 }
 
-/* Menu Trigger */
+/* ─── MENU TRIGGER ────────────────────────────────────────── */
 #menu-trigger {
     position: fixed; top: 20px; left: 20px;
     width: 44px; height: 44px;
-    background: var(--input-bg); border-radius: 12px; z-index: 9900;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px; z-index: 9900;
     display: flex; align-items: center; justify-content: center;
-    opacity: 0; transition: all 0.5s ease 2.6s;
-    border: 1px solid var(--border-glass);
+    opacity: 0; transition: all 0.3s ease 1.4s; cursor: pointer;
 }
 .loaded #menu-trigger { opacity: 1; }
 #menu-trigger span,
 #menu-trigger span::before,
 #menu-trigger span::after {
     content: ''; display: block;
-    width: 20px; height: 2px;
+    width: 18px; height: 1.5px;
     background: var(--text-main); position: absolute;
+    border-radius: 2px;
 }
-#menu-trigger span::before { top: -6px; }
-#menu-trigger span::after  { bottom: -6px; }
+#menu-trigger span::before { top: -5px; }
+#menu-trigger span::after  { bottom: -5px; }
 
-/* Side Drawer */
+/* ─── SIDE DRAWER ────────────────────────────────────────── */
 #menu-drawer {
     position: fixed; top: 0; left: -100%;
     width: 280px; height: 100%;
     background: var(--drawer-bg); z-index: 9995;
-    box-shadow: 20px 0 60px rgba(0,0,0,0.1);
-    transition: left 0.4s cubic-bezier(0.15, 1, 0.3, 1);
-    padding: 30px 20px; display: flex; flex-direction: column;
+    transition: left 0.4s cubic-bezier(0.15,1,0.3,1);
+    padding: 50px 20px 30px; display: flex; flex-direction: column;
     backdrop-filter: blur(20px);
     border-right: 1px solid var(--border-glass);
 }
 #menu-drawer.open { left: 0; }
 #menu-overlay {
-    position: fixed; top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5);
-    z-index: 9994; display: none;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6); z-index: 9994; display: none;
 }
 #menu-overlay.open { display: block; }
 
-/* Nav Views */
+/* ─── NAV VIEWS ──────────────────────────────────────────── */
 .nav-view {
-    width: 100%;
-    text-align: center; opacity: 0;
-    transition: 0.5s; margin-top: 80px;
+    width: 100%; opacity: 0;
+    transition: opacity 0.4s ease;
+    margin-top: 70px; padding-bottom: 60px;
 }
 .loaded .nav-view { opacity: 1; }
-.hub-title {
-    font-weight: 900; letter-spacing: 3px;
-    text-transform: uppercase;
-    margin-bottom: 30px; color: var(--pulp-lime);
+
+/* ─── VIEW NAVIGATION ────────────────────────────────────── */
+.view-nav {
+    display: flex; align-items: center;
+    margin-bottom: 8px;
+}
+.view-back {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.5);
+    font-size: 0.65rem; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 1px;
+    padding: 8px 16px; border-radius: 100px; cursor: pointer;
+    transition: 0.2s;
+}
+.view-back:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
+.view-back i { font-size: 0.75rem; }
+
+.view-title {
+    font-size: 1.8rem; font-weight: 900;
+    color: var(--text-main); letter-spacing: -0.5px;
+    line-height: 1.1; margin-bottom: 4px;
+    text-align: left; padding: 0 20px;
+}
+.view-sub {
+    font-size: 0.6rem; font-weight: 700;
+    color: rgba(255,255,255,0.25);
+    text-transform: uppercase; letter-spacing: 2px;
+    margin-bottom: 20px; text-align: left; padding: 0 20px;
 }
 
-/* App Container */
+/* ─── FRUIT HUB ──────────────────────────────────────────── */
+.live-tag {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: rgba(166,226,46,0.07);
+    border: 1px solid rgba(166,226,46,0.18);
+    border-radius: 100px; padding: 6px 14px;
+    margin: 0 auto 20px; width: fit-content;
+}
+.live-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #a6e22e; flex-shrink: 0;
+    animation: livePulse 2s infinite;
+}
+@keyframes livePulse {
+    0%,100% { opacity: 1; } 50% { opacity: 0.3; }
+}
+.live-tag span {
+    font-size: 0.52rem; font-weight: 800; color: #a6e22e;
+    letter-spacing: 1.5px; text-transform: uppercase;
+}
+.hero-title {
+    font-size: clamp(2.2rem, 8vw, 3.2rem);
+    font-weight: 900; letter-spacing: -1.5px; line-height: 1.05;
+    color: var(--text-main); margin-bottom: 12px;
+    text-align: left; padding: 0 20px;
+}
+.hero-title em { color: #a6e22e; font-style: normal; }
+.hero-sub {
+    font-size: 0.82rem; color: rgba(255,255,255,0.4);
+    line-height: 1.7; margin-bottom: 28px;
+    text-align: left; padding: 0 20px; font-weight: 400;
+    max-width: 480px;
+}
+
+/* ─── FRUIT CHIPS ────────────────────────────────────────── */
+.fruit-chips {
+    display: flex; gap: 10px;
+    padding: 0 20px 24px; overflow-x: auto;
+    scrollbar-width: none; -ms-overflow-style: none;
+}
+.fruit-chips::-webkit-scrollbar { display: none; }
+.fruit-chip {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 8px; background: #111;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 18px; padding: 14px 20px;
+    cursor: pointer; transition: 0.2s; flex-shrink: 0;
+    min-width: 90px;
+}
+.fruit-chip:active { transform: scale(0.96); }
+.fruit-chip.active {
+    background: #0a1a06;
+    border-color: rgba(166,226,46,0.3);
+}
+.chip-img {
+    width: 48px; height: 48px; object-fit: contain;
+}
+.chip-name {
+    font-size: 0.65rem; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: rgba(255,255,255,0.35);
+}
+.fruit-chip.active .chip-name { color: #a6e22e; }
+
+/* ─── SECTION LABEL ──────────────────────────────────────── */
+.section-label {
+    font-size: 0.5rem; font-weight: 900;
+    text-transform: uppercase; letter-spacing: 2px;
+    color: rgba(255,255,255,0.2);
+    padding: 0 20px 10px;
+}
+
+/* ─── TOOL GRID ──────────────────────────────────────────── */
+.tool-grid {
+    display: flex; flex-direction: column;
+    gap: 8px; padding: 0 20px;
+}
+
+/* ─── MENU LIST (middle hub rows) ────────────────────────── */
+.menu-list {
+    display: flex; flex-direction: column;
+    gap: 0; padding: 0 20px;
+    border-radius: 18px; overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.06);
+    background: #0f0f0f;
+}
+
+.menu-row, .tool-card {
+    display: flex; align-items: center;
+    gap: 14px; padding: 16px 18px;
+    cursor: pointer; transition: background 0.15s;
+    background: transparent;
+}
+.menu-row { border-bottom: 1px solid rgba(255,255,255,0.04); }
+.menu-row:last-child { border-bottom: none; }
+.menu-row:active, .tool-card:active { background: rgba(255,255,255,0.03); }
+
+.tool-card {
+    background: #0f0f0f;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px; margin-bottom: 8px;
+}
+.tool-card:hover { border-color: rgba(166,226,46,0.2); }
+
+/* Icon bubbles */
+.mr-icon, .tool-icon {
+    width: 38px; height: 38px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 1rem;
+}
+.mr-lime, .tool-icon-lime { background: rgba(166,226,46,0.1); color: #a6e22e; }
+.mr-amber, .tool-icon-amber { background: rgba(255,140,0,0.1); color: #ff8c00; }
+.mr-green { background: rgba(40,180,80,0.1); color: #28b450; }
+.mr-red, .tool-icon-red { background: rgba(255,77,77,0.1); color: #ff4d4d; }
+.mr-blue, .tool-icon-blue { background: rgba(60,130,255,0.1); color: #3c82ff; }
+
+.mr-body, .tool-body { flex: 1; min-width: 0; }
+.mr-name, .tool-name {
+    font-size: 0.88rem; font-weight: 800;
+    color: var(--text-main); margin-bottom: 2px;
+}
+.mr-desc, .tool-desc {
+    font-size: 0.62rem; color: rgba(255,255,255,0.3);
+    font-weight: 600;
+}
+.mr-arrow, .tool-arrow {
+    font-size: 0.9rem; color: rgba(255,255,255,0.15);
+    flex-shrink: 0;
+}
+
+/* Soon badge */
+.soon-pill {
+    font-size: 0.5rem; font-weight: 900;
+    color: #ff8c00; background: rgba(255,140,0,0.1);
+    border: 1px solid rgba(255,140,0,0.2);
+    padding: 3px 10px; border-radius: 20px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    flex-shrink: 0;
+}
+
+/* Accent row (lime) */
+.menu-row.accent { background: rgba(166,226,46,0.03); }
+.menu-row.accent .mr-arrow { color: rgba(166,226,46,0.3); }
+
+/* ─── APP CONTAINER ──────────────────────────────────────── */
 .app-container {
-    flex-direction: column;
-    gap: 30px; width: 100%;
-    max-width: 400px; margin-top: 40px;
+    flex-direction: column; gap: 30px;
+    width: 100%; max-width: 400px; margin-top: 40px;
 }
 .app-container.hidden { display: none !important; }
 .app-container:not(.hidden) { display: flex; }
@@ -112,9 +280,29 @@
     }
 }
 
-/* Favorites */
-#favorites-section { margin-top: 50px; padding-top: 30px; border-top: 1px solid var(--border-glass); }
-.fav-grid { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; margin-top: 20px; }
+/* ─── PC WIDE LAYOUT ─────────────────────────────────────── */
+@media (min-width: 900px) {
+    body { padding: 20px 40px; }
+    .nav-view { margin-top: 60px; }
+    .hero-title { font-size: 3.5rem; }
+    .fruit-chips { gap: 12px; }
+    .fruit-chip { min-width: 110px; padding: 16px 24px; }
+    .chip-img { width: 56px; height: 56px; }
+    .tool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .menu-list { max-width: 600px; }
+}
 
-/* History */
+/* ─── FAVORITES ──────────────────────────────────────────── */
+#favorites-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); }
+.fav-grid { display: flex; flex-wrap: wrap; gap: 10px; padding: 0 20px; }
+
+/* ─── HISTORY ────────────────────────────────────────────── */
 .history-section { margin-top: 30px; text-align: left; display: none; }
+
+/* ─── HUB TITLE (legacy compat) ─────────────────────────── */
+.hub-title {
+    font-weight: 900; letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 30px; color: var(--pulp-lime);
+    text-align: center;
+}

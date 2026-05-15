@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pulp-pro-v3';
+const CACHE_NAME = 'pulp-pro-v1';
 const ASSETS = [
     '/Pulp-Pro-Intelligence/',
     '/Pulp-Pro-Intelligence/index.html',

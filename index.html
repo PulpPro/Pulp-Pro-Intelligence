@@ -17,129 +17,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/knn-classifier"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
-
-<style>
-/* ── HOME GRID ─────────────────────────────── */
-.home-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    width: 100%;
-    padding-bottom: 20px;
-}
-.hc {
-    position: relative;
-    border-radius: 20px;
-    overflow: hidden;
-    cursor: pointer;
-    border: 1px solid rgba(255,255,255,0.07);
-    background: #141414;
-    transition: transform 0.2s ease, border-color 0.2s ease;
-    display: flex;
-    flex-direction: column;
-}
-.hc:hover { transform: translateY(-3px); border-color: rgba(166,226,46,0.35); }
-.hc:active { transform: scale(0.98); }
-.hc-img {
-    width: 100%; height: 120px;
-    object-fit: cover; display: block; flex-shrink: 0;
-}
-.hc-label {
-    padding: 10px 12px 12px;
-    background: #141414; flex: 1;
-    display: flex; flex-direction: column; justify-content: center;
-}
-.hc-name {
-    font-size: 0.78rem; font-weight: 900;
-    text-transform: uppercase; letter-spacing: 1.5px;
-    color: #fff; display: block;
-}
-.hc-sub {
-    font-size: 0.48rem; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 1px;
-    color: rgba(255,255,255,0.35); display: block; margin-top: 2px;
-}
-.hc-soon {
-    font-size: 0.5rem; font-weight: 900;
-    text-transform: uppercase; letter-spacing: 1px;
-    color: #ff8c00; display: block; margin-top: 2px;
-}
-.hc-banana {
-    grid-column: 1 / -1; flex-direction: row;
-    align-items: stretch; height: 110px;
-    border: 1px solid rgba(166,226,46,0.2);
-    background: #0d1a06; border-radius: 22px;
-}
-.hc-banana .hc-img {
-    width: 38%; height: 110px;
-    object-fit: cover; flex-shrink: 0; border-radius: 0;
-}
-.hc-banana .hc-label {
-    flex: 1; display: flex; flex-direction: column;
-    justify-content: center; padding: 14px 14px 14px 16px;
-    background: transparent;
-}
-.hc-banana .hc-name { font-size: 1.05rem; letter-spacing: 2px; color: #fff; }
-.hc-banana .hc-sub  { color: rgba(166,226,46,0.6); margin-top: 4px; font-size: 0.5rem; }
-.hc-banana-explore {
-    display: inline-block; margin-top: 10px;
-    background: rgba(166,226,46,0.12);
-    border: 1px solid rgba(166,226,46,0.25);
-    color: #a6e22e; font-size: 0.52rem; font-weight: 900;
-    text-transform: uppercase; letter-spacing: 1px;
-    padding: 5px 12px; border-radius: 20px; width: fit-content;
-}
-.hc-news {
-    grid-column: 1 / -1; flex-direction: row;
-    align-items: center; min-height: 80px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 20px; padding: 0 20px; gap: 16px;
-}
-.hc-news .hc-img { display: none; }
-.hc-news-icon { font-size: 2rem; flex-shrink: 0; line-height: 1; }
-.hc-news .hc-label {
-    flex: 1; padding: 0; background: transparent;
-    display: flex; flex-direction: column; justify-content: center;
-}
-.hc-news .hc-name { font-size: 0.85rem; letter-spacing: 1.5px; }
-.hc-news .hc-sub  { font-size: 0.52rem; margin-top: 4px; color: rgba(255,255,255,0.3); }
-.hc-news-arrow { font-size: 1.3rem; color: rgba(255,255,255,0.2); flex-shrink: 0; }
-
-@media (min-width: 900px) {
-    .home-grid {
-        grid-template-columns: 2fr 1fr 1fr;
-        grid-template-rows: 240px 170px 90px;
-        gap: 12px; padding-bottom: 20px;
-    }
-    .hc-banana {
-        grid-column: 1 / 2; grid-row: 1 / 3;
-        flex-direction: column; height: 100%;
-        align-items: stretch; border-radius: 26px;
-    }
-    .hc-banana .hc-img { width: 100%; height: 62%; object-fit: cover; flex-shrink: 0; border-radius: 0; }
-    .hc-banana .hc-label { flex: 1; padding: 22px 26px; justify-content: center; background: transparent; }
-    .hc-banana .hc-name { font-size: 1.8rem; letter-spacing: 3px; }
-    .hc-banana .hc-sub  { font-size: 0.6rem; margin-top: 6px; }
-    .hc-banana-explore  { margin-top: 16px; font-size: 0.6rem; padding: 8px 18px; }
-    .hc:nth-child(2) { grid-column: 2; grid-row: 1; border-radius: 24px; }
-    .hc:nth-child(3) { grid-column: 3; grid-row: 1; border-radius: 24px; }
-    .hc:nth-child(4) { grid-column: 2; grid-row: 2; border-radius: 24px; }
-    .hc:nth-child(5) { grid-column: 3; grid-row: 2; border-radius: 24px; }
-    .hc-news {
-        grid-column: 1 / -1; grid-row: 3;
-        min-height: 90px; border-radius: 20px;
-        padding: 0 32px; gap: 22px;
-    }
-    .hc-news-icon { font-size: 2.2rem; }
-    .hc-news .hc-name { font-size: 1rem; }
-    .hc-news .hc-sub  { font-size: 0.58rem; }
-    .hc-news-arrow { font-size: 1.4rem; }
-    .hc:not(.hc-banana):not(.hc-news) .hc-img   { height: 65%; }
-    .hc:not(.hc-banana):not(.hc-news) .hc-name  { font-size: 0.88rem; }
-    .hc:not(.hc-banana):not(.hc-news) .hc-label { padding: 12px 16px 14px; }
-}
-</style>
 </head>
 <body>
 
@@ -147,18 +24,19 @@
 <div id="splash-screen">
 <img src="edited-image.png" class="splash-logo">
 <div class="splash-text">PULP PRO</div>
+<div class="splash-sub">Intelligence for fruit professionals</div>
 </div>
 
 <!-- Update Banner -->
 <div id="updateBanner" class="hidden" style="
-    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-    background: var(--pulp-lime); color: #000; z-index: 99999;
-    padding: 14px 24px; border-radius: 100px;
-    font-weight: 900; font-size: 0.8rem; text-transform: uppercase;
-    letter-spacing: 1px; cursor: pointer; text-align: center;
-    box-shadow: 0 10px 40px rgba(166,226,46,0.4);
-    white-space: nowrap;" onclick="applyUpdate()">
-    &#x2B06; New Update Available &mdash; Tap to Refresh
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    background:var(--pulp-lime); color:#000; z-index:99999;
+    padding:14px 24px; border-radius:100px;
+    font-weight:900; font-size:0.8rem; text-transform:uppercase;
+    letter-spacing:1px; cursor:pointer; text-align:center;
+    box-shadow:0 10px 40px rgba(166,226,46,0.4);
+    white-space:nowrap;" onclick="applyUpdate()">
+    &#x2B06; New Update Available — Tap to Refresh
 </div>
 
 <!-- Menu Trigger -->
@@ -166,9 +44,10 @@
 
 <!-- Side Drawer -->
 <div id="menu-drawer">
-<div style="text-align:center; margin-bottom:40px;">
-<img src="edited-image.png" style="width:50px; margin-bottom:10px;">
-<div style="font-weight:900; color:var(--pulp-lime);">PULP PRO</div>
+<div style="text-align:center; margin-bottom:32px;">
+<img src="edited-image.png" style="width:44px; border-radius:12px; margin-bottom:8px;">
+<div style="font-size:0.65rem; font-weight:900; color:var(--pulp-lime); letter-spacing:3px; text-transform:uppercase;">Pulp Pro</div>
+<div style="font-size:0.48rem; color:rgba(255,255,255,0.25); font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-top:3px;">Intelligence</div>
 </div>
 <div class="menu-item" onclick="showHub(); toggleMenu();"><span>&#x1F3E0; Home</span></div>
 <div class="menu-item" onclick="openNews(); toggleMenu();"><span>&#x1F4F0; News</span></div>
@@ -184,91 +63,136 @@
 </div>
 <div id="menu-overlay" onclick="toggleMenu()"></div>
 
-<!-- Fruit Hub -->
+<!-- ═══════════════════════════════════════
+     FRUIT HUB
+════════════════════════════════════════ -->
 <div id="fruit-hub" class="nav-view">
-<div class="hub-title">Select Commodity</div>
-<div class="home-grid">
-    <div class="hc hc-banana" onclick="openMiddleHub('banana')">
-        <img class="hc-img" src="banana.png" alt="banana">
-        <div class="hc-label">
-            <span class="hc-name">Banana</span>
-            <span class="hc-sub">Age checker · Defects · Colour</span>
-            <span class="hc-banana-explore">Explore →</span>
+
+    <!-- Live indicator -->
+    <div class="live-tag">
+        <div class="live-dot"></div>
+        <span>Live fruit intelligence</span>
+    </div>
+
+    <h1 class="hero-title">Select<br><em>commodity</em></h1>
+    <p class="hero-sub">Age checking, defect detection, origin reports and colour scanning — all in one place.</p>
+
+    <!-- Fruit chips -->
+    <div class="fruit-chips">
+        <div class="fruit-chip active" onclick="openMiddleHub('banana')" id="chip-banana">
+            <img src="banana.png" class="chip-img" alt="banana">
+            <div class="chip-name">Banana</div>
+        </div>
+        <div class="fruit-chip" onclick="openMiddleHub('mango')" id="chip-mango">
+            <img src="mango.png" class="chip-img" alt="mango">
+            <div class="chip-name">Mango</div>
+        </div>
+        <div class="fruit-chip" onclick="openMiddleHub('avocado')" id="chip-avocado">
+            <img src="avocado.png" class="chip-img" alt="avocado">
+            <div class="chip-name">Avocado</div>
         </div>
     </div>
-    <div class="hc" onclick="openMiddleHub('mango')">
-        <img class="hc-img" src="mango.png" alt="mango">
-        <div class="hc-label">
-            <span class="hc-name">Mango</span>
-            <span class="hc-soon">(Soon)</span>
+
+    <!-- Tool cards -->
+    <div class="section-label">Quick tools</div>
+    <div class="tool-grid">
+        <div class="tool-card" onclick="openDefectDetector()">
+            <div class="tool-icon tool-icon-red"><i class="bi bi-camera"></i></div>
+            <div class="tool-body">
+                <div class="tool-name">Defect Detector</div>
+                <div class="tool-desc">Camera · AI scan</div>
+            </div>
+            <i class="bi bi-chevron-right tool-arrow"></i>
+        </div>
+        <div class="tool-card" onclick="openColourScanner()">
+            <div class="tool-icon tool-icon-lime"><i class="bi bi-palette"></i></div>
+            <div class="tool-body">
+                <div class="tool-name">Colour Scanner</div>
+                <div class="tool-desc">Classic · AI model</div>
+            </div>
+            <i class="bi bi-chevron-right tool-arrow"></i>
+        </div>
+        <div class="tool-card" onclick="openNews()">
+            <div class="tool-icon tool-icon-blue"><i class="bi bi-newspaper"></i></div>
+            <div class="tool-body">
+                <div class="tool-name">Industry News</div>
+                <div class="tool-desc">AGF · FreshPlaza · More</div>
+            </div>
+            <i class="bi bi-chevron-right tool-arrow"></i>
         </div>
     </div>
-    <div class="hc" onclick="openMiddleHub('avocado')">
-        <img class="hc-img" src="avocado.png" alt="avocado">
-        <div class="hc-label">
-            <span class="hc-name">Avocado</span>
-            <span class="hc-soon">(Soon)</span>
-        </div>
+
+    <div id="favorites-section" class="hidden">
+        <div class="section-label" style="margin-top:24px;">Saved favorites</div>
+        <div class="fav-grid" id="fav-grid"></div>
     </div>
-    <div class="hc" onclick="openDefectDetector()">
-        <img class="hc-img" src="rotten.png" alt="defect">
-        <div class="hc-label">
-            <span class="hc-name">Defect Detector</span>
-            <span class="hc-sub">Camera · AI scan</span>
-        </div>
-    </div>
-    <div class="hc" onclick="openColourScanner()">
-        <img class="hc-img" src="colour.png" alt="colour">
-        <div class="hc-label">
-            <span class="hc-name">Colour Scanner</span>
-            <span class="hc-sub">Classic · AI model</span>
-        </div>
-    </div>
-    <div class="hc hc-news" onclick="openNews()">
-        <span class="hc-news-icon">📰</span>
-        <div class="hc-label">
-            <span class="hc-name">Industry News</span>
-            <span class="hc-sub">AGF · FreshPlaza · Fresh Fruit Portal · Good Fruit Grower</span>
-        </div>
-        <span class="hc-news-arrow">›</span>
-    </div>
-</div>
-<div id="favorites-section" class="hidden">
-<div class="hub-title" style="color:var(--pulp-amber); font-size:0.8rem; margin-top:20px;">Saved Favorites</div>
-<div class="fav-grid" id="fav-grid"></div>
-</div>
 </div>
 
-<!-- Middle Hub -->
+<!-- ═══════════════════════════════════════
+     MIDDLE HUB
+════════════════════════════════════════ -->
 <div id="middle-hub" class="nav-view hidden">
-<div class="hub-title" id="middleHubTitle">Banana Menu</div>
-<div class="list-container" id="middleHubButtons"></div>
-<button class="btn-main btn-back" onclick="showHub()" id="backToHubBtn">&larr; Back</button>
+    <div class="view-nav">
+        <button class="view-back" onclick="showHub()"><i class="bi bi-arrow-left"></i> Home</button>
+    </div>
+    <div class="view-title" id="middleHubTitle">Banana</div>
+    <div class="view-sub" id="middleHubSub">Select a tool</div>
+    <div class="menu-list" id="middleHubButtons"></div>
 </div>
 
-<!-- Defect Hub -->
+<!-- ═══════════════════════════════════════
+     DEFECT HUB
+════════════════════════════════════════ -->
 <div id="defect-hub" class="nav-view hidden">
-<div class="hub-title">Defect Detector</div>
-<div class="list-container">
-<div class="list-btn" onclick="DefectDetector.selectFruit('banana')">&#x1F34C; Banana</div>
-<div class="list-btn" onclick="DefectDetector.selectFruit('mango')">&#x1F96D; Mango</div>
-<div class="list-btn" onclick="DefectDetector.selectFruit('avocado')">&#x1F951; Avocado</div>
-</div>
-<button class="btn-main btn-back" onclick="showHub()">&larr; Back</button>
+    <div class="view-nav">
+        <button class="view-back" onclick="showHub()"><i class="bi bi-arrow-left"></i> Home</button>
+    </div>
+    <div class="view-title">Defect Detector</div>
+    <div class="view-sub">Select fruit to scan</div>
+    <div class="menu-list">
+        <div class="menu-row" onclick="DefectDetector.selectFruit('banana')">
+            <div class="mr-icon mr-lime"><span style="font-size:1.1rem;">&#x1F34C;</span></div>
+            <div class="mr-body"><div class="mr-name">Banana</div><div class="mr-desc">External & internal defects</div></div>
+            <i class="bi bi-chevron-right mr-arrow"></i>
+        </div>
+        <div class="menu-row" onclick="DefectDetector.selectFruit('mango')">
+            <div class="mr-icon mr-amber"><span style="font-size:1.1rem;">&#x1F96D;</span></div>
+            <div class="mr-body"><div class="mr-name">Mango</div><div class="mr-desc">External & internal defects</div></div>
+            <i class="bi bi-chevron-right mr-arrow"></i>
+        </div>
+        <div class="menu-row" onclick="DefectDetector.selectFruit('avocado')">
+            <div class="mr-icon mr-green"><span style="font-size:1.1rem;">&#x1F951;</span></div>
+            <div class="mr-body"><div class="mr-name">Avocado</div><div class="mr-desc">External & internal defects</div></div>
+            <i class="bi bi-chevron-right mr-arrow"></i>
+        </div>
+    </div>
+    <button class="btn-main btn-back" onclick="showHub()">&larr; Back</button>
 </div>
 
 <!-- Defect Type View -->
 <div id="defect-type-view" class="nav-view hidden">
-<div class="hub-title" id="defectTypeTitle">Banana &mdash; Select Type</div>
-<div style="max-width:400px; margin:0 auto;">
-<div class="type-btn" onclick="DefectDetector.selectType('external')">
-<div class="type-btn-title" id="extDefectsBtn">&#x1F50D; External Defects</div>
-<div class="type-btn-desc" id="defectTypeDesc_external">Skin, colour, bruising, cuts, mould</div>
+<div class="view-nav">
+    <button class="view-back" onclick="DefectDetector.showDefectView('defect-hub')"><i class="bi bi-arrow-left"></i> Defects</button>
 </div>
-<div class="type-btn" onclick="DefectDetector.selectType('internal')">
-<div class="type-btn-title" id="intDefectsBtn">&#x1F52C; Internal Defects</div>
-<div class="type-btn-desc" id="defectTypeDesc_internal">Flesh, rot, discolouration, flavour</div>
-</div>
+<div class="view-title" id="defectTypeTitle">Banana</div>
+<div class="view-sub">Select defect category</div>
+<div class="menu-list">
+    <div class="menu-row" onclick="DefectDetector.selectType('external')">
+        <div class="mr-icon mr-lime"><i class="bi bi-eye" style="font-size:1rem;"></i></div>
+        <div class="mr-body">
+            <div class="mr-name" id="extDefectsBtn">External Defects</div>
+            <div class="mr-desc" id="defectTypeDesc_external">Skin, colour, bruising, cuts, mould</div>
+        </div>
+        <i class="bi bi-chevron-right mr-arrow"></i>
+    </div>
+    <div class="menu-row" onclick="DefectDetector.selectType('internal')">
+        <div class="mr-icon mr-amber"><i class="bi bi-search" style="font-size:1rem;"></i></div>
+        <div class="mr-body">
+            <div class="mr-name" id="intDefectsBtn">Internal Defects</div>
+            <div class="mr-desc" id="defectTypeDesc_internal">Flesh, rot, discolouration, flavour</div>
+        </div>
+        <i class="bi bi-chevron-right mr-arrow"></i>
+    </div>
 </div>
 <button class="btn-main btn-back" onclick="DefectDetector.showDefectView('defect-hub')">&larr; Back</button>
 </div>
@@ -277,7 +201,10 @@
 <div id="defect-scan-view" class="nav-view hidden">
 <div style="max-width:400px; margin:0 auto; position:relative;">
 <i class="bi bi-star-fill fav-toggle" id="defectFavStar" onclick="toggleFavorite('defect')" style="position:absolute; top:0; right:0; z-index:10;"></i>
-<div class="hub-title" id="defectScanTitle" style="padding-right:40px;">Banana &mdash; External</div>
+<div class="view-nav" style="margin-bottom:0;">
+    <button class="view-back" onclick="DefectDetector.showDefectView('defect-type-view'); DefectDetector.stopCamera();"><i class="bi bi-arrow-left"></i> Back</button>
+</div>
+<div class="view-title" id="defectScanTitle" style="padding-right:40px;">Banana — External</div>
 <div class="camera-wrapper">
 <video id="defectVideo" autoplay playsinline muted style="display:none;"></video>
 <canvas id="defectCanvas" style="display:none;"></canvas>
@@ -291,7 +218,7 @@
 </div>
 <div style="margin:10px 0 14px; text-align:center;">
 <span id="defectDisclaimer" style="font-size:0.55rem; font-weight:700; color:var(--pulp-red); text-transform:uppercase; letter-spacing:1px; opacity:0.8;">
-&#x26A0;&#xFE0F; Camera detection is colour-based. Accuracy may vary. Always verify results manually.
+&#x26A0;&#xFE0F; Colour-based detection. Always verify manually.
 </span>
 </div>
 <div id="defectScanResults" class="hidden"></div>
@@ -332,15 +259,16 @@
 </div>
 </div>
 
-<!-- Colour Scanner View -->
+<!-- ═══════════════════════════════════════
+     COLOUR SCANNER
+════════════════════════════════════════ -->
 <div id="colour-scanner-view" class="nav-view hidden">
 <div style="max-width:400px; margin:0 auto; position:relative;">
 <i class="bi bi-star-fill fav-toggle" id="colourFavStar" onclick="toggleFavorite('colour')" style="position:absolute; top:0; right:0; z-index:10;"></i>
-<div style="text-align:center; margin-bottom:14px;">
-<img src="edited-image.png" style="width:46px; border-radius:14px; margin-bottom:6px;">
-<div style="font-size:0.6rem; font-weight:900; color:var(--pulp-lime); letter-spacing:3px; text-transform:uppercase;">Pulp Pro</div>
+<div class="view-nav">
+    <button class="view-back" onclick="ColourScanner.close()"><i class="bi bi-arrow-left"></i> Home</button>
 </div>
-<div class="hub-title" id="csScannerTitle">Banana Colour Scanner</div>
+<div class="view-title" id="csScannerTitle">Colour Scanner</div>
 <div id="csAIStatus" style="text-align:center; font-size:0.5rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:rgba(255,255,255,0.3); margin-bottom:10px;">&#x1F4CA; Classic Mode</div>
 <div style="display:flex; gap:8px; margin-bottom:14px;">
 <div class="cs-toggle-btn active" id="csSingleBtn" onclick="ColourScanner.setScanMode('single')">Single Scan</div>
@@ -357,7 +285,7 @@
 <div class="cs-crosshair"></div>
 <button class="capture-btn" id="csScanBtn" onclick="ColourScanner.doScan()">Scan</button>
 </div>
-<div id="csOfflineLabel" style="font-size:0.55rem; color:var(--text-dim); text-align:center; text-transform:uppercase; letter-spacing:2px; margin:10px 0; opacity:0.4;">Works offline &mdash; no internet needed</div>
+<div id="csOfflineLabel" style="font-size:0.55rem; color:var(--text-dim); text-align:center; text-transform:uppercase; letter-spacing:2px; margin:10px 0; opacity:0.4;">Works offline — no internet needed</div>
 <div id="csMultiList" style="margin-bottom:10px;"></div>
 <button id="csBatchBtn" class="btn-main" style="display:none; margin-bottom:8px;" onclick="ColourScanner.getBatchResult()">Get Batch Result &rarr;</button>
 </div>
@@ -381,18 +309,9 @@
 <div id="csAIConfidence" style="display:none; font-size:0.5rem; font-weight:700; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; opacity:0.8;"></div>
 <div class="report-row"><span class="report-key" id="shelfLifeLabel">Shelf Life</span><span class="report-val" id="csSingleShelf">&mdash;</span></div>
 <div class="report-row"><span class="report-key" id="statusLabel2">Status</span><span class="report-val" id="csSingleStatus">&mdash;</span></div>
-<div id="csNotePreview" class="hidden" style="background:rgba(166,226,46,0.06); border:1px solid rgba(166,226,46,0.15); border-radius:12px; padding:8px 12px; margin-top:10px;">
-<div style="font-size:0.45rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:2px; margin-bottom:4px;">&#x1F4DD; Note</div>
-<div id="csNotePreviewText" style="font-size:0.68rem; color:var(--text-dim); font-weight:600; line-height:1.4;"></div>
 </div>
-</div>
-<div style="background:var(--glass-card); border:1px solid var(--border-glass); border-radius:20px; padding:14px; margin-bottom:12px;">
-<div style="font-size:0.5rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">&#x1F4DD; Add a note <span style="color:rgba(255,255,255,0.15); font-size:0.45rem;">(optional)</span></div>
-<textarea id="csNoteInput" placeholder="e.g. Supplier X, Pallet 4, Cell 3..." maxlength="120" oninput="ColourScanner.updateNotePreview(this.value)" style="width:100%; background:var(--input-bg); border:1px solid var(--border-glass); border-radius:12px; padding:10px 12px; color:var(--text-main); font-size:0.7rem; font-family:-apple-system,sans-serif; font-weight:600; resize:none; outline:none; min-height:60px;"></textarea>
-<div id="csNoteCharCount" style="font-size:0.45rem; color:rgba(255,255,255,0.2); text-align:right; margin-top:4px; font-weight:700;">0 / 120</div>
-</div>
-<button class="btn-main" style="margin-bottom:8px;" onclick="ColourScanner.shareReport()"><i class="bi bi-share-fill"></i> Share Report Card</button>
-<button id="csCopySingle" class="btn-copy" style="width:100%; justify-content:center; margin-bottom:10px;" onclick="ColourScanner.copySingleResult()"><i class="bi bi-clipboard"></i> Copy Text Report</button>
+<button class="btn-main" style="margin-bottom:8px;" onclick="ColourScanner.shareReport()"><i class="bi bi-share-fill"></i> Share Report</button>
+<button id="csCopySingle" class="btn-copy" style="width:100%; justify-content:center; margin-bottom:10px;" onclick="ColourScanner.copySingleResult()"><i class="bi bi-clipboard"></i> Copy Report</button>
 <button class="btn-main btn-back" onclick="ColourScanner.resetScanner()" id="csNewScanBtn">&larr; New Scan</button>
 </div>
 <div id="cs-batch-result" class="hidden">
@@ -409,29 +328,25 @@
 <div class="report-row"><span class="report-key" id="boxesScannedLabel">Boxes Scanned</span><span class="report-val" id="csBatchCount">&mdash;</span></div>
 <div class="report-row"><span class="report-key" id="shelfLifeEstLabel">Shelf Life Est.</span><span class="report-val" id="csBatchShelf">&mdash;</span></div>
 <div class="report-row"><span class="report-key" id="batchStatusLabel">Batch Status</span><span class="report-val" id="csBatchStatus">&mdash;</span></div>
-<div id="csBatchNotePreview" class="hidden" style="background:rgba(166,226,46,0.06); border:1px solid rgba(166,226,46,0.15); border-radius:12px; padding:8px 12px; margin-top:10px;">
-<div style="font-size:0.45rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:2px; margin-bottom:4px;">&#x1F4DD; Note</div>
-<div id="csBatchNotePreviewText" style="font-size:0.68rem; color:var(--text-dim); font-weight:600; line-height:1.4;"></div>
-</div>
-</div>
-<div style="background:var(--glass-card); border:1px solid var(--border-glass); border-radius:20px; padding:14px; margin-bottom:12px;">
-<div style="font-size:0.5rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">&#x1F4DD; Add a note <span style="color:rgba(255,255,255,0.15); font-size:0.45rem;">(optional)</span></div>
-<textarea id="csBatchNoteInput" placeholder="e.g. Supplier X, Pallet 4, Cell 3..." maxlength="120" oninput="ColourScanner.updateBatchNotePreview(this.value)" style="width:100%; background:var(--input-bg); border:1px solid var(--border-glass); border-radius:12px; padding:10px 12px; color:var(--text-main); font-size:0.7rem; font-family:-apple-system,sans-serif; font-weight:600; resize:none; outline:none; min-height:60px;"></textarea>
-<div id="csBatchNoteCharCount" style="font-size:0.45rem; color:rgba(255,255,255,0.2); text-align:right; margin-top:4px; font-weight:700;">0 / 120</div>
 </div>
 <button class="btn-main" style="margin-bottom:8px;" onclick="ColourScanner.shareBatchReport()"><i class="bi bi-share-fill"></i> Share Batch Report</button>
-<button id="csCopyBatch" class="btn-copy" style="width:100%; justify-content:center; margin-bottom:10px;" onclick="ColourScanner.copyBatchResult()"><i class="bi bi-clipboard"></i> Copy Text Report</button>
+<button id="csCopyBatch" class="btn-copy" style="width:100%; justify-content:center; margin-bottom:10px;" onclick="ColourScanner.copyBatchResult()"><i class="bi bi-clipboard"></i> Copy Report</button>
 <button class="btn-main btn-back" onclick="ColourScanner.resetScanner()" id="csNewBatchScanBtn">&larr; New Scan</button>
 </div>
 <button class="btn-main btn-back" style="margin-top:10px;" onclick="ColourScanner.close()" id="csBackBtn">&larr; Back</button>
 </div>
 </div>
 
-<!-- News View -->
+<!-- ═══════════════════════════════════════
+     NEWS
+════════════════════════════════════════ -->
 <div id="news-view" class="nav-view hidden">
 <div style="max-width:1200px; margin:0 auto;">
 <div id="news-list-view">
-<div class="hub-title">&#x1F4F0; Fruit Industry News</div>
+<div class="view-nav">
+    <button class="view-back" onclick="showHub()"><i class="bi bi-arrow-left"></i> Home</button>
+</div>
+<div class="view-title">Industry News</div>
 <div id="newsCacheStatus"></div>
 <div class="news-filter-row">
 <div class="news-filter-tab active" data-filter="all" onclick="NewsManager.setFilter('all')">All</div>
@@ -478,11 +393,13 @@ Pulp Pro is not affiliated with any news source.
 </div>
 </div>
 
-<!-- App Interface (Calculator) -->
+<!-- ═══════════════════════════════════════
+     APP INTERFACE (Calculator)
+════════════════════════════════════════ -->
 <div class="app-container hidden" id="appInterface">
 <div class="app-card" id="appCard">
 <i class="bi bi-star-fill fav-toggle" id="favStar" onclick="toggleFavorite('calculator')"></i>
-<img src="edited-image.png" style="width:50px; margin-bottom:10px;">
+<img src="edited-image.png" style="width:44px; border-radius:12px; margin-bottom:8px;">
 <div id="brandName" style="font-size:1.4rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase;">Chiquita</div>
 <div id="commodityLabel" style="font-weight:900; letter-spacing:4px; opacity:0.5; font-size:0.7rem; margin-bottom:25px; color:var(--text-main);">BANANA AGE CHECKER</div>
 <div style="display:flex; gap:8px; margin-bottom:20px;">

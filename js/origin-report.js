@@ -1,6 +1,6 @@
 // ============================================================
 // PULP PRO — ORIGIN REPORT
-// Live weather data (Open-Meteo) + AI analysis (Groq via Cloudflare Worker)
+// Live weather data (Open-Meteo) + AI via Cloudflare Worker → Groq
 // Covers today + last 28 days for transit-accurate reporting
 // ============================================================
 
@@ -8,7 +8,6 @@ const OriginReport = (() => {
 
     const WORKER_URL = 'https://pulppro-gemini-proxy.pulpprobrain.workers.dev';
 
-    // ── ORIGINS DATABASE ──────────────────────────────────────
     const ORIGINS = {
         banana: {
             'Latin America': [
@@ -77,7 +76,7 @@ const OriginReport = (() => {
             'Latin America': [
                 { name: 'Mexico',             lat: 19.7,   lon: -101.2, region: 'Michoacán' },
                 { name: 'Peru',               lat: -11.1,  lon: -75.5,  region: 'La Libertad / Junín' },
-                { name: 'Chile',              lat: -33.5,  lon: -70.8,  region: 'Valparaíso / O\'Higgins' },
+                { name: 'Chile',              lat: -33.5,  lon: -70.8,  region: "Valparaíso / O'Higgins" },
                 { name: 'Colombia',           lat:  5.1,   lon: -75.5,  region: 'Antioquia / Caldas' },
                 { name: 'Dominican Republic', lat: 18.5,   lon: -69.9,  region: 'Cibao Valley' },
                 { name: 'Brazil',             lat: -22.9,  lon: -43.2,  region: 'São Paulo / Minas Gerais' },
@@ -107,13 +106,20 @@ const OriginReport = (() => {
     let activeFruit  = null;
     let savedScrollY = 0;
 
-    // ── SHOW VIEW ─────────────────────────────────────────────
+    // ── SHOW VIEW — updated for new screen system ─────────────
     function showView(id) {
-        document.querySelectorAll('.nav-view').forEach(el => el.classList.add('hidden'));
-        const app = document.getElementById('appInterface');
-        if (app) app.classList.add('hidden');
+        // Hide all screens
+        document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+        // Hide any other floating views
+        ['fd-type-view','fd-list-view','fd-detail-view','or-picker-view','or-report-view'].forEach(v => {
+            const el = document.getElementById(v);
+            if (el) el.style.display = 'none';
+        });
         const target = document.getElementById(id);
-        if (target) { target.classList.remove('hidden'); window.scrollTo(0, 0); }
+        if (target) {
+            target.style.display = 'block';
+            window.scrollTo(0, 0);
+        }
     }
 
     // ── OPEN ORIGIN PICKER ────────────────────────────────────
@@ -136,22 +142,18 @@ const OriginReport = (() => {
         const origins = ORIGINS[fruit] || {};
         container.innerHTML = Object.entries(origins).map(([region, countries]) => `
         <div style="margin-bottom:18px;">
-            <div style="font-size:0.52rem; font-weight:900; text-transform:uppercase; letter-spacing:2px;
-                color:var(--text-dim); padding:6px 16px 8px; opacity:0.6;">${region}</div>
-            <div style="border-radius:16px; overflow:hidden; border:1px solid var(--border-glass);">
+            <div style="font-size:0.52rem;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.3);padding:6px 0 8px;">${region}</div>
+            <div style="border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.07);">
                 ${countries.map((c, i) => `
-                <div onclick="OriginReport.generate('${c.name}', ${c.lat}, ${c.lon}, '${c.region}')"
-                    style="display:flex; align-items:center; justify-content:space-between;
-                    padding:14px 18px; cursor:pointer; background:var(--glass-card);
-                    ${i < countries.length - 1 ? 'border-bottom:1px solid var(--border-glass);' : ''}
-                    transition:background 0.15s;"
+                <div onclick="OriginReport.generate('${c.name}',${c.lat},${c.lon},'${c.region}')"
+                    style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;background:#0f0f0f;${i < countries.length - 1 ? 'border-bottom:1px solid rgba(255,255,255,0.07);' : ''}transition:background 0.15s;"
                     onmouseover="this.style.background='rgba(255,255,255,0.05)'"
-                    onmouseout="this.style.background='var(--glass-card)'">
+                    onmouseout="this.style.background='#0f0f0f'">
                     <div>
-                        <div style="font-size:0.88rem; font-weight:800; color:var(--text-main);">${c.name}</div>
-                        <div style="font-size:0.58rem; color:var(--text-dim); font-weight:600; margin-top:2px;">${c.region}</div>
+                        <div style="font-size:0.88rem;font-weight:800;color:#fff;">${c.name}</div>
+                        <div style="font-size:0.58rem;color:rgba(255,255,255,0.45);font-weight:600;margin-top:2px;">${c.region}</div>
                     </div>
-                    <div style="color:var(--text-dim); font-size:1.1rem;">›</div>
+                    <div style="color:rgba(255,255,255,0.3);font-size:1.1rem;">›</div>
                 </div>`).join('')}
             </div>
         </div>`).join('');
@@ -164,81 +166,60 @@ const OriginReport = (() => {
         const lang = getLang();
         const nl   = lang === 'nl';
 
-        // Show loading screen
         showView('or-report-view');
         const reportEl = document.getElementById('or-report-content');
         if (reportEl) {
             reportEl.innerHTML = `
-            <div style="text-align:center; padding:60px 20px;">
-                <div style="font-size:2.5rem; margin-bottom:16px;">🌍</div>
-                <div style="font-size:0.75rem; font-weight:900; color:var(--pulp-lime);
-                    text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;
-                    animation: pulse 1.5s infinite;">${nl ? 'Rapport genereren...' : 'Generating report...'}</div>
-                <div style="font-size:0.6rem; color:var(--text-dim); font-weight:600;">
-                    ${nl ? 'Weersdata ophalen voor' : 'Fetching weather data for'} ${country}
-                </div>
+            <div style="text-align:center;padding:60px 20px;">
+                <div style="font-size:2.5rem;margin-bottom:16px;">🌍</div>
+                <div style="font-size:0.75rem;font-weight:900;color:#a6e22e;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;animation:pulse 1.5s infinite;">${nl ? 'Rapport genereren...' : 'Generating report...'}</div>
+                <div style="font-size:0.6rem;color:rgba(255,255,255,0.45);font-weight:600;">${nl ? 'Weersdata ophalen voor' : 'Fetching weather data for'} ${country}</div>
             </div>`;
         }
 
-        // Update header
         const headerEl = document.getElementById('or-report-header');
         if (headerEl) {
             const fruitEmojis = { banana: '🍌', mango: '🥭', avocado: '🥑' };
             headerEl.innerHTML = `
-            <div style="font-size:0.48rem; font-weight:900; text-transform:uppercase; letter-spacing:2px;
-                color:var(--pulp-lime); margin-bottom:4px; opacity:0.8;">
-                ${fruitEmojis[activeFruit]} ${activeFruit.toUpperCase()} · ${nl ? 'HERKOMSTRAPPORT' : 'ORIGIN REPORT'}
-            </div>
-            <div style="font-size:1.4rem; font-weight:900; color:var(--text-main);">${country}</div>
-            <div style="font-size:0.6rem; color:var(--text-dim); font-weight:600; margin-top:3px;">${region}</div>`;
+            <div style="font-size:0.48rem;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#a6e22e;margin-bottom:4px;opacity:0.8;">${fruitEmojis[activeFruit]} ${activeFruit.toUpperCase()} · ${nl ? 'HERKOMSTRAPPORT' : 'ORIGIN REPORT'}</div>
+            <div style="font-size:1.4rem;font-weight:900;color:#fff;">${country}</div>
+            <div style="font-size:0.6rem;color:rgba(255,255,255,0.45);font-weight:600;margin-top:3px;">${region}</div>`;
         }
 
         try {
-            // ── Fetch 28 days of weather from Open-Meteo
             const today     = new Date();
             const endDate   = today.toISOString().split('T')[0];
             const startDate = new Date(today - 28 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
             const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max,relative_humidity_2m_max&start_date=${startDate}&end_date=${endDate}&timezone=auto`;
-
             const weatherResp = await fetch(weatherUrl);
             const weatherData = await weatherResp.json();
-
             if (!weatherData.daily) throw new Error('Weather data unavailable');
 
             const daily    = weatherData.daily;
-            const dates    = daily.time;
             const maxTemps = daily.temperature_2m_max;
             const precip   = daily.precipitation_sum;
             const wind     = daily.windspeed_10m_max;
             const humidity = daily.relative_humidity_2m_max;
 
-            // Build weekly summaries for the prompt
             const weeks = [
-                { label: nl ? 'Week 4 geleden (oogstperiode)'      : 'Week 4 ago (harvest period)',  temps: maxTemps.slice(0, 7),  rain: precip.slice(0, 7),  wind: wind.slice(0, 7),  hum: humidity.slice(0, 7) },
-                { label: nl ? 'Week 3 geleden (verpakkingsperiode)' : 'Week 3 ago (packing period)',  temps: maxTemps.slice(7, 14), rain: precip.slice(7, 14), wind: wind.slice(7, 14), hum: humidity.slice(7, 14) },
-                { label: nl ? 'Week 2 geleden (transport)'          : 'Week 2 ago (in transit)',      temps: maxTemps.slice(14, 21),rain: precip.slice(14, 21),wind: wind.slice(14, 21),hum: humidity.slice(14, 21) },
-                { label: nl ? 'Afgelopen week (aankomst)'           : 'Last week (arrival)',          temps: maxTemps.slice(21),    rain: precip.slice(21),    wind: wind.slice(21),    hum: humidity.slice(21) },
+                { label: nl ? 'Week 4 geleden (oogstperiode)'      : 'Week 4 ago (harvest period)',  temps: maxTemps.slice(0,7),  rain: precip.slice(0,7),  wind: wind.slice(0,7),  hum: humidity.slice(0,7) },
+                { label: nl ? 'Week 3 geleden (verpakkingsperiode)' : 'Week 3 ago (packing period)',  temps: maxTemps.slice(7,14), rain: precip.slice(7,14), wind: wind.slice(7,14), hum: humidity.slice(7,14) },
+                { label: nl ? 'Week 2 geleden (transport)'          : 'Week 2 ago (in transit)',      temps: maxTemps.slice(14,21),rain: precip.slice(14,21),wind: wind.slice(14,21),hum: humidity.slice(14,21) },
+                { label: nl ? 'Afgelopen week (aankomst)'           : 'Last week (arrival)',          temps: maxTemps.slice(21),   rain: precip.slice(21),   wind: wind.slice(21),   hum: humidity.slice(21) },
             ];
 
-            const avgTemp  = arr => (arr.filter(Boolean).reduce((a, b) => a + b, 0) / (arr.filter(Boolean).length || 1)).toFixed(1);
-            const totalRain = arr => arr.filter(Boolean).reduce((a, b) => a + b, 0).toFixed(1);
-            const avgWind  = arr => (arr.filter(Boolean).reduce((a, b) => a + b, 0) / (arr.filter(Boolean).length || 1)).toFixed(1);
-            const avgHum   = arr => (arr.filter(Boolean).reduce((a, b) => a + b, 0) / (arr.filter(Boolean).length || 1)).toFixed(0);
+            const avgTemp   = arr => (arr.filter(Boolean).reduce((a,b)=>a+b,0)/(arr.filter(Boolean).length||1)).toFixed(1);
+            const totalRain = arr => arr.filter(Boolean).reduce((a,b)=>a+b,0).toFixed(1);
+            const avgWind   = arr => (arr.filter(Boolean).reduce((a,b)=>a+b,0)/(arr.filter(Boolean).length||1)).toFixed(1);
+            const avgHum    = arr => (arr.filter(Boolean).reduce((a,b)=>a+b,0)/(arr.filter(Boolean).length||1)).toFixed(0);
 
-            const weatherSummary = weeks.map(w => `
-${w.label}:
-- Avg max temp: ${avgTemp(w.temps)}°C
-- Total rainfall: ${totalRain(w.rain)}mm
-- Avg wind speed: ${avgWind(w.wind)} km/h
-- Avg humidity: ${avgHum(w.hum)}%`).join('\n');
+            const weatherSummary = weeks.map(w => `\n${w.label}:\n- Avg max temp: ${avgTemp(w.temps)}°C\n- Total rainfall: ${totalRain(w.rain)}mm\n- Avg wind speed: ${avgWind(w.wind)} km/h\n- Avg humidity: ${avgHum(w.hum)}%`).join('\n');
 
-            // Current conditions (last 3 days)
             const currentTemp = avgTemp(maxTemps.slice(-3));
             const currentRain = totalRain(precip.slice(-3));
             const currentHum  = avgHum(humidity.slice(-3));
 
-            // ── Build prompt
             const prompt = `You are a senior postharvest fruit quality specialist with 20+ years of experience in tropical fruit supply chains. A fruit importer needs a practical, professional quality report based on real weather data from the growing region.
 
 FRUIT: ${activeFruit.toUpperCase()}
@@ -270,16 +251,12 @@ FORMAT YOUR RESPONSE AS JSON with this exact structure:
 
 Only respond with the JSON. No extra text.`;
 
-            // ── Call Cloudflare Worker (proxies to Groq)
             const aiResp = await fetch(WORKER_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt })
             });
-
-            const aiData = await aiResp.json();
-
-            // Groq returns OpenAI-compatible format via the Worker
+            const aiData  = await aiResp.json();
             const rawText = aiData.choices?.[0]?.message?.content || '';
             const clean   = rawText.replace(/```json|```/g, '').trim();
             const report  = JSON.parse(clean);
@@ -290,19 +267,11 @@ Only respond with the JSON. No extra text.`;
             console.error('Origin report error:', err);
             if (reportEl) {
                 reportEl.innerHTML = `
-                <div style="text-align:center; padding:40px 20px;">
-                    <div style="font-size:2rem; margin-bottom:12px;">📡</div>
-                    <div style="font-size:0.75rem; font-weight:900; color:var(--pulp-red);
-                        text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">
-                        ${nl ? 'Rapport mislukt' : 'Report failed'}
-                    </div>
-                    <div style="font-size:0.65rem; color:var(--text-dim); margin-bottom:20px;">
-                        ${nl ? 'Controleer uw internetverbinding en probeer opnieuw.' : 'Check your internet connection and try again.'}
-                    </div>
-                    <button onclick="OriginReport.generate('${country}', ${lat}, ${lon}, '${region}')"
-                        class="btn-main" style="max-width:200px; margin:0 auto;">
-                        ${nl ? 'Opnieuw proberen' : 'Try again'}
-                    </button>
+                <div style="text-align:center;padding:40px 20px;">
+                    <div style="font-size:2rem;margin-bottom:12px;">📡</div>
+                    <div style="font-size:0.75rem;font-weight:900;color:#ff4d4d;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">${nl ? 'Rapport mislukt' : 'Report failed'}</div>
+                    <div style="font-size:0.65rem;color:rgba(255,255,255,0.45);margin-bottom:20px;">${nl ? 'Controleer uw internetverbinding en probeer opnieuw.' : 'Check your internet connection and try again.'}</div>
+                    <button onclick="OriginReport.generate('${country}',${lat},${lon},'${region}')" style="background:#a6e22e;color:#000;border:none;border-radius:100px;padding:14px 28px;font-weight:900;text-transform:uppercase;cursor:pointer;font-size:0.85rem;">${nl ? 'Opnieuw proberen' : 'Try again'}</button>
                 </div>`;
             }
         }
@@ -313,104 +282,40 @@ Only respond with the JSON. No extra text.`;
         const reportEl = document.getElementById('or-report-content');
         if (!reportEl) return;
 
-        const ratingColor = {
-            'Excellent': '#78c830',
-            'Good':      '#a6e22e',
-            'Moderate':  '#ff8c00',
-            'Poor':      '#ff4d4d',
-        }[report.overall_rating] || '#ff8c00';
-
-        const ratingEmoji = {
-            'Excellent': '🟢',
-            'Good':      '🟡',
-            'Moderate':  '🟠',
-            'Poor':      '🔴',
-        }[report.overall_rating] || '🟠';
-
+        const ratingColor = { 'Excellent':'#78c830','Good':'#a6e22e','Moderate':'#ff8c00','Poor':'#ff4d4d' }[report.overall_rating] || '#ff8c00';
+        const ratingEmoji = { 'Excellent':'🟢','Good':'🟡','Moderate':'🟠','Poor':'🔴' }[report.overall_rating] || '🟠';
         const alerts = report.alerts?.filter(a => a && a.trim()) || [];
 
         reportEl.innerHTML = `
-        <!-- Overall rating badge -->
-        <div style="background:${ratingColor}15; border:1px solid ${ratingColor}30;
-            border-radius:18px; padding:16px 20px; margin-bottom:16px;
-            display:flex; align-items:center; gap:14px;">
-            <div style="font-size:2.2rem; flex-shrink:0;">${ratingEmoji}</div>
+        <div style="background:${ratingColor}15;border:1px solid ${ratingColor}30;border-radius:18px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:14px;">
+            <div style="font-size:2.2rem;flex-shrink:0;">${ratingEmoji}</div>
             <div>
-                <div style="font-size:0.48rem; font-weight:900; text-transform:uppercase;
-                    letter-spacing:2px; color:${ratingColor}; margin-bottom:4px;">
-                    ${nl ? 'Algehele kwaliteitsrating' : 'Overall quality rating'}
-                </div>
-                <div style="font-size:1.1rem; font-weight:900; color:var(--text-main); margin-bottom:3px;">
-                    ${report.overall_rating}
-                </div>
-                <div style="font-size:0.7rem; color:var(--text-dim); font-weight:500; line-height:1.4;">
-                    ${report.rating_reason || ''}
-                </div>
+                <div style="font-size:0.48rem;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:${ratingColor};margin-bottom:4px;">${nl ? 'Algehele kwaliteitsrating' : 'Overall quality rating'}</div>
+                <div style="font-size:1.1rem;font-weight:900;color:#fff;margin-bottom:3px;">${report.overall_rating}</div>
+                <div style="font-size:0.7rem;color:rgba(255,255,255,0.55);font-weight:500;line-height:1.4;">${report.rating_reason || ''}</div>
             </div>
         </div>
-
-        <!-- Current conditions quick stats -->
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:16px;">
-            <div style="background:var(--glass-card); border:1px solid var(--border-glass);
-                border-radius:14px; padding:12px; text-align:center;">
-                <div style="font-size:1.3rem;">🌡️</div>
-                <div style="font-size:0.9rem; font-weight:900; color:var(--text-main); margin-top:4px;">${temp}°C</div>
-                <div style="font-size:0.46rem; color:var(--text-dim); font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-top:2px;">Temp</div>
-            </div>
-            <div style="background:var(--glass-card); border:1px solid var(--border-glass);
-                border-radius:14px; padding:12px; text-align:center;">
-                <div style="font-size:1.3rem;">🌧️</div>
-                <div style="font-size:0.9rem; font-weight:900; color:var(--text-main); margin-top:4px;">${rain}mm</div>
-                <div style="font-size:0.46rem; color:var(--text-dim); font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-top:2px;">${nl ? 'Neerslag (3d)' : 'Rain (3d)'}</div>
-            </div>
-            <div style="background:var(--glass-card); border:1px solid var(--border-glass);
-                border-radius:14px; padding:12px; text-align:center;">
-                <div style="font-size:1.3rem;">💧</div>
-                <div style="font-size:0.9rem; font-weight:900; color:var(--text-main); margin-top:4px;">${hum}%</div>
-                <div style="font-size:0.46rem; color:var(--text-dim); font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-top:2px;">${nl ? 'Luchtvochtigheid' : 'Humidity'}</div>
-            </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">
+            <div style="background:#0f0f0f;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:12px;text-align:center;"><div style="font-size:1.3rem;">🌡️</div><div style="font-size:0.9rem;font-weight:900;color:#fff;margin-top:4px;">${temp}°C</div><div style="font-size:0.46rem;color:rgba(255,255,255,0.35);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:2px;">Temp</div></div>
+            <div style="background:#0f0f0f;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:12px;text-align:center;"><div style="font-size:1.3rem;">🌧️</div><div style="font-size:0.9rem;font-weight:900;color:#fff;margin-top:4px;">${rain}mm</div><div style="font-size:0.46rem;color:rgba(255,255,255,0.35);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:2px;">${nl ? 'Neerslag (3d)' : 'Rain (3d)'}</div></div>
+            <div style="background:#0f0f0f;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:12px;text-align:center;"><div style="font-size:1.3rem;">💧</div><div style="font-size:0.9rem;font-weight:900;color:#fff;margin-top:4px;">${hum}%</div><div style="font-size:0.46rem;color:rgba(255,255,255,0.35);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:2px;">${nl ? 'Luchtvochtigheid' : 'Humidity'}</div></div>
         </div>
-
-        ${alerts.length > 0 ? `
-        <!-- Alerts -->
-        <div style="background:rgba(255,77,77,0.08); border:1px solid rgba(255,77,77,0.25);
-            border-radius:16px; padding:14px 16px; margin-bottom:16px;">
-            <div style="font-size:0.52rem; font-weight:900; text-transform:uppercase;
-                letter-spacing:2px; color:#ff4d4d; margin-bottom:10px;">
-                ⚠️ ${nl ? 'Waarschuwingen' : 'Alerts'}
-            </div>
-            ${alerts.map(a => `
-            <div style="display:flex; gap:10px; align-items:flex-start; margin-bottom:7px;">
-                <span style="color:#ff4d4d; font-size:0.7rem; flex-shrink:0; margin-top:1px;">●</span>
-                <span style="font-size:0.82rem; color:var(--text-dim); font-weight:500; line-height:1.5;">${a}</span>
-            </div>`).join('')}
-        </div>` : ''}
-
-        <!-- Sections -->
+        ${alerts.length > 0 ? `<div style="background:rgba(255,77,77,0.08);border:1px solid rgba(255,77,77,0.25);border-radius:16px;padding:14px 16px;margin-bottom:16px;"><div style="font-size:0.52rem;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#ff4d4d;margin-bottom:10px;">⚠️ ${nl ? 'Waarschuwingen' : 'Alerts'}</div>${alerts.map(a=>`<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:7px;"><span style="color:#ff4d4d;font-size:0.7rem;flex-shrink:0;margin-top:1px;">●</span><span style="font-size:0.82rem;color:rgba(255,255,255,0.55);font-weight:500;line-height:1.5;">${a}</span></div>`).join('')}</div>` : ''}
         ${[
-            { icon: '🌤️', label: nl ? 'Weersomstandigheden'      : 'Weather conditions',       text: report.conditions },
-            { icon: '🍑', label: nl ? 'Kwaliteitsimpact'          : 'Quality impact',            text: report.quality_impact },
-            { icon: '🚢', label: nl ? 'Fruit dat nu aankomt'      : 'Fruit arriving now',        text: report.arriving_now },
-            { icon: '📦', label: nl ? 'Fruit over 4 weken'        : 'Fruit arriving in 4 weeks', text: report.arriving_in_4_weeks },
+            { icon:'🌤️', label: nl ? 'Weersomstandigheden' : 'Weather conditions',       text: report.conditions },
+            { icon:'🍑', label: nl ? 'Kwaliteitsimpact'     : 'Quality impact',            text: report.quality_impact },
+            { icon:'🚢', label: nl ? 'Fruit dat nu aankomt' : 'Fruit arriving now',        text: report.arriving_now },
+            { icon:'📦', label: nl ? 'Fruit over 4 weken'   : 'Fruit arriving in 4 weeks', text: report.arriving_in_4_weeks },
         ].map(sec => `
         <div style="margin-bottom:18px;">
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;
-                padding-bottom:8px; border-bottom:1px solid var(--border-glass);">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.07);">
                 <span style="font-size:1rem;">${sec.icon}</span>
-                <span style="font-size:0.56rem; font-weight:900; color:var(--pulp-lime);
-                    text-transform:uppercase; letter-spacing:2px;">${sec.label}</span>
+                <span style="font-size:0.56rem;font-weight:900;color:#a6e22e;text-transform:uppercase;letter-spacing:2px;">${sec.label}</span>
             </div>
-            <p style="font-size:0.9rem; color:var(--text-dim); line-height:1.8;
-                font-weight:500; margin:0;">${sec.text || ''}</p>
+            <p style="font-size:0.9rem;color:rgba(255,255,255,0.55);line-height:1.8;font-weight:500;margin:0;">${sec.text || ''}</p>
         </div>`).join('')}
-
-        <!-- Timestamp -->
-        <div style="text-align:center; padding:16px 0 0;
-            border-top:1px solid var(--border-glass); margin-top:8px;">
-            <div style="font-size:0.48rem; color:rgba(255,255,255,0.2); font-weight:700;
-                text-transform:uppercase; letter-spacing:1px;">
-                ${nl ? 'Rapport gegenereerd op' : 'Report generated'} ${date} · ${nl ? 'Gebaseerd op 28 dagen weerdata' : 'Based on 28 days weather data'}
-            </div>
+        <div style="text-align:center;padding:16px 0 0;border-top:1px solid rgba(255,255,255,0.07);margin-top:8px;">
+            <div style="font-size:0.48rem;color:rgba(255,255,255,0.2);font-weight:700;text-transform:uppercase;letter-spacing:1px;">${nl ? 'Rapport gegenereerd op' : 'Report generated'} ${date} · ${nl ? 'Gebaseerd op 28 dagen weerdata' : 'Based on 28 days weather data'}</div>
         </div>`;
     }
 
@@ -420,12 +325,11 @@ Only respond with the JSON. No extra text.`;
     }
 
     function backToMiddleHub() {
-        ['or-picker-view', 'or-report-view'].forEach(id => {
+        ['or-picker-view','or-report-view'].forEach(id => {
             const el = document.getElementById(id);
-            if (el) el.classList.add('hidden');
+            if (el) el.style.display = 'none';
         });
-        const mh = document.getElementById('middle-hub');
-        if (mh) mh.classList.remove('hidden');
+        if (typeof showScreen === 'function') showScreen('hub');
         requestAnimationFrame(() => window.scrollTo(0, savedScrollY));
     }
 
@@ -444,12 +348,13 @@ Only respond with the JSON. No extra text.`;
     function buildPickerView() {
         const div = document.createElement('div');
         div.id = 'or-picker-view';
-        div.className = 'nav-view hidden';
+        div.style.cssText = 'display:none;position:fixed;inset:0;background:#050505;z-index:500;overflow-y:auto;padding-top:64px;';
         div.innerHTML = `
-        <div style="max-width:600px; margin:0 auto;">
-            <div class="hub-title" id="or-picker-title"></div>
+        <div style="max-width:640px;margin:0 auto;padding:40px 24px 80px;">
+            <div style="margin-bottom:16px;"><button onclick="OriginReport.backToMiddleHub()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);font-size:0.6rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;padding:8px 16px;border-radius:100px;cursor:pointer;">← Back</button></div>
+            <div id="or-picker-title" style="font-size:clamp(2rem,5vw,3rem);font-weight:900;color:#fff;letter-spacing:-1px;line-height:1.05;margin-bottom:4px;"></div>
+            <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.22);text-transform:uppercase;letter-spacing:2px;margin-bottom:24px;">Select growing region</div>
             <div id="or-picker-list" style="margin-bottom:16px;"></div>
-            <button class="btn-main btn-back" onclick="OriginReport.backToMiddleHub()">← Back</button>
         </div>`;
         document.body.appendChild(div);
     }
@@ -457,22 +362,13 @@ Only respond with the JSON. No extra text.`;
     function buildReportView() {
         const div = document.createElement('div');
         div.id = 'or-report-view';
-        div.className = 'nav-view hidden';
-        div.style.paddingBottom = '40px';
+        div.style.cssText = 'display:none;position:fixed;inset:0;background:#050505;z-index:500;overflow-y:auto;padding-top:64px;padding-bottom:40px;';
         div.innerHTML = `
-        <div style="max-width:640px; margin:0 auto; padding:0 4px;">
-            <div style="padding:20px 16px 16px; margin-bottom:4px;">
-                <button onclick="OriginReport.backToPicker()"
-                    style="background:rgba(0,0,0,0.45); border:1px solid rgba(255,255,255,0.15);
-                    color:#fff; font-size:0.62rem; font-weight:900; text-transform:uppercase;
-                    letter-spacing:1px; padding:7px 16px; border-radius:20px;
-                    cursor:pointer; margin-bottom:16px; display:inline-block;">← Back</button>
-                <div id="or-report-header"></div>
-            </div>
-            <div id="or-report-content" style="padding:0 16px;"></div>
-            <div style="padding:16px 16px 0;">
-                <button class="btn-main btn-back" onclick="OriginReport.backToPicker()">← Back</button>
-            </div>
+        <div style="max-width:640px;margin:0 auto;padding:40px 24px 80px;">
+            <div style="margin-bottom:16px;"><button onclick="OriginReport.backToPicker()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);font-size:0.6rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;padding:8px 16px;border-radius:100px;cursor:pointer;">← Back</button></div>
+            <div id="or-report-header" style="margin-bottom:20px;"></div>
+            <div id="or-report-content"></div>
+            <button onclick="OriginReport.backToPicker()" style="display:block;width:100%;background:transparent;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);border-radius:100px;padding:15px;font-weight:900;text-transform:uppercase;cursor:pointer;letter-spacing:1px;font-size:0.85rem;margin-top:20px;">← Back</button>
         </div>`;
         document.body.appendChild(div);
     }

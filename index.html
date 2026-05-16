@@ -10,11 +10,12 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="edited-image.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/knn-classifier"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
 html,body{background:#050505;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;overflow-x:hidden}
 .hidden{display:none!important}
 .shake{animation:shake 0.4s both}
@@ -288,24 +289,7 @@ input[type=text]{border:none;text-align:center;letter-spacing:8px;font-weight:90
 .news-time{font-size:0.46rem;font-weight:700;color:rgba(255,255,255,0.35)}
 #updateBanner{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#a6e22e;color:#000;z-index:99999;padding:14px 24px;border-radius:100px;font-weight:900;font-size:0.8rem;text-transform:uppercase;letter-spacing:1px;cursor:pointer;text-align:center;white-space:nowrap}
 
-@media(max-width:900px){
-    .nav-links{display:none}
-    .hero-h1{font-size:38px;letter-spacing:-1.5px}
-    .hero-sub{font-size:14px}
-    .bento{grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto auto;gap:8px}
-    .hc-banana{grid-column:1/-1;grid-row:auto;flex-direction:row;height:110px}
-    .hc-banana-img{width:38%;height:110px}
-    .hc-banana-body{padding:14px 16px}
-    .hc-banana-title{font-size:18px}
-    .hc-mango{grid-column:1/2;grid-row:auto}
-    .hc-avocado{grid-column:2/3;grid-row:auto}
-    .hc-defect{grid-column:1/2;grid-row:auto}
-    .hc-colour{grid-column:2/3;grid-row:auto}
-    .hc-news{grid-column:1/-1;grid-row:auto}
-    .view{padding:40px 16px 60px}
-    .bottom-stats{gap:20px}
-}
-</style>
+
 </head>
 <body>
 

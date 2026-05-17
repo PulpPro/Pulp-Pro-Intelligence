@@ -1,43 +1,43 @@
 // Navigation Module
-// Handles navigation between different hubs in the app
+let activeFruit = null;
+let activeBrand = null;
 
-// ── HISTORY API — browser/device back button ──────────────────
 function pushNav(view) {
     history.pushState({ view }, '', window.location.pathname);
 }
 
 window.addEventListener('popstate', function(e) {
-    const state = e.state;
-    if (!state) { _showHub(); return; }
-    switch (state.view) {
-        case 'middle-hub':  _openMiddleHub(activeFruit); break;
-        case 'brand-hub':   _openBrands(activeFruit);    break;
-        case 'defect-hub':  _openDefectDetector();       break;
-        case 'calculator':  _showCalculator();            break;
-        default:            _showHub();                  break;
-    }
+    const v = e.state && e.state.view;
+    if (!v || v === 'hub') { showHub(); return; }
+    if (v === 'middle-hub' && activeFruit) { openMiddleHub(activeFruit); return; }
+    if (v === 'brand-hub'  && activeFruit) { openBrands(activeFruit);    return; }
+    if (v === 'defect-hub')                { openDefectDetector();        return; }
+    showHub();
 });
 
-function _showHub() {
+function showHub() {
     document.getElementById('fruit-hub').classList.remove('hidden');
     document.getElementById('middle-hub').classList.add('hidden');
     document.getElementById('brand-hub').classList.add('hidden');
     document.getElementById('appInterface').classList.add('hidden');
     document.getElementById('defect-hub').classList.add('hidden');
 }
-function _openMiddleHub(fruit) {
-    if (!fruit) return;
-    const fruitNames = { 'banana':'Banana','mango':'Mango','avocado':'Avocado' };
+
+function openMiddleHub(fruit) {
+    activeFruit = fruit;
+    const fruitNames = { 'banana': 'Banana', 'mango': 'Mango', 'avocado': 'Avocado' };
     document.getElementById('middleHubTitle').innerText = fruitNames[fruit] + ' Menu';
     document.getElementById('fruit-hub').classList.add('hidden');
     document.getElementById('middle-hub').classList.remove('hidden');
     document.getElementById('brand-hub').classList.add('hidden');
     document.getElementById('appInterface').classList.add('hidden');
     document.getElementById('defect-hub').classList.add('hidden');
+    pushNav('middle-hub');
 }
-function _openBrands(fruit) {
-    if (!fruit) return;
-    const fruitNames = { 'banana':'Banana','mango':'Mango','avocado':'Avocado' };
+
+function openBrands(fruit) {
+    activeFruit = fruit;
+    const fruitNames = { 'banana': 'Banana', 'mango': 'Mango', 'avocado': 'Avocado' };
     document.getElementById('brandHubTitle').innerText = 'Select ' + fruitNames[fruit] + ' Brand';
     document.getElementById('fruit-hub').classList.add('hidden');
     document.getElementById('middle-hub').classList.add('hidden');
@@ -45,45 +45,9 @@ function _openBrands(fruit) {
     document.getElementById('appInterface').classList.add('hidden');
     document.getElementById('defect-hub').classList.add('hidden');
     renderBrands(fruit);
-}
-function _openDefectDetector() {
-    document.getElementById('fruit-hub').classList.add('hidden');
-    document.getElementById('middle-hub').classList.add('hidden');
-    document.getElementById('brand-hub').classList.add('hidden');
-    document.getElementById('appInterface').classList.add('hidden');
-    document.getElementById('defect-hub').classList.remove('hidden');
-}
-function _showCalculator() {
-    document.getElementById('fruit-hub').classList.add('hidden');
-    document.getElementById('middle-hub').classList.add('hidden');
-    document.getElementById('brand-hub').classList.add('hidden');
-    document.getElementById('appInterface').classList.remove('hidden');
-    document.getElementById('defect-hub').classList.add('hidden');
-}
-
-// ── PUBLIC FUNCTIONS ──────────────────────────────────────────
-
-// Show fruit hub
-function showHub() {
-    _showHub();
-    pushNav('hub');
-}
-
-// Open middle hub for fruit selection
-function openMiddleHub(fruit) {
-    activeFruit = fruit;
-    _openMiddleHub(fruit);
-    pushNav('middle-hub');
-}
-
-// Open brands hub
-function openBrands(fruit) {
-    activeFruit = fruit;
-    _openBrands(fruit);
     pushNav('brand-hub');
 }
 
-// Select brand and show calculator
 function selectBrand(brand) {
     activeBrand = brand;
     document.getElementById('brandName').innerText = brand;
@@ -95,15 +59,17 @@ function selectBrand(brand) {
     pushNav('calculator');
 }
 
-// Open defect detector hub
 function openDefectDetector() {
-    _openDefectDetector();
+    document.getElementById('fruit-hub').classList.add('hidden');
+    document.getElementById('middle-hub').classList.add('hidden');
+    document.getElementById('brand-hub').classList.add('hidden');
+    document.getElementById('appInterface').classList.add('hidden');
+    document.getElementById('defect-hub').classList.remove('hidden');
     pushNav('defect-hub');
 }
 
-// Open specific fruit defect scanner
 function openDefectScanner(fruit) {
-    const fruitNames = { 'banana':'Banana','mango':'Mango','avocado':'Avocado' };
+    const fruitNames = { 'banana': 'Banana', 'mango': 'Mango', 'avocado': 'Avocado' };
     activeFruit = fruit;
     document.getElementById('defectScannerTitle').innerText = 'Scan ' + fruitNames[fruit] + ' for Defects';
     document.getElementById('defect-hub').classList.add('hidden');
@@ -111,21 +77,30 @@ function openDefectScanner(fruit) {
     pushNav('defect-scanner');
 }
 
-// Back from defect scanner to defect hub
 function backToDefectHub() {
     document.getElementById('defect-scanner-view').classList.add('hidden');
     document.getElementById('defect-hub').classList.remove('hidden');
     pushNav('defect-hub');
 }
 
-// Back from defect hub to main fruit hub
 function backToFruitHub() {
     document.getElementById('defect-hub').classList.add('hidden');
     document.getElementById('fruit-hub').classList.remove('hidden');
     pushNav('hub');
 }
 
-// Load saved theme
+function toggleMenu() {
+    document.getElementById('menu-drawer').classList.toggle('open');
+    document.getElementById('menu-overlay').classList.toggle('open');
+}
+
+function toggleTheme() {
+    document.body.classList.toggle('light-theme');
+    const themeText = document.getElementById('themeText');
+    themeText.innerText = document.body.classList.contains('light-theme') ? 'Light Mode' : 'Dark Mode';
+    localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
+}
+
 function loadTheme() {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'light') {

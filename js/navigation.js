@@ -1,86 +1,48 @@
+// Global State
 let activeFruit = null;
 let activeBrand = null;
 
+// Helper — hide all views including dynamically created ones and app-container
 function hideAllViews() {
     document.querySelectorAll('.nav-view').forEach(el => el.classList.add('hidden'));
     const app = document.getElementById('appInterface');
     if (app) app.classList.add('hidden');
 }
 
+// Show Home Hub
 function showHub() {
-    hideAllViews();
+    document.querySelectorAll('.nav-view').forEach(el => el.classList.add('hidden'));
+    const app = document.getElementById('appInterface');
+    if (app) app.classList.add('hidden');
     document.getElementById('fruit-hub').classList.remove('hidden');
-    if (typeof renderFavorites === 'function') renderFavorites();
+    renderFavorites();
 }
 
+// Open Middle Hub — buttons differ per fruit
 function openMiddleHub(fruit) {
     activeFruit = fruit;
-    const names = { banana: 'Banana', mango: 'Mango', avocado: 'Avocado' };
-    document.getElementById('middleHubTitle').innerText = names[fruit] || fruit;
-    document.getElementById('middleHubSub').innerText = 'Select a tool';
-
-    document.querySelectorAll('.fruit-chip').forEach(c => c.classList.remove('active'));
-    const chip = document.getElementById('chip-' + fruit);
-    if (chip) chip.classList.add('active');
+    const fruitNames = { banana: 'Banana', mango: 'Mango', avocado: 'Avocado' };
+    const name = fruitNames[fruit] || fruit;
+    document.getElementById('middleHubTitle').innerText = name + ' ' + t('menu');
 
     const btns = document.getElementById('middleHubButtons');
     if (btns) {
         if (fruit === 'banana') {
             btns.innerHTML = `
-            <div class="mrow acc" onclick="openAgeChecker()">
-                <div class="ic ic-lime"><i class="bi bi-calendar3" style="font-size:1rem;"></i></div>
-                <div class="mb"><div class="mn">Age Checker</div><div class="md">Chiquita code system</div></div>
-                <i class="bi bi-chevron-right ma"></i>
-            </div>
-            <div class="mrow" onclick="FruitDefects.open('banana')">
-                <div class="ic ic-amber"><i class="bi bi-search" style="font-size:1rem;"></i></div>
-                <div class="mb"><div class="mn">Defects</div><div class="md">8 external · 4 internal</div></div>
-                <i class="bi bi-chevron-right ma"></i>
-            </div>
-            <div class="mrow" onclick="OriginReport.open('banana')">
-                <div class="ic ic-blue"><i class="bi bi-globe" style="font-size:1rem;"></i></div>
-                <div class="mb"><div class="mn">Origin Report</div><div class="md">Live weather · AI analysis</div></div>
-                <i class="bi bi-chevron-right ma"></i>
-            </div>
-            <div class="mrow dim">
-                <div class="ic" style="background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);"><i class="bi bi-thermometer-half" style="font-size:1rem;"></i></div>
-                <div class="mb"><div class="mn">Ripening</div><div class="md">Room calculator</div></div>
-                <div class="soon-pill">Soon</div>
-            </div>`;
+                <div class="list-btn" onclick="openAgeChecker()">Age Checker <span style="font-size:0.6rem; opacity:0.5;">(Chiquita)</span></div>
+                <div class="list-btn" onclick="FruitDefects.open('banana')">Defects</div>
+                <div class="list-btn" onclick="OriginReport.open('banana')">🌍 Origin Report</div>
+                <div class="list-btn disabled">Ripening (Soon)</div>`;
         } else if (fruit === 'mango') {
             btns.innerHTML = `
-            <div class="mrow" onclick="FruitDefects.open('mango')">
-                <div class="ic ic-amber"><i class="bi bi-search" style="font-size:1rem;"></i></div>
-                <div class="mb"><div class="mn">Defects</div><div class="md">6 external · 3 internal</div></div>
-                <i class="bi bi-chevron-right ma"></i>
-            </div>
-            <div class="mrow" onclick="OriginReport.open('mango')">
-                <div class="ic ic-blue"><i class="bi bi-globe" style="font-size:1rem;"></i></div>
-                <div class="mb"><div class="mn">Origin Report</div><div class="md">Live weather · AI analysis</div></div>
-                <i class="bi bi-chevron-right ma"></i>
-            </div>
-            <div class="mrow dim">
-                <div class="ic" style="background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);"><i class="bi bi-thermometer-half" style="font-size:1rem;"></i></div>
-                <div class="mb"><div class="mn">Ripening</div><div class="md">Room calculator</div></div>
-                <div class="soon-pill">Soon</div>
-            </div>`;
+                <div class="list-btn" onclick="FruitDefects.open('mango')">Defects</div>
+                <div class="list-btn" onclick="OriginReport.open('mango')">🌍 Origin Report</div>
+                <div class="list-btn disabled">Ripening (Soon)</div>`;
         } else if (fruit === 'avocado') {
             btns.innerHTML = `
-            <div class="mrow" onclick="FruitDefects.open('avocado')">
-                <div class="ic ic-green"><i class="bi bi-search" style="font-size:1rem;"></i></div>
-                <div class="mb"><div class="mn">Defects</div><div class="md">5 external · 4 internal</div></div>
-                <i class="bi bi-chevron-right ma"></i>
-            </div>
-            <div class="mrow" onclick="OriginReport.open('avocado')">
-                <div class="ic ic-blue"><i class="bi bi-globe" style="font-size:1rem;"></i></div>
-                <div class="mb"><div class="mn">Origin Report</div><div class="md">Live weather · AI analysis</div></div>
-                <i class="bi bi-chevron-right ma"></i>
-            </div>
-            <div class="mrow dim">
-                <div class="ic" style="background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);"><i class="bi bi-thermometer-half" style="font-size:1rem;"></i></div>
-                <div class="mb"><div class="mn">Ripening</div><div class="md">Room calculator</div></div>
-                <div class="soon-pill">Soon</div>
-            </div>`;
+                <div class="list-btn" onclick="FruitDefects.open('avocado')">Defects</div>
+                <div class="list-btn" onclick="OriginReport.open('avocado')">🌍 Origin Report</div>
+                <div class="list-btn disabled">Ripening (Soon)</div>`;
         }
     }
 
@@ -88,54 +50,65 @@ function openMiddleHub(fruit) {
     document.getElementById('middle-hub').classList.remove('hidden');
 }
 
+// Open Age Checker directly (Chiquita only — no brand selection step)
 function openAgeChecker() {
     activeBrand = 'Chiquita';
     document.getElementById('brandName').innerText = 'Chiquita';
-    document.getElementById('commodityLabel').innerText = (activeFruit || 'banana').toUpperCase() + ' AGE CHECKER';
+    document.getElementById('commodityLabel').innerText = (activeFruit || 'fruit').toUpperCase() + ' ' + t('bananaAgeChecker');
     document.getElementById('codeIn').value = '';
     document.getElementById('resBox').classList.add('hidden');
     hideAllViews();
     document.getElementById('appInterface').classList.remove('hidden');
-    if (typeof updateFavoriteUI === 'function') updateFavoriteUI();
-    if (typeof renderHistory === 'function') renderHistory();
+    updateFavoriteUI();
+    renderHistory();
     setTimeout(() => document.getElementById('codeIn').focus(), 100);
 }
 
+// Open Defect Detector Hub
 function openDefectDetector() {
     hideAllViews();
     document.getElementById('defect-hub').classList.remove('hidden');
 }
 
+// Open Defect Detector directly from favorites
 function openDefectDetectorDirect(fruit, type) {
+    window.defectActiveFruit = fruit;
+    window.defectActiveType = type;
     hideAllViews();
     document.getElementById('defect-scan-view').classList.remove('hidden');
-    const names = { banana: 'Banana', mango: 'Mango', avocado: 'Avocado' };
-    document.getElementById('defectScanTitle').innerText = (names[fruit] || fruit) + ' — ' + (type === 'external' ? 'External' : 'Internal');
-    if (typeof updateDefectFavoriteUI === 'function') updateDefectFavoriteUI();
-    if (typeof DefectDetector !== 'undefined') DefectDetector.selectType(type);
+    const fruitNames = { banana: 'Banana', mango: 'Mango', avocado: 'Avocado' };
+    const typeLabel = type === 'external' ? t('external') : t('internal');
+    document.getElementById('defectScanTitle').innerText = fruitNames[fruit] + ' — ' + typeLabel;
+    updateDefectFavoriteUI();
+    DefectDetector.selectType(type);
 }
 
+// Open Colour Scanner
 function openColourScanner() {
     hideAllViews();
     document.getElementById('colour-scanner-view').classList.remove('hidden');
-    if (typeof updateColourFavoriteUI === 'function') updateColourFavoriteUI();
-    if (typeof ColourScanner !== 'undefined') { ColourScanner.init(); ColourScanner.setScanMode('single'); }
+    updateColourFavoriteUI();
+    ColourScanner.init();
+    ColourScanner.setScanMode('single');
 }
 
+// Open News
 function openNews() {
     hideAllViews();
     document.getElementById('news-view').classList.remove('hidden');
-    if (typeof NewsManager !== 'undefined') NewsManager.init();
+    NewsManager.init();
 }
 
+// Toggle Menu Drawer
 function toggleMenu() {
     document.getElementById('menu-drawer').classList.toggle('open');
     document.getElementById('menu-overlay').classList.toggle('open');
 }
 
+// Toggle Theme
 function toggleTheme() {
     document.body.classList.toggle('light-theme');
     const isLight = document.body.classList.contains('light-theme');
-    document.getElementById('themeText').innerText = isLight ? 'Light Mode' : 'Dark Mode';
+    document.getElementById('themeText').innerText = isLight ? t('lightMode') : t('darkMode');
     localStorage.setItem('pulpTheme', isLight ? 'light' : 'dark');
 }

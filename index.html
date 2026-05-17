@@ -139,6 +139,18 @@
     .hc:not(.hc-banana):not(.hc-news) .hc-name  { font-size: 0.88rem; }
     .hc:not(.hc-banana):not(.hc-news) .hc-label { padding: 12px 16px 14px; }
 }
+
+/* ── ARTICLE SELECTOR ──────────────────────── */
+.article-btn.active {
+    background: rgba(166,226,46,0.08) !important;
+    border-color: var(--pulp-lime) !important;
+    color: var(--pulp-lime) !important;
+}
+.scan-mode-btn.active {
+    background: rgba(166,226,46,0.08) !important;
+    border-color: var(--pulp-lime) !important;
+    color: var(--pulp-lime) !important;
+}
 </style>
 </head>
 <body>
@@ -484,21 +496,43 @@ Pulp Pro is not affiliated with any news source.
 <i class="bi bi-star-fill fav-toggle" id="favStar" onclick="toggleFavorite('calculator')"></i>
 <img src="edited-image.png" style="width:50px; margin-bottom:10px;">
 <div id="brandName" style="font-size:1.4rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase;">Chiquita</div>
-<div id="commodityLabel" style="font-weight:900; letter-spacing:4px; opacity:0.5; font-size:0.7rem; margin-bottom:25px; color:var(--text-main);">BANANA AGE CHECKER</div>
-<div style="display:flex; gap:8px; margin-bottom:20px;">
-<div class="scan-toggle-btn active" id="singleCodeBtn" onclick="setScanMode('single')">Single Code</div>
-<div class="scan-toggle-btn" id="batchCodeBtn" onclick="setScanMode('batch')">Batch Scan</div>
+<div id="commodityLabel" style="font-weight:900; letter-spacing:4px; opacity:0.5; font-size:0.7rem; margin-bottom:20px; color:var(--text-main);">BANANA AGE CHECKER</div>
+
+<!-- ARTICLE SELECTOR -->
+<div style="font-size:0.52rem; font-weight:900; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">Select Article</div>
+<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px; margin-bottom:18px;">
+    <button class="article-btn active" data-article="Chiquita 18kg" onclick="setArticle('Chiquita 18kg')" style="background:var(--input-bg); border:1.5px solid var(--border-glass); border-radius:12px; padding:12px 4px; font-size:0.55rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; cursor:pointer; line-height:1.4;">Chiquita<br>18kg</button>
+    <button class="article-btn" data-article="Chiquita Geel" onclick="setArticle('Chiquita Geel')" style="background:var(--input-bg); border:1.5px solid var(--border-glass); border-radius:12px; padding:12px 4px; font-size:0.55rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; cursor:pointer; line-height:1.4;">Chiquita<br>Geel</button>
+    <button class="article-btn" data-article="Chiquita Groene" onclick="setArticle('Chiquita Groene')" style="background:var(--input-bg); border:1.5px solid var(--border-glass); border-radius:12px; padding:12px 4px; font-size:0.55rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; cursor:pointer; line-height:1.4;">Chiquita<br>Groene</button>
 </div>
+
+<!-- SCAN MODE -->
+<div style="font-size:0.52rem; font-weight:900; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">Scan Mode</div>
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:18px;">
+    <button id="singleModeBtn" class="scan-mode-btn active" onclick="setScanMode('single')" style="background:var(--input-bg); border:1.5px solid var(--border-glass); border-radius:12px; padding:11px; font-size:0.62rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; cursor:pointer;">Single Scan</button>
+    <button id="multiModeBtn" class="scan-mode-btn" onclick="setScanMode('multi')" style="background:var(--input-bg); border:1.5px solid var(--border-glass); border-radius:12px; padding:11px; font-size:0.62rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; cursor:pointer;">Multi Scan</button>
+</div>
+
+<!-- INPUT -->
 <div class="input-wrapper"><input type="text" id="codeIn" placeholder="---" maxlength="3" autofocus></div>
-<div id="batchList" style="display:none; background:var(--input-bg); border-radius:20px; margin-bottom:15px; max-height:300px; overflow-y:auto;"></div>
-<button id="batchReportBtn" class="btn-main" style="display:none; margin-bottom:15px;" onclick="showBatchReport()">Get Batch Report &rarr;</button>
+
+<!-- BATCH LIST (multi scan) -->
+<div id="batchList" class="hidden" style="background:var(--input-bg); border:1px solid var(--border-glass); border-radius:16px; margin-bottom:14px; overflow:hidden;"></div>
+<button id="batchReportBtn" class="btn-main hidden" style="margin-bottom:15px;" onclick="showBatchReport()">Get Batch Report &rarr;</button>
+
 <button onclick="checkFruit()" class="btn-main" id="calcBtn">Calculate</button>
+
+<!-- SINGLE RESULT -->
 <div id="resBox" class="result-display hidden">
 <div id="statusLabel" style="font-weight:900;">READY</div>
 <div id="daysValue">--</div>
 <div id="dateText" style="font-size:1.3rem; font-weight:900; margin-top:10px;">-- -- ----</div>
 <button class="btn btn-copy" onclick="copyResult()" id="copyBtn"><i class="bi bi-clipboard"></i> COPY</button>
 </div>
+
+<!-- BATCH COPY -->
+<button id="batchCopyBtn" class="btn btn-copy hidden" onclick="copyBatch()" style="width:100%; justify-content:center; margin-top:10px;"><i class="bi bi-clipboard"></i> COPY</button>
+
 <button class="btn-main btn-back" style="margin-top:25px;" onclick="openMiddleHub(activeFruit)" id="backToBrandsBtn">&larr; Back</button>
 </div>
 <div id="historySection" class="history-section"><div id="historyList"></div></div>

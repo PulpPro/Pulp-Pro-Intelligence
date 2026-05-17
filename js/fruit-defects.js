@@ -10,8 +10,9 @@ const FruitDefects = (() => {
     let activeType   = null;
     let activeDefect = null;
 
-    let scrollBeforeDetail   = 0;
-    let scrollBeforeTypeView = 0;
+    // Scroll position memory
+    let scrollBeforeDetail   = 0;  // saved when opening a defect detail
+    let scrollBeforeTypeView = 0;  // saved when opening the defect list
 
     // ── FULLSCREEN VIEWER ─────────────────────────────────────
     let fsImages      = [];
@@ -21,13 +22,18 @@ const FruitDefects = (() => {
     function openFullscreen(images, index) {
         fsImages = images;
         fsIndex  = index;
+
         let overlay = document.getElementById('fd-fs-overlay');
         if (!overlay) {
             overlay = document.createElement('div');
             overlay.id = 'fd-fs-overlay';
-            overlay.style.cssText = `position:fixed;inset:0;z-index:99999;background:#000;display:flex;flex-direction:column;touch-action:pan-y;`;
+            overlay.style.cssText = `
+                position:fixed; inset:0; z-index:99999;
+                background:#000; display:flex; flex-direction:column;
+                touch-action:pan-y;
+            `;
             overlay.addEventListener('touchstart', e => { fsTouchStartX = e.touches[0].clientX; }, { passive: true });
-            overlay.addEventListener('touchend', e => {
+            overlay.addEventListener('touchend',   e => {
                 const dx = e.changedTouches[0].clientX - fsTouchStartX;
                 if (Math.abs(dx) > 50) dx < 0 ? fsNext() : fsPrev();
             }, { passive: true });
@@ -43,25 +49,60 @@ const FruitDefects = (() => {
         if (!overlay) return;
         const src   = fsImages[fsIndex];
         const total = fsImages.length;
+
         overlay.innerHTML = `
-        <div style="position:absolute;top:0;left:0;right:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:max(env(safe-area-inset-top,14px),14px) 20px 14px;background:linear-gradient(to bottom,rgba(0,0,0,0.88) 0%,transparent 100%);">
-            <div style="display:flex;align-items:center;gap:10px;">
-                <img src="edited-image.png" style="width:30px;height:30px;border-radius:8px;opacity:0.92;">
-                <span style="font-size:0.68rem;font-weight:900;color:#a6e22e;letter-spacing:3px;text-transform:uppercase;">PULP PRO</span>
+        <div style="position:absolute; top:0; left:0; right:0; z-index:10;
+            display:flex; align-items:center; justify-content:space-between;
+            padding:max(env(safe-area-inset-top,14px),14px) 20px 14px;
+            background:linear-gradient(to bottom,rgba(0,0,0,0.88) 0%,transparent 100%);">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <img src="edited-image.png" style="width:30px; height:30px; border-radius:8px; opacity:0.92;">
+                <span style="font-size:0.68rem; font-weight:900; color:var(--pulp-lime); letter-spacing:3px; text-transform:uppercase;">PULP PRO</span>
             </div>
-            ${total > 1 ? `<span style="font-size:0.62rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:1px;">${fsIndex + 1} / ${total}</span>` : ''}
-            <button onclick="FruitDefects.closeFullscreen()" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.22);color:#fff;font-size:1rem;width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+            ${total > 1 ? `<span style="font-size:0.62rem; font-weight:700; color:rgba(255,255,255,0.5); letter-spacing:1px;">${fsIndex + 1} / ${total}</span>` : ''}
+            <button onclick="FruitDefects.closeFullscreen()"
+                style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.22);
+                color:#fff; font-size:1rem; width:36px; height:36px;
+                border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center;">✕</button>
         </div>
-        <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:70px 0 90px;overflow:hidden;">
-            <img src="${src}" alt="Defect photo" style="max-width:100%;max-height:100%;object-fit:contain;display:block;user-select:none;" onerror="this.style.display='none';document.getElementById('fd-fs-err').style.display='flex';">
-            <div id="fd-fs-err" style="display:none;flex-direction:column;align-items:center;gap:12px;color:rgba(255,255,255,0.3);"><span style="font-size:3rem;">📷</span><span style="font-size:0.65rem;text-transform:uppercase;letter-spacing:1px;">Photo not found</span></div>
+
+        <div style="flex:1; display:flex; align-items:center; justify-content:center; padding:70px 0 90px; overflow:hidden;">
+            <img src="${src}" alt="Defect photo"
+                style="max-width:100%; max-height:100%; object-fit:contain; display:block; user-select:none;"
+                onerror="this.style.display='none'; document.getElementById('fd-fs-err').style.display='flex';">
+            <div id="fd-fs-err" style="display:none; flex-direction:column; align-items:center; gap:12px; color:rgba(255,255,255,0.3);">
+                <span style="font-size:3rem;">📷</span>
+                <span style="font-size:0.65rem; text-transform:uppercase; letter-spacing:1px;">Photo not found</span>
+            </div>
         </div>
+
         ${total > 1 ? `
-        <div style="position:absolute;bottom:0;left:0;right:0;z-index:10;display:flex;align-items:center;justify-content:center;gap:20px;padding:16px 20px max(env(safe-area-inset-bottom,18px),18px);background:linear-gradient(to top,rgba(0,0,0,0.88) 0%,transparent 100%);">
-            <button onclick="FruitDefects.fsPrev()" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.22);color:#fff;font-size:1.3rem;width:50px;height:50px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:${fsIndex === 0 ? '0.2' : '1'};">‹</button>
-            <div style="display:flex;gap:7px;align-items:center;">${fsImages.map((_, i) => `<div style="width:${i === fsIndex ? '20px' : '7px'};height:7px;border-radius:4px;background:${i === fsIndex ? '#a6e22e' : 'rgba(255,255,255,0.25)'};transition:all 0.2s;"></div>`).join('')}</div>
-            <button onclick="FruitDefects.fsNext()" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.22);color:#fff;font-size:1.3rem;width:50px;height:50px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:${fsIndex === total - 1 ? '0.2' : '1'};">›</button>
-        </div>` : `<div style="position:absolute;bottom:0;left:0;right:0;z-index:10;text-align:center;padding:14px 20px max(env(safe-area-inset-bottom,16px),16px);background:linear-gradient(to top,rgba(0,0,0,0.7) 0%,transparent 100%);"><span style="font-size:0.55rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px;">Tap ✕ to close</span></div>`}`;
+        <div style="position:absolute; bottom:0; left:0; right:0; z-index:10;
+            display:flex; align-items:center; justify-content:center; gap:20px;
+            padding:16px 20px max(env(safe-area-inset-bottom,18px),18px);
+            background:linear-gradient(to top,rgba(0,0,0,0.88) 0%,transparent 100%);">
+            <button onclick="FruitDefects.fsPrev()"
+                style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.22);
+                color:#fff; font-size:1.3rem; width:50px; height:50px;
+                border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center;
+                opacity:${fsIndex === 0 ? '0.2' : '1'};">‹</button>
+            <div style="display:flex; gap:7px; align-items:center;">
+                ${fsImages.map((_, i) => `
+                <div style="width:${i === fsIndex ? '20px' : '7px'}; height:7px; border-radius:4px;
+                    background:${i === fsIndex ? 'var(--pulp-lime)' : 'rgba(255,255,255,0.25)'};
+                    transition:all 0.2s;"></div>`).join('')}
+            </div>
+            <button onclick="FruitDefects.fsNext()"
+                style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.22);
+                color:#fff; font-size:1.3rem; width:50px; height:50px;
+                border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center;
+                opacity:${fsIndex === total - 1 ? '0.2' : '1'};">›</button>
+        </div>` : `
+        <div style="position:absolute; bottom:0; left:0; right:0; z-index:10; text-align:center;
+            padding:14px 20px max(env(safe-area-inset-bottom,16px),16px);
+            background:linear-gradient(to top,rgba(0,0,0,0.7) 0%,transparent 100%);">
+            <span style="font-size:0.55rem; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:1px;">Tap ✕ to close</span>
+        </div>`}`;
     }
 
     function closeFullscreen() {
@@ -69,8 +110,9 @@ const FruitDefects = (() => {
         if (o) o.style.display = 'none';
         document.body.style.overflow = '';
     }
+
     function fsNext() { if (fsIndex < fsImages.length - 1) { fsIndex++; renderFsContent(); } }
-    function fsPrev() { if (fsIndex > 0) { fsIndex--; renderFsContent(); } }
+    function fsPrev() { if (fsIndex > 0)                   { fsIndex--; renderFsContent(); } }
 
     // ── HELPERS ───────────────────────────────────────────────
     function getLang() {
@@ -78,6 +120,7 @@ const FruitDefects = (() => {
         return localStorage.getItem('pulpLang') || 'en';
     }
     function isPC() { return window.innerWidth >= 900; }
+
     function sevColor(s) {
         if (s === 'critical') return '#ff4d4d';
         if (s === 'major')    return '#ff8c00';
@@ -94,19 +137,12 @@ const FruitDefects = (() => {
         return nl ? '🟢 Makkelijk te detecteren' : '🟢 Easy to detect';
     }
 
-    // ── SHOW VIEW — updated for new screen system ─────────────
+    // ── SHOW VIEW ─────────────────────────────────────────────
     function showView(id) {
-        // Hide all screens
-        document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
-        // Show the target view (appended to body, not inside .screen)
-        // Hide any previously shown fd/or views
-        ['fd-type-view','fd-list-view','fd-detail-view','or-picker-view','or-report-view'].forEach(v => {
-            const el = document.getElementById(v);
-            if (el) el.style.display = 'none';
-        });
+        document.querySelectorAll('.nav-view').forEach(el => el.classList.add('hidden'));
         const target = document.getElementById(id);
         if (target) {
-            target.style.display = 'block';
+            target.classList.remove('hidden');
             window.scrollTo(0, 0);
         }
     }
@@ -115,6 +151,7 @@ const FruitDefects = (() => {
     function open(fruit) {
         activeFruit = fruit;
         ensureViews();
+        // Save scroll position before going into defects
         scrollBeforeTypeView = window.scrollY;
 
         const lang = getLang();
@@ -136,25 +173,25 @@ const FruitDefects = (() => {
         const intBtn = document.getElementById('fd-int-btn');
 
         if (extBtn) extBtn.innerHTML = `
-        <div style="display:flex;align-items:center;gap:14px;padding:20px 22px;">
-            <div style="font-size:2rem;width:46px;text-align:center;flex-shrink:0;">🔍</div>
+        <div style="display:flex; align-items:center; gap:14px; padding:20px 22px;">
+            <div style="font-size:2rem; width:46px; text-align:center; flex-shrink:0;">🔍</div>
             <div style="flex:1;">
-                <div style="font-size:0.95rem;font-weight:900;color:#fff;margin-bottom:4px;">${nl ? 'Externe Gebreken' : 'External Defects'}</div>
-                <div style="font-size:0.68rem;color:rgba(255,255,255,0.45);font-weight:600;">${nl ? 'Schil, kneuzing, schimmel, veldschade' : 'Skin, bruising, fungal, field damage'}</div>
+                <div style="font-size:0.95rem; font-weight:900; color:var(--text-main); margin-bottom:4px;">${nl ? 'Externe Gebreken' : 'External Defects'}</div>
+                <div style="font-size:0.68rem; color:var(--text-dim); font-weight:600;">${nl ? 'Schil, kneuzing, schimmel, veldschade' : 'Skin, bruising, fungal, field damage'}</div>
             </div>
-            <div style="background:#a6e22e;color:#000;font-size:0.7rem;font-weight:900;padding:5px 12px;border-radius:20px;flex-shrink:0;">${extCount}</div>
-            <div style="color:rgba(255,255,255,0.3);font-size:1.3rem;flex-shrink:0;">›</div>
+            <div style="background:var(--pulp-lime); color:#000; font-size:0.7rem; font-weight:900; padding:5px 12px; border-radius:20px; flex-shrink:0;">${extCount}</div>
+            <div style="color:var(--text-dim); font-size:1.3rem; flex-shrink:0;">›</div>
         </div>`;
 
         if (intBtn) intBtn.innerHTML = `
-        <div style="display:flex;align-items:center;gap:14px;padding:20px 22px;">
-            <div style="font-size:2rem;width:46px;text-align:center;flex-shrink:0;">🔬</div>
+        <div style="display:flex; align-items:center; gap:14px; padding:20px 22px;">
+            <div style="font-size:2rem; width:46px; text-align:center; flex-shrink:0;">🔬</div>
             <div style="flex:1;">
-                <div style="font-size:0.95rem;font-weight:900;color:#fff;margin-bottom:4px;">${nl ? 'Interne Gebreken' : 'Internal Defects'}</div>
-                <div style="font-size:0.68rem;color:rgba(255,255,255,0.45);font-weight:600;">${nl ? 'Vruchtvlees, vaatbundels, pit, verval' : 'Flesh, vascular, seed cavity, breakdown'}</div>
+                <div style="font-size:0.95rem; font-weight:900; color:var(--text-main); margin-bottom:4px;">${nl ? 'Interne Gebreken' : 'Internal Defects'}</div>
+                <div style="font-size:0.68rem; color:var(--text-dim); font-weight:600;">${nl ? 'Vruchtvlees, vaatbundels, pit, verval' : 'Flesh, vascular, seed cavity, breakdown'}</div>
             </div>
-            <div style="background:#a6e22e;color:#000;font-size:0.7rem;font-weight:900;padding:5px 12px;border-radius:20px;flex-shrink:0;">${intCount}</div>
-            <div style="color:rgba(255,255,255,0.3);font-size:1.3rem;flex-shrink:0;">›</div>
+            <div style="background:var(--pulp-lime); color:#000; font-size:0.7rem; font-weight:900; padding:5px 12px; border-radius:20px; flex-shrink:0;">${intCount}</div>
+            <div style="color:var(--text-dim); font-size:1.3rem; flex-shrink:0;">›</div>
         </div>`;
 
         showView('fd-type-view');
@@ -168,7 +205,9 @@ const FruitDefects = (() => {
         const data    = FRUIT_DEFECTS[activeFruit] || {};
         const defects = data[type] || [];
         const fruitNames = { banana: nl ? 'Banaan' : 'Banana', mango: 'Mango', avocado: 'Avocado' };
-        const typeLabel  = type === 'external' ? (nl ? 'Externe Gebreken' : 'External Defects') : (nl ? 'Interne Gebreken' : 'Internal Defects');
+        const typeLabel  = type === 'external'
+            ? (nl ? 'Externe Gebreken' : 'External Defects')
+            : (nl ? 'Interne Gebreken' : 'Internal Defects');
 
         const titleEl = document.getElementById('fd-list-title');
         if (titleEl) titleEl.innerText = (fruitNames[activeFruit] || activeFruit) + ' — ' + typeLabel;
@@ -177,7 +216,7 @@ const FruitDefects = (() => {
         if (!container) return;
 
         if (defects.length === 0) {
-            container.innerHTML = `<div style="padding:40px;text-align:center;color:rgba(255,255,255,0.45);font-size:0.82rem;">${nl ? 'Binnenkort beschikbaar' : 'Coming soon'}</div>`;
+            container.innerHTML = `<div style="padding:40px; text-align:center; color:var(--text-dim); font-size:0.82rem;">${nl ? 'Binnenkort beschikbaar' : 'Coming soon'}</div>`;
         } else {
             const byCategory = {};
             defects.forEach(def => {
@@ -189,8 +228,8 @@ const FruitDefects = (() => {
 
             container.innerHTML = Object.entries(byCategory).map(([cat, defs]) => `
             <div style="margin-bottom:14px;">
-                <div style="font-size:0.58rem;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.3);padding:8px 16px 6px;">${cat}</div>
-                <div style="border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.07);">
+                <div style="font-size:0.58rem; font-weight:900; text-transform:uppercase; letter-spacing:2px; color:var(--text-dim); padding:8px 16px 6px; opacity:0.7;">${cat}</div>
+                <div style="border-radius:16px; overflow:hidden; border:1px solid var(--border-glass);">
                 ${defs.map((def, i) => {
                     const d      = def[lang] || def['en'];
                     const col    = sevColor(def.severity);
@@ -198,17 +237,23 @@ const FruitDefects = (() => {
                     const isLast = i === defs.length - 1;
                     return `
                     <div onclick="FruitDefects.openDefect('${def.id}')"
-                        style="display:flex;align-items:center;gap:14px;padding:16px 18px;cursor:pointer;background:#0f0f0f;${isLast ? '' : 'border-bottom:1px solid rgba(255,255,255,0.07);'}transition:background 0.15s;"
+                        style="display:flex; align-items:center; gap:14px; padding:16px 18px; cursor:pointer;
+                        background:var(--glass-card); ${isLast ? '' : 'border-bottom:1px solid var(--border-glass);'}
+                        transition:background 0.15s;"
                         onmouseover="this.style.background='rgba(255,255,255,0.05)'"
-                        onmouseout="this.style.background='#0f0f0f'">
-                        <div style="width:46px;height:46px;border-radius:12px;background:${col}18;border:1px solid ${col}30;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;">${def.emoji}</div>
-                        <div style="flex:1;min-width:0;">
-                            <div style="font-size:0.92rem;font-weight:800;color:#fff;margin-bottom:3px;">${d.name}</div>
-                            <div style="font-size:0.7rem;color:rgba(255,255,255,0.45);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.shortDesc}</div>
+                        onmouseout="this.style.background='var(--glass-card)'">
+                        <div style="width:46px; height:46px; border-radius:12px; background:${col}18;
+                            border:1px solid ${col}30; display:flex; align-items:center;
+                            justify-content:center; font-size:1.4rem; flex-shrink:0;">${def.emoji}</div>
+                        <div style="flex:1; min-width:0;">
+                            <div style="font-size:0.92rem; font-weight:800; color:var(--text-main); margin-bottom:3px;">${d.name}</div>
+                            <div style="font-size:0.7rem; color:var(--text-dim); font-weight:600;
+                                white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${d.shortDesc}</div>
                         </div>
-                        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;">
-                            <div style="font-size:0.52rem;font-weight:900;text-transform:uppercase;letter-spacing:0.5px;padding:4px 10px;border-radius:8px;background:${col}18;color:${col};white-space:nowrap;">${sev}</div>
-                            <div style="color:rgba(255,255,255,0.3);font-size:1.1rem;">›</div>
+                        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:5px; flex-shrink:0;">
+                            <div style="font-size:0.52rem; font-weight:900; text-transform:uppercase; letter-spacing:0.5px;
+                                padding:4px 10px; border-radius:8px; background:${col}18; color:${col}; white-space:nowrap;">${sev}</div>
+                            <div style="color:var(--text-dim); font-size:1.1rem;">›</div>
                         </div>
                     </div>`;
                 }).join('')}
@@ -221,7 +266,9 @@ const FruitDefects = (() => {
 
     // ── OPEN DEFECT DETAIL ────────────────────────────────────
     function openDefect(defectId) {
+        // Save scroll position before going into detail
         scrollBeforeDetail = window.scrollY;
+
         const lang = getLang();
         const nl   = lang === 'nl';
         const data = FRUIT_DEFECTS[activeFruit] || {};
@@ -235,56 +282,75 @@ const FruitDefects = (() => {
         const sev = sevLabel(def.severity, nl);
         const pc  = isPC();
 
+        // ── Hero
         const hero = document.getElementById('fd-detail-hero');
         if (hero) {
-            hero.style.background = `linear-gradient(135deg,${col}30 0%,${col}08 60%,transparent 100%)`;
+            hero.style.background = `linear-gradient(135deg, ${col}30 0%, ${col}08 60%, transparent 100%)`;
             hero.innerHTML = `
             <div style="padding:${pc ? '28px 32px 24px' : '20px 16px 18px'};">
-                <button onclick="FruitDefects.backToList()" style="background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:${pc ? '0.7rem' : '0.64rem'};font-weight:900;text-transform:uppercase;letter-spacing:1px;padding:${pc ? '9px 22px' : '8px 18px'};border-radius:20px;cursor:pointer;margin-bottom:${pc ? '24px' : '18px'};display:inline-block;">← ${nl ? 'Terug' : 'Back'}</button>
-                <div style="display:flex;align-items:flex-start;gap:${pc ? '20px' : '14px'};">
-                    <div style="font-size:${pc ? '3.8rem' : '2.8rem'};line-height:1;">${def.emoji}</div>
+                <button onclick="FruitDefects.backToList()"
+                    style="background:rgba(0,0,0,0.45); border:1px solid rgba(255,255,255,0.15);
+                    color:#fff; font-size:${pc ? '0.7rem' : '0.64rem'}; font-weight:900;
+                    text-transform:uppercase; letter-spacing:1px;
+                    padding:${pc ? '9px 22px' : '8px 18px'}; border-radius:20px;
+                    cursor:pointer; margin-bottom:${pc ? '24px' : '18px'}; display:inline-block;">← ${nl ? 'Terug' : 'Back'}</button>
+                <div style="display:flex; align-items:flex-start; gap:${pc ? '20px' : '14px'};">
+                    <div style="font-size:${pc ? '3.8rem' : '2.8rem'}; line-height:1;">${def.emoji}</div>
                     <div style="flex:1;">
-                        <div style="font-size:${pc ? '0.62rem' : '0.48rem'};font-weight:900;text-transform:uppercase;letter-spacing:2px;color:${col};margin-bottom:6px;opacity:0.9;">${d.category || ''}</div>
-                        <div style="font-size:${pc ? '2.1rem' : '1.4rem'};font-weight:900;color:#fff;line-height:1.15;margin-bottom:${pc ? '10px' : '7px'};">${d.name}</div>
-                        <div style="font-size:${pc ? '0.92rem' : '0.75rem'};color:rgba(255,255,255,0.55);font-weight:600;line-height:1.5;">${d.shortDesc}</div>
+                        <div style="font-size:${pc ? '0.62rem' : '0.48rem'}; font-weight:900; text-transform:uppercase;
+                            letter-spacing:2px; color:${col}; margin-bottom:6px; opacity:0.9;">${d.category || ''}</div>
+                        <div style="font-size:${pc ? '2.1rem' : '1.4rem'}; font-weight:900;
+                            color:var(--text-main); line-height:1.15; margin-bottom:${pc ? '10px' : '7px'};">${d.name}</div>
+                        <div style="font-size:${pc ? '0.92rem' : '0.75rem'}; color:var(--text-dim);
+                            font-weight:600; line-height:1.5;">${d.shortDesc}</div>
                     </div>
                 </div>
                 <div style="margin-top:${pc ? '22px' : '16px'};">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                        <span style="font-size:${pc ? '0.62rem' : '0.5rem'};font-weight:900;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.45);">${nl ? 'Ernstniveau' : 'Severity level'}</span>
-                        <span style="font-size:${pc ? '0.72rem' : '0.58rem'};font-weight:900;color:${col};text-transform:uppercase;letter-spacing:1px;">${sev}</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span style="font-size:${pc ? '0.62rem' : '0.5rem'}; font-weight:900;
+                            text-transform:uppercase; letter-spacing:1px; color:var(--text-dim);">${nl ? 'Ernstniveau' : 'Severity level'}</span>
+                        <span style="font-size:${pc ? '0.72rem' : '0.58rem'}; font-weight:900;
+                            color:${col}; text-transform:uppercase; letter-spacing:1px;">${sev}</span>
                     </div>
-                    <div style="height:${pc ? '8px' : '6px'};background:rgba(255,255,255,0.08);border-radius:6px;overflow:hidden;">
-                        <div style="height:100%;width:${(def.severityScore / 5) * 100}%;background:${col};border-radius:6px;transition:width 0.5s ease;"></div>
+                    <div style="height:${pc ? '8px' : '6px'}; background:rgba(255,255,255,0.08); border-radius:6px; overflow:hidden;">
+                        <div style="height:100%; width:${(def.severityScore / 5) * 100}%;
+                            background:${col}; border-radius:6px; transition:width 0.5s ease;"></div>
                     </div>
-                    <div style="display:flex;justify-content:space-between;margin-top:4px;">
-                        ${[1,2,3,4,5].map(i => `<div style="width:18%;height:3px;border-radius:2px;background:${i <= def.severityScore ? col : 'rgba(255,255,255,0.1)'};"></div>`).join('')}
+                    <div style="display:flex; justify-content:space-between; margin-top:4px;">
+                        ${[1,2,3,4,5].map(i => `<div style="width:18%; height:3px; border-radius:2px;
+                            background:${i <= def.severityScore ? col : 'rgba(255,255,255,0.1)'};"></div>`).join('')}
                     </div>
                 </div>
             </div>`;
         }
 
+        // ── Quick facts
         const factsEl = document.getElementById('fd-quick-facts');
         if (factsEl) {
             factsEl.innerHTML = `
-            <div style="display:grid;grid-template-columns:${pc ? '1fr 1fr 1fr' : '1fr 1fr'};gap:${pc ? '12px' : '8px'};padding:${pc ? '18px 20px' : '14px 16px'};">
-                <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:${pc ? '14px 16px' : '11px 13px'};">
-                    <div style="font-size:${pc ? '0.56rem' : '0.46rem'};font-weight:900;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.45);margin-bottom:5px;">🌡️ ${nl ? 'Temperatuur' : 'Temperature'}</div>
-                    <div style="font-size:${pc ? '0.88rem' : '0.7rem'};font-weight:800;color:#fff;line-height:1.3;">${def.tempRange || '—'}</div>
+            <div style="display:grid; grid-template-columns:${pc ? '1fr 1fr 1fr' : '1fr 1fr'}; gap:${pc ? '12px' : '8px'}; padding:${pc ? '18px 20px' : '14px 16px'};">
+                <div style="background:rgba(255,255,255,0.04); border:1px solid var(--border-glass); border-radius:12px; padding:${pc ? '14px 16px' : '11px 13px'};">
+                    <div style="font-size:${pc ? '0.56rem' : '0.46rem'}; font-weight:900; text-transform:uppercase;
+                        letter-spacing:1px; color:var(--text-dim); margin-bottom:5px;">🌡️ ${nl ? 'Temperatuur' : 'Temperature'}</div>
+                    <div style="font-size:${pc ? '0.88rem' : '0.7rem'}; font-weight:800; color:var(--text-main); line-height:1.3;">${def.tempRange || '—'}</div>
                 </div>
-                <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:${pc ? '14px 16px' : '11px 13px'};">
-                    <div style="font-size:${pc ? '0.56rem' : '0.46rem'};font-weight:900;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.45);margin-bottom:5px;">📉 ${nl ? 'Houdbaarheid' : 'Shelf impact'}</div>
-                    <div style="font-size:${pc ? '0.88rem' : '0.7rem'};font-weight:800;color:#fff;line-height:1.3;">${def.shelfImpact || '—'}</div>
+                <div style="background:rgba(255,255,255,0.04); border:1px solid var(--border-glass); border-radius:12px; padding:${pc ? '14px 16px' : '11px 13px'};">
+                    <div style="font-size:${pc ? '0.56rem' : '0.46rem'}; font-weight:900; text-transform:uppercase;
+                        letter-spacing:1px; color:var(--text-dim); margin-bottom:5px;">📉 ${nl ? 'Houdbaarheid' : 'Shelf impact'}</div>
+                    <div style="font-size:${pc ? '0.88rem' : '0.7rem'}; font-weight:800; color:var(--text-main); line-height:1.3;">${def.shelfImpact || '—'}</div>
                 </div>
-                <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:${pc ? '14px 16px' : '11px 13px'};${pc ? '' : 'grid-column:1/-1;'}">
-                    <div style="font-size:${pc ? '0.56rem' : '0.46rem'};font-weight:900;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.45);margin-bottom:5px;">👁️ ${nl ? 'Detectie' : 'Detection'}</div>
-                    <div style="font-size:${pc ? '0.88rem' : '0.7rem'};font-weight:800;color:#fff;">${detectionLabel(def.detection, nl)}</div>
+                <div style="background:rgba(255,255,255,0.04); border:1px solid var(--border-glass); border-radius:12px;
+                    padding:${pc ? '14px 16px' : '11px 13px'}; ${pc ? '' : 'grid-column:1/-1;'}">
+                    <div style="font-size:${pc ? '0.56rem' : '0.46rem'}; font-weight:900; text-transform:uppercase;
+                        letter-spacing:1px; color:var(--text-dim); margin-bottom:5px;">👁️ ${nl ? 'Detectie' : 'Detection'}</div>
+                    <div style="font-size:${pc ? '0.88rem' : '0.7rem'}; font-weight:800; color:var(--text-main);">${detectionLabel(def.detection, nl)}</div>
                 </div>
             </div>`;
         }
 
         renderDetailImages(def.images || [], pc);
         renderSections(d, nl, col, pc);
+
         showView('fd-detail-view');
     }
 
@@ -292,18 +358,66 @@ const FruitDefects = (() => {
     function renderDetailImages(images, pc) {
         const container = document.getElementById('fd-images-container');
         if (!container) return;
+
         const validImages = images.filter(src => src && src.trim() !== '');
         window._fdCurrentImages = validImages;
+
         if (validImages.length === 0) {
-            container.innerHTML = `<div style="height:${pc ? '240px' : '130px'};background:#0f0f0f;border:1px dashed rgba(255,255,255,0.1);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;margin-bottom:${pc ? '0' : '16px'};"><span style="font-size:2.2rem;opacity:0.3;">📷</span><span style="font-size:${pc ? '0.62rem' : '0.5rem'};color:rgba(255,255,255,0.2);font-weight:700;text-transform:uppercase;letter-spacing:1px;">Add photos to images/defects/</span></div>`;
+            container.innerHTML = `
+            <div style="height:${pc ? '240px' : '130px'}; background:var(--glass-card);
+                border:1px dashed rgba(255,255,255,0.1); border-radius:16px;
+                display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+                margin-bottom:${pc ? '0' : '16px'};">
+                <span style="font-size:2.2rem; opacity:0.3;">📷</span>
+                <span style="font-size:${pc ? '0.62rem' : '0.5rem'}; color:rgba(255,255,255,0.2); font-weight:700; text-transform:uppercase; letter-spacing:1px;">Add photos to images/defects/</span>
+            </div>`;
             return;
         }
+
         if (pc) {
-            container.innerHTML = validImages.map((src, i) => `<div style="border-radius:16px;overflow:hidden;background:#0f0f0f;cursor:pointer;position:relative;${i > 0 ? 'margin-top:14px;' : ''}" onclick="FruitDefects.openFullscreen(window._fdCurrentImages,${i})"><img src="${src}" alt="Defect photo ${i+1}" style="width:100%;display:block;object-fit:cover;max-height:340px;border-radius:16px;" onerror="this.parentElement.innerHTML='<div style=\'height:160px;display:flex;align-items:center;justify-content:center;background:#0f0f0f;border-radius:16px\'><span style=\'font-size:0.58rem;color:rgba(255,255,255,0.2);text-transform:uppercase;letter-spacing:1px\'>Photo not found</span></div>'"><div style="position:absolute;bottom:12px;right:12px;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:7px 12px;font-size:0.85rem;pointer-events:none;">🔍</div></div>`).join('');
+            container.innerHTML = validImages.map((src, i) => `
+            <div style="border-radius:16px; overflow:hidden; background:var(--glass-card);
+                cursor:pointer; position:relative; ${i > 0 ? 'margin-top:14px;' : ''}"
+                onclick="FruitDefects.openFullscreen(window._fdCurrentImages, ${i})">
+                <img src="${src}" alt="Defect photo ${i+1}"
+                    style="width:100%; display:block; object-fit:cover; max-height:340px; border-radius:16px;"
+                    onerror="this.parentElement.style.cursor='default'; this.parentElement.onclick=null;
+                    this.parentElement.innerHTML='<div style=\'height:160px;display:flex;align-items:center;justify-content:center;background:var(--glass-card);border-radius:16px\'><span style=\'font-size:0.58rem;color:rgba(255,255,255,0.2);text-transform:uppercase;letter-spacing:1px\'>Photo not found</span></div>'">
+                <div style="position:absolute; bottom:12px; right:12px; background:rgba(0,0,0,0.6);
+                    border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:7px 12px;
+                    font-size:0.85rem; pointer-events:none;">🔍</div>
+            </div>`).join('');
         } else if (validImages.length === 1) {
-            container.innerHTML = `<div style="margin:0 0 16px;border-radius:16px;overflow:hidden;background:#0f0f0f;cursor:pointer;position:relative;" onclick="FruitDefects.openFullscreen(window._fdCurrentImages,0)"><img src="${validImages[0]}" alt="Defect photo" style="width:100%;display:block;object-fit:cover;max-height:230px;border-radius:16px;" onerror="this.parentElement.innerHTML='<div style=\'height:120px;display:flex;align-items:center;justify-content:center;background:#0f0f0f;border-radius:16px\'><span style=\'font-size:0.52rem;color:rgba(255,255,255,0.2);text-transform:uppercase;letter-spacing:1px\'>Photo not found</span></div>'"><div style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:5px 10px;font-size:0.78rem;pointer-events:none;">🔍</div></div>`;
+            container.innerHTML = `
+            <div style="margin:0 0 16px; border-radius:16px; overflow:hidden;
+                background:var(--glass-card); cursor:pointer; position:relative;"
+                onclick="FruitDefects.openFullscreen(window._fdCurrentImages, 0)">
+                <img src="${validImages[0]}" alt="Defect photo"
+                    style="width:100%; display:block; object-fit:cover; max-height:230px; border-radius:16px;"
+                    onerror="this.parentElement.style.cursor='default'; this.parentElement.onclick=null;
+                    this.parentElement.innerHTML='<div style=\'height:120px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--glass-card);border-radius:16px\'><span style=\'font-size:1.5rem;opacity:0.3\'>📷</span><span style=\'font-size:0.52rem;color:rgba(255,255,255,0.2);text-transform:uppercase;letter-spacing:1px\'>Photo not found</span></div>'">
+                <div style="position:absolute; bottom:10px; right:10px; background:rgba(0,0,0,0.6);
+                    border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:5px 10px;
+                    font-size:0.78rem; pointer-events:none;">🔍</div>
+            </div>`;
         } else {
-            container.innerHTML = `<div style="display:flex;gap:10px;overflow-x:auto;padding:0 0 16px;scrollbar-width:none;-webkit-overflow-scrolling:touch;">${validImages.map((src, i) => `<div style="flex-shrink:0;width:${validImages.length === 2 ? 'calc(50% - 5px)' : '70%'};border-radius:14px;overflow:hidden;background:#0f0f0f;cursor:pointer;position:relative;" onclick="FruitDefects.openFullscreen(window._fdCurrentImages,${i})"><img src="${src}" alt="Defect photo ${i+1}" style="width:100%;height:195px;object-fit:cover;display:block;border-radius:14px;" onerror="this.parentElement.innerHTML='<div style=\'height:195px;display:flex;align-items:center;justify-content:center;background:#0f0f0f;border-radius:14px\'><span style=\'font-size:0.52rem;color:rgba(255,255,255,0.2);text-transform:uppercase;letter-spacing:1px\'>Photo not found</span></div>'"><div style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:4px 9px;font-size:0.72rem;pointer-events:none;">🔍</div></div>`).join('')}</div>`;
+            container.innerHTML = `
+            <div style="display:flex; gap:10px; overflow-x:auto; padding:0 0 16px;
+                scrollbar-width:none; -webkit-overflow-scrolling:touch;">
+                ${validImages.map((src, i) => `
+                <div style="flex-shrink:0; width:${validImages.length === 2 ? 'calc(50% - 5px)' : '70%'};
+                    border-radius:14px; overflow:hidden; background:var(--glass-card);
+                    cursor:pointer; position:relative;"
+                    onclick="FruitDefects.openFullscreen(window._fdCurrentImages, ${i})">
+                    <img src="${src}" alt="Defect photo ${i+1}"
+                        style="width:100%; height:195px; object-fit:cover; display:block; border-radius:14px;"
+                        onerror="this.parentElement.style.cursor='default'; this.parentElement.onclick=null;
+                        this.parentElement.innerHTML='<div style=\'height:195px;display:flex;align-items:center;justify-content:center;background:var(--glass-card);border-radius:14px\'><span style=\'font-size:0.52rem;color:rgba(255,255,255,0.2);text-transform:uppercase;letter-spacing:1px\'>Photo not found</span></div>'">
+                    <div style="position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,0.6);
+                        border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:4px 9px;
+                        font-size:0.72rem; pointer-events:none;">🔍</div>
+                </div>`).join('')}
+            </div>`;
         }
     }
 
@@ -311,6 +425,7 @@ const FruitDefects = (() => {
     function renderSections(d, nl, col, pc) {
         const container = document.getElementById('fd-sections-container');
         if (!container) return;
+
         const sections = [];
         if (d.whatIsIt)           sections.push({ icon:'🔬', label: nl ? 'Wat is het?'           : 'What is it?',          content: renderText(d.whatIsIt, pc) });
         if (d.howToIdentify)      sections.push({ icon:'👁️', label: nl ? 'Hoe te herkennen'      : 'How to identify',      content: renderText(d.howToIdentify, pc) });
@@ -319,16 +434,18 @@ const FruitDefects = (() => {
         if (d.temperatureEffects) sections.push({ icon:'🌡️', label: nl ? 'Temperatuureffecten'   : 'Temperature effects',  content: renderText(d.temperatureEffects, pc) });
         if (d.acceptReject)       sections.push({ icon:'🚦', label: nl ? 'Accepteren / Afkeuren' : 'Accept / Reject guide', content: renderTrafficLight(d.acceptReject, nl, pc) });
         if (d.prevention)         sections.push({ icon:'🛡️', label: nl ? 'Preventie'             : 'Prevention',           content: renderList(d.prevention, pc) });
-        const labelFs = pc ? '0.7rem' : '0.58rem';
+
+        const labelFs   = pc ? '0.7rem'  : '0.58rem';
         const labelIcon = pc ? '1.25rem' : '1rem';
-        const mb = pc ? '30px' : '20px';
-        const pbHead = pc ? '12px' : '9px';
-        const mbHead = pc ? '16px' : '11px';
+        const mb        = pc ? '30px'    : '20px';
+        const pbHead    = pc ? '12px'    : '9px';
+        const mbHead    = pc ? '16px'    : '11px';
+
         container.innerHTML = sections.map(sec => `
         <div style="margin-bottom:${mb};">
-            <div style="display:flex;align-items:center;gap:9px;margin-bottom:${mbHead};padding-bottom:${pbHead};border-bottom:1px solid rgba(255,255,255,0.07);">
+            <div style="display:flex; align-items:center; gap:9px; margin-bottom:${mbHead}; padding-bottom:${pbHead}; border-bottom:1px solid var(--border-glass);">
                 <span style="font-size:${labelIcon};">${sec.icon}</span>
-                <span style="font-size:${labelFs};font-weight:900;color:#a6e22e;text-transform:uppercase;letter-spacing:2px;">${sec.label}</span>
+                <span style="font-size:${labelFs}; font-weight:900; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:2px;">${sec.label}</span>
             </div>
             ${sec.content}
         </div>`).join('');
@@ -336,49 +453,72 @@ const FruitDefects = (() => {
 
     function renderText(text, pc) {
         if (!text) return '';
-        return `<p style="font-size:${pc ? '1.05rem' : '0.92rem'};color:rgba(255,255,255,0.55);line-height:1.85;font-weight:500;margin:0;">${text}</p>`;
+        const fs = pc ? '1.05rem' : '0.92rem';
+        return `<p style="font-size:${fs}; color:var(--text-dim); line-height:1.85; font-weight:500; margin:0;">${text}</p>`;
     }
+
     function renderList(items, pc) {
         if (!items || !items.length) return '';
         if (typeof items === 'string') return renderText(items, pc);
-        const fs = pc ? '1.02rem' : '0.9rem';
-        const gap = pc ? '12px' : '8px';
-        return `<ul style="margin:0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:${gap};">${items.map(item => `<li style="display:flex;align-items:flex-start;gap:12px;font-size:${fs};color:rgba(255,255,255,0.55);line-height:1.65;font-weight:500;"><span style="color:#a6e22e;font-size:0.55rem;margin-top:${pc ? '7px' : '5px'};flex-shrink:0;">●</span><span>${item}</span></li>`).join('')}</ul>`;
+        const fs  = pc ? '1.02rem' : '0.9rem';
+        const gap = pc ? '12px'    : '8px';
+        return `<ul style="margin:0; padding-left:0; list-style:none; display:flex; flex-direction:column; gap:${gap};">
+            ${items.map(item => `
+            <li style="display:flex; align-items:flex-start; gap:12px; font-size:${fs}; color:var(--text-dim); line-height:1.65; font-weight:500;">
+                <span style="color:var(--pulp-lime); font-size:0.55rem; margin-top:${pc ? '7px' : '5px'}; flex-shrink:0;">●</span>
+                <span>${item}</span>
+            </li>`).join('')}
+        </ul>`;
     }
+
     function renderTrafficLight(ar, nl, pc) {
         if (!ar || typeof ar !== 'object') return renderText(ar, pc);
+
         const rows = [
             { icon:'✅', color:'#78c830', label: nl ? 'Accepteren' : 'Accept',    text: ar.accept },
             { icon:'🟡', color:'#ff8c00', label: nl ? 'Afwaarderen': 'Downgrade', text: ar.downgrade },
             { icon:'❌', color:'#ff4d4d', label: nl ? 'Afkeuren'   : 'Reject',    text: ar.reject },
         ].filter(r => r.text && r.text !== 'N/A' && r.text !== 'N/v.t.');
-        const pad = pc ? '18px 22px' : '13px 15px';
-        const iconFs = pc ? '1.4rem' : '1.15rem';
-        const labFs = pc ? '0.62rem' : '0.52rem';
-        const txtFs = pc ? '1rem' : '0.88rem';
-        const gap = pc ? '14px' : '9px';
-        return `<div style="display:flex;flex-direction:column;gap:${gap};">${rows.map(r => `<div style="display:flex;gap:14px;align-items:flex-start;padding:${pad};border-radius:14px;background:${r.color}12;border:1px solid ${r.color}28;"><span style="font-size:${iconFs};flex-shrink:0;margin-top:2px;">${r.icon}</span><div><div style="font-size:${labFs};font-weight:900;color:${r.color};text-transform:uppercase;letter-spacing:1.5px;margin-bottom:5px;">${r.label}</div><div style="font-size:${txtFs};color:rgba(255,255,255,0.55);font-weight:500;line-height:1.65;">${r.text}</div></div></div>`).join('')}</div>`;
+
+        const pad    = pc ? '18px 22px' : '13px 15px';
+        const iconFs = pc ? '1.4rem'    : '1.15rem';
+        const labFs  = pc ? '0.62rem'   : '0.52rem';
+        const txtFs  = pc ? '1rem'      : '0.88rem';
+        const gap    = pc ? '14px'      : '9px';
+
+        return `<div style="display:flex; flex-direction:column; gap:${gap};">
+            ${rows.map(r => `
+            <div style="display:flex; gap:14px; align-items:flex-start; padding:${pad}; border-radius:14px; background:${r.color}12; border:1px solid ${r.color}28;">
+                <span style="font-size:${iconFs}; flex-shrink:0; margin-top:2px;">${r.icon}</span>
+                <div>
+                    <div style="font-size:${labFs}; font-weight:900; color:${r.color}; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:5px;">${r.label}</div>
+                    <div style="font-size:${txtFs}; color:var(--text-dim); font-weight:500; line-height:1.65;">${r.text}</div>
+                </div>
+            </div>`).join('')}
+        </div>`;
     }
 
     // ── BACK NAVIGATION ───────────────────────────────────────
     function backToTypeView() {
         showView('fd-type-view');
+        // Restore scroll to where user was in the type view
         requestAnimationFrame(() => window.scrollTo(0, 0));
     }
 
     function backToList() {
         selectType(activeType);
+        // Restore scroll position to where user was in the list
         requestAnimationFrame(() => window.scrollTo(0, scrollBeforeDetail));
     }
 
     function backToMiddleHub() {
-        // Hide defect views
-        ['fd-type-view','fd-list-view','fd-detail-view'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.style.display = 'none';
+        ['fd-type-view','fd-list-view','fd-detail-view'].forEach(v => {
+            const el = document.getElementById(v);
+            if (el) el.classList.add('hidden');
         });
-        // Go back to hub screen using the new screen system
-        if (typeof showScreen === 'function') showScreen('hub');
+        const mh = document.getElementById('middle-hub');
+        if (mh) mh.classList.remove('hidden');
+        // Restore scroll to where user was before entering defects
         requestAnimationFrame(() => window.scrollTo(0, scrollBeforeTypeView));
     }
 
@@ -392,16 +532,20 @@ const FruitDefects = (() => {
     function buildTypeView() {
         const div = document.createElement('div');
         div.id = 'fd-type-view';
-        div.style.cssText = 'display:none;position:fixed;inset:0;background:#050505;z-index:500;overflow-y:auto;padding-top:64px;';
+        div.className = 'nav-view hidden';
         div.innerHTML = `
-        <div style="max-width:640px;margin:0 auto;padding:40px 24px 80px;">
-            <div style="margin-bottom:16px;"><button onclick="FruitDefects.backToMiddleHub()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);font-size:0.6rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;padding:8px 16px;border-radius:100px;cursor:pointer;">← Back</button></div>
-            <div id="fd-type-title" style="font-size:clamp(2rem,5vw,3rem);font-weight:900;color:#fff;letter-spacing:-1px;line-height:1.05;margin-bottom:4px;"></div>
-            <div id="fd-type-sub" style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.22);text-transform:uppercase;letter-spacing:2px;margin-bottom:24px;"></div>
-            <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">
-                <button id="fd-ext-btn" onclick="FruitDefects.selectType('external')" style="width:100%;background:#0f0f0f;border:1px solid rgba(255,255,255,0.07);border-radius:18px;cursor:pointer;text-align:left;transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='#0f0f0f'"></button>
-                <button id="fd-int-btn" onclick="FruitDefects.selectType('internal')" style="width:100%;background:#0f0f0f;border:1px solid rgba(255,255,255,0.07);border-radius:18px;cursor:pointer;text-align:left;transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='#0f0f0f'"></button>
+        <div style="max-width:520px; margin:0 auto; padding:0 8px;">
+            <div class="hub-title" id="fd-type-title"></div>
+            <div id="fd-type-sub" style="text-align:center; font-size:0.62rem; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; margin:-10px 0 26px;"></div>
+            <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:26px;">
+                <button id="fd-ext-btn" onclick="FruitDefects.selectType('external')"
+                    style="width:100%; background:var(--glass-card); border:1px solid var(--border-glass); border-radius:20px; cursor:pointer; text-align:left; transition:background 0.15s;"
+                    onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='var(--glass-card)'"></button>
+                <button id="fd-int-btn" onclick="FruitDefects.selectType('internal')"
+                    style="width:100%; background:var(--glass-card); border:1px solid var(--border-glass); border-radius:20px; cursor:pointer; text-align:left; transition:background 0.15s;"
+                    onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='var(--glass-card)'"></button>
             </div>
+            <button class="btn-main btn-back" onclick="FruitDefects.backToMiddleHub()">← Back</button>
         </div>`;
         document.body.appendChild(div);
     }
@@ -409,12 +553,12 @@ const FruitDefects = (() => {
     function buildListView() {
         const div = document.createElement('div');
         div.id = 'fd-list-view';
-        div.style.cssText = 'display:none;position:fixed;inset:0;background:#050505;z-index:500;overflow-y:auto;padding-top:64px;';
+        div.className = 'nav-view hidden';
         div.innerHTML = `
-        <div style="max-width:640px;margin:0 auto;padding:40px 24px 80px;">
-            <div style="margin-bottom:16px;"><button onclick="FruitDefects.backToTypeView()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);font-size:0.6rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;padding:8px 16px;border-radius:100px;cursor:pointer;">← Back</button></div>
-            <div id="fd-list-title" style="font-size:clamp(2rem,5vw,3rem);font-weight:900;color:#fff;letter-spacing:-1px;line-height:1.05;margin-bottom:4px;"></div>
+        <div style="max-width:620px; margin:0 auto;">
+            <div class="hub-title" id="fd-list-title"></div>
             <div id="fd-list-container" style="margin-bottom:18px;"></div>
+            <button class="btn-main btn-back" onclick="FruitDefects.backToTypeView()">← Back</button>
         </div>`;
         document.body.appendChild(div);
     }
@@ -424,24 +568,33 @@ const FruitDefects = (() => {
             const style = document.createElement('style');
             style.id = 'fd-detail-style';
             style.textContent = `
-                #fd-detail-inner{max-width:520px;margin:0 auto;padding:0 16px}
-                #fd-detail-hero{overflow:hidden;margin-bottom:6px}
-                #fd-quick-facts{margin:0 0 16px;background:#0f0f0f;border:1px solid rgba(255,255,255,0.07);border-radius:18px;overflow:hidden}
-                #fd-pc-wrap{display:block}
-                #fd-images-container{margin-bottom:4px}
-                @media(min-width:900px){
-                    #fd-detail-inner{max-width:100%;padding:0 32px}
-                    #fd-detail-hero{border-radius:0 0 32px 32px;margin-bottom:8px}
-                    #fd-quick-facts{margin:0 0 24px}
-                    #fd-pc-wrap{display:grid;grid-template-columns:420px 1fr;gap:36px;align-items:start}
-                    #fd-images-container{position:sticky;top:24px;margin-bottom:0}
+                #fd-detail-inner { max-width: 520px; margin: 0 auto; padding: 0 16px; }
+                #fd-detail-hero  { overflow: hidden; margin-bottom: 6px; }
+                #fd-quick-facts  { margin: 0 0 16px; background: var(--glass-card); border: 1px solid var(--border-glass); border-radius: 18px; overflow: hidden; }
+                #fd-pc-wrap      { display: block; }
+                #fd-images-container { margin-bottom: 4px; }
+
+                @media (min-width: 900px) {
+                    #fd-detail-inner { max-width: 100%; padding: 0 32px; }
+                    #fd-detail-hero  { border-radius: 0 0 32px 32px; margin-bottom: 8px; }
+                    #fd-quick-facts  { margin: 0 0 24px; }
+                    #fd-pc-wrap {
+                        display: grid;
+                        grid-template-columns: 420px 1fr;
+                        gap: 36px;
+                        align-items: start;
+                    }
+                    #fd-images-container { position: sticky; top: 24px; margin-bottom: 0; }
+                    #fd-sections-container { padding: 0; }
                 }
             `;
             document.head.appendChild(style);
         }
+
         const div = document.createElement('div');
         div.id = 'fd-detail-view';
-        div.style.cssText = 'display:none;position:fixed;inset:0;background:#050505;z-index:500;overflow-y:auto;padding-top:64px;padding-bottom:40px;';
+        div.className = 'nav-view hidden';
+        div.style.paddingBottom = '40px';
         div.innerHTML = `
         <div>
             <div id="fd-detail-hero"></div>
@@ -451,7 +604,7 @@ const FruitDefects = (() => {
                     <div id="fd-images-container"></div>
                     <div>
                         <div id="fd-sections-container"></div>
-                        <button onclick="FruitDefects.backToList()" style="display:block;width:100%;background:transparent;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);border-radius:100px;padding:15px;font-weight:900;text-transform:uppercase;cursor:pointer;letter-spacing:1px;font-size:0.85rem;margin-top:16px;">← Back</button>
+                        <button class="btn-main btn-back" onclick="FruitDefects.backToList()" style="margin-top:10px;">← Back</button>
                     </div>
                 </div>
             </div>

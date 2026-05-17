@@ -1,117 +1,56 @@
 const inputField = document.getElementById('codeIn');
+
+// Active article
+let activeArticle = 'Chiquita 18kg';
+
+// Multi scan batch
+let batchResults = [];
 let scanMode = 'single';
-let batchCodes = [];
+
+// Set article
+function setArticle(name) {
+    activeArticle = name;
+    document.querySelectorAll('.article-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.article === name);
+    });
+}
+
+// Set scan mode
+function setScanMode(mode) {
+    scanMode = mode;
+    document.getElementById('singleModeBtn').classList.toggle('active', mode === 'single');
+    document.getElementById('multiModeBtn').classList.toggle('active', mode === 'multi');
+
+    if (mode === 'single') {
+        document.getElementById('batchList').classList.add('hidden');
+        document.getElementById('batchCopyBtn').classList.add('hidden');
+        document.getElementById('resBox').classList.add('hidden');
+        batchResults = [];
+        inputField.value = '';
+        inputField.focus();
+    } else {
+        document.getElementById('resBox').classList.add('hidden');
+        document.getElementById('batchList').classList.remove('hidden');
+        batchResults = [];
+        renderBatchList();
+        inputField.value = '';
+        inputField.focus();
+    }
+}
 
 // Input listeners
 inputField.addEventListener('input', () => {
     if (scanMode === 'single') {
         document.getElementById('resBox').classList.add('hidden');
-        renderHistory();
     }
 });
 
 inputField.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         e.preventDefault();
-        if (scanMode === 'single') {
-            checkFruit();
-        } else {
-            addToBatch();
-        }
+        checkFruit();
     }
 });
-
-// Set scan mode
-function setScanMode(mode) {
-    scanMode = mode;
-    batchCodes = [];
-    document.getElementById('singleCodeBtn').classList.toggle('active', mode === 'single');
-    document.getElementById('batchCodeBtn').classList.toggle('active', mode === 'batch');
-    inputField.value = '';
-    document.getElementById('resBox').classList.add('hidden');
-    document.getElementById('daysValue').style.display = 'block';
-    document.getElementById('calcBtn').style.display = mode === 'single' ? 'block' : 'none';
-    document.getElementById('batchList').style.display = mode === 'batch' ? 'block' : 'none';
-    document.getElementById('batchReportBtn').style.display = 'none';
-    if (mode === 'batch') renderBatchList();
-    inputField.focus();
-}
-
-// Add code to batch
-function addToBatch() {
-    const val = inputField.value.toUpperCase();
-    if (val.length < 3) { triggerShake(); return; }
-
-    const mChar = val.charCodeAt(0);
-    const dChar = val.charCodeAt(1);
-    const yDigit = val.charAt(2);
-    const isValid = (mChar >= 65 && mChar <= 76) &&
-                    (dChar >= 65 && dChar <= 90) &&
-                    (yDigit === '1' || yDigit === '2');
-    if (!isValid) { triggerShake(); return; }
-
-    const now = new Date();
-    const m = mChar - 65;
-    let d = dChar - 64;
-    if (yDigit === '2') d += 26;
-    let hDate = new Date(now.getFullYear(), m, d);
-    if (hDate > now) hDate.setFullYear(now.getFullYear() - 1);
-    const diff = Math.floor((now - hDate) / (1000 * 60 * 60 * 24));
-    const dateStr = hDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
-
-    let status = '', statusColor = '';
-    if (diff > 31) { status = 'TOO OLD'; statusColor = '#ff4d4d'; }
-    else if (diff <= 21) { status = 'PERFECT'; statusColor = '#a6e22e'; }
-    else { status = 'ACCEPTABLE'; statusColor = '#ff8c00'; }
-
-    batchCodes.push({ code: val, days: diff, date: dateStr, status, color: statusColor });
-    inputField.value = '';
-    renderBatchList();
-    document.getElementById('batchReportBtn').style.display = 'block';
-    inputField.focus();
-}
-
-// Render batch list
-function renderBatchList() {
-    const container = document.getElementById('batchList');
-    if (batchCodes.length === 0) {
-        container.innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-dim); font-size:0.7rem; opacity:0.5;">Enter a code and press Enter to add</div>`;
-        return;
-    }
-    container.innerHTML = batchCodes.map((item, index) => `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 15px; border-bottom:1px solid var(--border-glass);">
-            <div>
-                <div style="font-weight:900; font-family:monospace; font-size:0.85rem;">${item.code}</div>
-                <div style="font-size:0.6rem; opacity:0.6; margin-top:2px;">${item.date}</div>
-            </div>
-            <div style="text-align:right; margin-right:10px;">
-                <div style="color:${item.color}; font-weight:900; font-size:0.8rem;">${item.days}D</div>
-                <div style="font-size:0.6rem; opacity:0.7;">${item.status}</div>
-            </div>
-            <i class="bi bi-x-circle" onclick="removeBatchCode(${index})" style="cursor:pointer; color:var(--pulp-red); font-size:1.1rem;"></i>
-        </div>
-    `).join('');
-}
-
-// Remove a code from batch
-function removeBatchCode(index) {
-    batchCodes.splice(index, 1);
-    renderBatchList();
-    if (batchCodes.length === 0) {
-        document.getElementById('batchReportBtn').style.display = 'none';
-        document.getElementById('resBox').classList.add('hidden');
-    }
-}
-
-// Show batch report
-function showBatchReport() {
-    if (batchCodes.length === 0) return;
-    document.getElementById('daysValue').style.display = 'none';
-    document.getElementById('resBox').classList.remove('hidden');
-    document.getElementById('resBox').className = 'result-display bg-perfect';
-    document.getElementById('statusLabel').innerText = `BATCH — ${batchCodes.length} CODE${batchCodes.length > 1 ? 'S' : ''}`;
-    document.getElementById('dateText').innerText = 'Ready to copy';
-}
 
 // Handle keyboard after calculation
 function handlePostCalculation() {
@@ -127,13 +66,12 @@ function handlePostCalculation() {
     }
 }
 
-// Main calculation logic (single mode)
+// Main calculation logic
 function checkFruit(historicalCode = null) {
     const val = historicalCode || inputField.value.toUpperCase();
     if (historicalCode) inputField.value = historicalCode;
 
     const box = document.getElementById('resBox');
-    document.getElementById('daysValue').style.display = 'block';
 
     if (val.length < 3) {
         box.classList.add('hidden');
@@ -144,9 +82,11 @@ function checkFruit(historicalCode = null) {
     const mChar = val.charCodeAt(0);
     const dChar = val.charCodeAt(1);
     const yDigit = val.charAt(2);
+
     const isValid = (mChar >= 65 && mChar <= 76) &&
                     (dChar >= 65 && dChar <= 90) &&
                     (yDigit === '1' || yDigit === '2');
+
     if (!isValid) {
         box.classList.add('hidden');
         triggerShake();
@@ -157,32 +97,46 @@ function checkFruit(historicalCode = null) {
     const m = mChar - 65;
     let d = dChar - 64;
     if (yDigit === '2') d += 26;
+
     let hDate = new Date(now.getFullYear(), m, d);
     if (hDate > now) hDate.setFullYear(now.getFullYear() - 1);
-    const diff = Math.floor((now - hDate) / (1000 * 60 * 60 * 24));
 
-    document.getElementById('daysValue').innerText = diff;
-    document.getElementById('dateText').innerText = hDate.toLocaleDateString('en-GB', {
+    const diff = Math.floor((now - hDate) / (1000 * 60 * 60 * 24));
+    const dateStr = hDate.toLocaleDateString('en-GB', {
         day: '2-digit', month: 'short', year: 'numeric'
     }).toUpperCase();
 
-    const label = document.getElementById('statusLabel');
+    let status = '';
     let statusColor = '';
-    box.classList.remove('hidden');
-
     if (diff > 31) {
-        label.innerText = 'TOO OLD';
-        box.className = 'result-display bg-old';
+        status = 'TOO OLD';
         statusColor = '#ff4d4d';
     } else if (diff <= 21) {
-        label.innerText = 'PERFECT';
-        box.className = 'result-display bg-perfect';
+        status = 'PERFECT';
         statusColor = '#a6e22e';
     } else {
-        label.innerText = 'ACCEPTABLE';
-        box.className = 'result-display bg-acceptable';
+        status = 'ACCEPTABLE';
         statusColor = '#ff8c00';
     }
+
+    if (scanMode === 'multi' && !historicalCode) {
+        // Add to batch
+        batchResults.push({ code: val, days: diff, date: dateStr, status, statusColor });
+        renderBatchList();
+        inputField.value = '';
+        inputField.focus();
+        saveToHistory(val, diff, statusColor);
+        return;
+    }
+
+    // Single scan
+    document.getElementById('daysValue').innerText = diff;
+    document.getElementById('dateText').innerText = dateStr;
+
+    const label = document.getElementById('statusLabel');
+    label.innerText = status;
+    box.className = 'result-display ' + (diff > 31 ? 'bg-old' : diff <= 21 ? 'bg-perfect' : 'bg-acceptable');
+    box.classList.remove('hidden');
 
     if (!historicalCode) {
         saveToHistory(val, diff, statusColor);
@@ -191,66 +145,90 @@ function checkFruit(historicalCode = null) {
     renderHistory();
 }
 
+// Render batch list
+function renderBatchList() {
+    const list = document.getElementById('batchList');
+    const copyBtn = document.getElementById('batchCopyBtn');
+
+    if (batchResults.length === 0) {
+        list.innerHTML = '<div style="padding:14px;text-align:center;font-size:0.65rem;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:1px;">Enter codes to start scanning</div>';
+        copyBtn.classList.add('hidden');
+        return;
+    }
+
+    list.innerHTML = batchResults.map((r, i) => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;${i < batchResults.length - 1 ? 'border-bottom:1px solid rgba(255,255,255,0.06);' : ''}">
+            <div style="font-weight:900;font-size:0.9rem;color:#fff;letter-spacing:2px;">${r.code}</div>
+            <div style="text-align:right;">
+                <span style="color:${r.statusColor};font-weight:900;font-size:0.85rem;">${r.days}D</span>
+                <div style="font-size:0.5rem;color:rgba(255,255,255,0.3);margin-top:2px;">${r.date}</div>
+            </div>
+            <button onclick="removeBatchItem(${i})" style="background:none;border:none;color:rgba(255,255,255,0.2);font-size:1rem;cursor:pointer;padding:0 0 0 8px;">✕</button>
+        </div>
+    `).join('');
+
+    copyBtn.classList.remove('hidden');
+}
+
+// Remove batch item
+function removeBatchItem(index) {
+    batchResults.splice(index, 1);
+    renderBatchList();
+}
+
 // Shake animation on invalid input
 function triggerShake() {
     document.getElementById('appCard').classList.add('shake');
     setTimeout(() => document.getElementById('appCard').classList.remove('shake'), 400);
 }
 
-// Copy result to clipboard
+// Copy single result
 function copyResult() {
-    const appUrl = 'https://pulppro.github.io/Pulp-Pro-Intelligence/';
-    let plainText = '';
-    let htmlText = '';
+    const days = document.getElementById('daysValue').innerText;
+    const date = document.getElementById('dateText').innerText;
+    const code = document.getElementById('codeIn').value.toUpperCase();
 
-    if (scanMode === 'single') {
-        if (document.getElementById('resBox').classList.contains('hidden')) return;
-        const days = document.getElementById('daysValue').innerText;
-        const date = document.getElementById('dateText').innerText;
-        const code = inputField.value.toUpperCase();
+    if (document.getElementById('resBox').classList.contains('hidden')) return;
 
-        plainText = `Pulp Pro Intelligence: ${appUrl}\nCode: ${code}  Age: ${days} Days  Harvest Date: ${date}`;
-
-        htmlText = `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.8;">
-<p style="margin:0 0 6px 0;"><a href="${appUrl}" style="color:#0066cc;text-decoration:none;">Pulp Pro Intelligence</a></p>
-<p style="margin:0;">Code: <strong style="color:#cc0000;">${code}</strong>&nbsp;&nbsp;Age: <strong style="color:#cc0000;">${days} Days</strong>&nbsp;&nbsp;Harvest Date: ${date}</p>
-</div>`;
-
-    } else {
-        if (batchCodes.length === 0) return;
-
-        const lines = batchCodes.map(item =>
-            `Code: ${item.code}  Age: ${item.days} Days  Harvest Date: ${item.date}`
-        ).join('\n');
-        plainText = `Pulp Pro Intelligence: ${appUrl}\n${lines}`;
-
-        const htmlLines = batchCodes.map(item =>
-            `<p style="margin:0;">Code: <strong style="color:#cc0000;">${item.code}</strong>&nbsp;&nbsp;Age: <strong style="color:#cc0000;">${item.days} Days</strong>&nbsp;&nbsp;Harvest Date: ${item.date}</p>`
-        ).join('');
-
-        htmlText = `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.8;">
-<p style="margin:0 0 6px 0;"><a href="${appUrl}" style="color:#0066cc;text-decoration:none;">Pulp Pro Intelligence</a></p>
-${htmlLines}
-</div>`;
-    }
+    const plainText = `Pulp Pro Intelligence\nArticle: ${activeArticle}\nCode: ${code}  Age: ${days} Days  Harvest Date: ${date}`;
 
     try {
-        const blobHTML = new Blob([htmlText], { type: 'text/html' });
         const blobText = new Blob([plainText], { type: 'text/plain' });
-        const data = [new ClipboardItem({ 'text/plain': blobText, 'text/html': blobHTML })];
+        const data = [new ClipboardItem({ 'text/plain': blobText })];
         navigator.clipboard.write(data).then(() => {
-            showCopySuccess();
+            showCopySuccess('copyBtn');
         }).catch(() => {
-            navigator.clipboard.writeText(plainText).then(showCopySuccess);
+            navigator.clipboard.writeText(plainText).then(() => showCopySuccess('copyBtn'));
         });
     } catch (err) {
-        navigator.clipboard.writeText(plainText).then(showCopySuccess);
+        navigator.clipboard.writeText(plainText).then(() => showCopySuccess('copyBtn'));
+    }
+}
+
+// Copy batch result
+function copyBatch() {
+    if (batchResults.length === 0) return;
+
+    const lines = batchResults.map(r => `Code: ${r.code}  Age: ${r.days} Days  Harvest Date: ${r.date}`).join('\n');
+    const plainText = `Pulp Pro Intelligence\nArticle: ${activeArticle}\n\n${lines}`;
+
+    try {
+        const blobText = new Blob([plainText], { type: 'text/plain' });
+        const data = [new ClipboardItem({ 'text/plain': blobText })];
+        navigator.clipboard.write(data).then(() => {
+            showCopySuccess('batchCopyBtn');
+        }).catch(() => {
+            navigator.clipboard.writeText(plainText).then(() => showCopySuccess('batchCopyBtn'));
+        });
+    } catch (err) {
+        navigator.clipboard.writeText(plainText).then(() => showCopySuccess('batchCopyBtn'));
     }
 }
 
 // Copy success feedback
-function showCopySuccess() {
-    const btn = document.getElementById('copyBtn');
+function showCopySuccess(btnId) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
     btn.classList.add('success');
     btn.innerHTML = `<i class="bi bi-check-lg"></i> COPIED`;
     setTimeout(() => {

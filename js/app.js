@@ -1,70 +1,51 @@
+// Register Service Worker
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').then((reg) => {
-            reg.addEventListener('updatefound', () => {
-                const newWorker = reg.installing;
-                newWorker.addEventListener('statechange', () => {
-                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        showUpdateBanner();
-                    }
-                });
-            });
-        }).catch(err => console.log('SW failed', err));
-
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-            window.location.reload();
-        });
+        navigator.serviceWorker.register('sw.js')
+            .catch(err => console.log('SW failed', err));
     });
 }
 
-function showUpdateBanner() {
-    const banner = document.getElementById('updateBanner');
-    if (banner) banner.classList.remove('hidden');
-}
-
-function applyUpdate() {
-    navigator.serviceWorker.getRegistration().then(reg => {
-        if (reg && reg.waiting) {
-            reg.waiting.postMessage('skipWaiting');
-        }
-    });
-}
-
+// Global State
 let scanHistory = JSON.parse(localStorage.getItem('pulpProHistory')) || [];
 let favorites = JSON.parse(localStorage.getItem('pulpProFavorites')) || [];
+let activeFruit = '';
+let activeBrand = '';
 
+// App Init
 window.addEventListener('load', () => {
     const savedTheme = localStorage.getItem('pulpTheme');
     if (savedTheme === 'light') {
         document.body.classList.add('light-theme');
+        document.getElementById('themeText').innerText = 'Light Mode';
     }
-
-    // Apply saved language
-    const savedLang = localStorage.getItem('pulpLang') || 'en';
-    currentLang = savedLang;
-
     renderHistory();
     renderFavorites();
 
+    // Push initial state so browser back button stays inside the app
+    history.replaceState({ view: 'hub' }, '', window.location.pathname);
+
     setTimeout(() => {
         document.body.classList.add('loaded');
-        applyTranslations();
-        updateLanguageUI();
+        document.getElementById('codeIn').focus();
     }, 2600);
 });
 
+// Theme Toggle
 function toggleTheme() {
     document.body.classList.toggle('light-theme');
     const isLight = document.body.classList.contains('light-theme');
     localStorage.setItem('pulpTheme', isLight ? 'light' : 'dark');
-    document.getElementById('themeText').innerText = isLight ? t('lightMode') : t('darkMode');
+    document.getElementById('themeText').innerText = isLight ? 'Light Mode' : 'Dark Mode';
 }
 
+// Menu Toggle
 function toggleMenu() {
     document.getElementById('menu-drawer').classList.toggle('open');
     document.getElementById('menu-overlay').classList.toggle('open');
 }
 
+// Favorites Menu Dropdown
 function toggleMenuFavs() {
     const list = document.getElementById('menu-fav-list');
     const icon = document.getElementById('favChevron');
@@ -73,6 +54,7 @@ function toggleMenuFavs() {
     icon.classList.toggle('bi-chevron-down');
 }
 
+// Send Feedback
 function sendFeedback() {
     const theme = document.body.classList.contains('light-theme') ? 'Light' : 'Dark';
     const historyCount = scanHistory.length;

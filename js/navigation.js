@@ -1,114 +1,156 @@
-// Global State
+// Navigation Module
+// Handles navigation between different hubs in the app
+
 let activeFruit = null;
 let activeBrand = null;
 
-// Helper — hide all views including dynamically created ones and app-container
-function hideAllViews() {
-    document.querySelectorAll('.nav-view').forEach(el => el.classList.add('hidden'));
-    const app = document.getElementById('appInterface');
-    if (app) app.classList.add('hidden');
+// ── HISTORY API — intercept browser/device back button ────────
+// Push a state every time we navigate to a new view.
+// On popstate (back button), go back within the app.
+
+function pushNav(view) {
+    history.pushState({ view }, '', window.location.pathname);
 }
 
-// Show Home Hub
-function showHub() {
-    document.querySelectorAll('.nav-view').forEach(el => el.classList.add('hidden'));
-    const app = document.getElementById('appInterface');
-    if (app) app.classList.add('hidden');
+window.addEventListener('popstate', function(e) {
+    const state = e.state;
+    if (!state) {
+        // At the root — show hub without pushing another state
+        _showHub();
+        return;
+    }
+    switch (state.view) {
+        case 'hub':          _showHub();                     break;
+        case 'middle-hub':   _openMiddleHub(activeFruit);    break;
+        case 'brand-hub':    _openBrands(activeFruit);       break;
+        case 'defect-hub':   _openDefectDetector();          break;
+        default:             _showHub();                     break;
+    }
+});
+
+// ── INTERNAL functions (no history push) ─────────────────────
+function _showHub() {
     document.getElementById('fruit-hub').classList.remove('hidden');
-    renderFavorites();
+    document.getElementById('middle-hub').classList.add('hidden');
+    document.getElementById('brand-hub').classList.add('hidden');
+    document.getElementById('appInterface').classList.add('hidden');
+    const dd = document.getElementById('defect-detector-hub');
+    if (dd) dd.classList.add('hidden');
 }
 
-// Open Middle Hub — buttons differ per fruit
+function _openMiddleHub(fruit) {
+    if (!fruit) return;
+    const fruitNames = { banana: 'Banana', mango: 'Mango', avocado: 'Avocado' };
+    document.getElementById('middleHubTitle').innerText = fruitNames[fruit] + ' Menu';
+    document.getElementById('fruit-hub').classList.add('hidden');
+    document.getElementById('middle-hub').classList.remove('hidden');
+    document.getElementById('brand-hub').classList.add('hidden');
+    document.getElementById('appInterface').classList.add('hidden');
+    const dd = document.getElementById('defect-detector-hub');
+    if (dd) dd.classList.add('hidden');
+}
+
+function _openBrands(fruit) {
+    if (!fruit) return;
+    const fruitNames = { banana: 'Banana', mango: 'Mango', avocado: 'Avocado' };
+    document.getElementById('brandHubTitle').innerText = 'Select ' + fruitNames[fruit] + ' Brand';
+    document.getElementById('fruit-hub').classList.add('hidden');
+    document.getElementById('middle-hub').classList.add('hidden');
+    document.getElementById('brand-hub').classList.remove('hidden');
+    document.getElementById('appInterface').classList.add('hidden');
+    const dd = document.getElementById('defect-detector-hub');
+    if (dd) dd.classList.add('hidden');
+    renderBrands(fruit);
+}
+
+function _openDefectDetector() {
+    document.getElementById('fruit-hub').classList.add('hidden');
+    document.getElementById('middle-hub').classList.add('hidden');
+    document.getElementById('brand-hub').classList.add('hidden');
+    document.getElementById('appInterface').classList.add('hidden');
+    const dd = document.getElementById('defect-detector-hub');
+    if (dd) dd.classList.remove('hidden');
+}
+
+// ── PUBLIC functions (with history push) ─────────────────────
+function showHub() {
+    _showHub();
+    pushNav('hub');
+}
+
 function openMiddleHub(fruit) {
     activeFruit = fruit;
-    const fruitNames = { banana: 'Banana', mango: 'Mango', avocado: 'Avocado' };
-    const name = fruitNames[fruit] || fruit;
-    document.getElementById('middleHubTitle').innerText = name + ' ' + t('menu');
-
-    const btns = document.getElementById('middleHubButtons');
-    if (btns) {
-        if (fruit === 'banana') {
-            btns.innerHTML = `
-                <div class="list-btn" onclick="openAgeChecker()">Age Checker <span style="font-size:0.6rem; opacity:0.5;">(Chiquita)</span></div>
-                <div class="list-btn" onclick="FruitDefects.open('banana')">Defects</div>
-                <div class="list-btn" onclick="OriginReport.open('banana')">🌍 Origin Report</div>
-                <div class="list-btn disabled">Ripening (Soon)</div>`;
-        } else if (fruit === 'mango') {
-            btns.innerHTML = `
-                <div class="list-btn" onclick="FruitDefects.open('mango')">Defects</div>
-                <div class="list-btn" onclick="OriginReport.open('mango')">🌍 Origin Report</div>
-                <div class="list-btn disabled">Ripening (Soon)</div>`;
-        } else if (fruit === 'avocado') {
-            btns.innerHTML = `
-                <div class="list-btn" onclick="FruitDefects.open('avocado')">Defects</div>
-                <div class="list-btn" onclick="OriginReport.open('avocado')">🌍 Origin Report</div>
-                <div class="list-btn disabled">Ripening (Soon)</div>`;
-        }
-    }
-
-    hideAllViews();
-    document.getElementById('middle-hub').classList.remove('hidden');
+    _openMiddleHub(fruit);
+    pushNav('middle-hub');
 }
 
-// Open Age Checker directly (Chiquita only — no brand selection step)
-function openAgeChecker() {
-    activeBrand = 'Chiquita';
-    document.getElementById('brandName').innerText = 'Chiquita';
-    document.getElementById('commodityLabel').innerText = (activeFruit || 'fruit').toUpperCase() + ' ' + t('bananaAgeChecker');
-    document.getElementById('codeIn').value = '';
-    document.getElementById('resBox').classList.add('hidden');
-    hideAllViews();
+function openBrands(fruit) {
+    activeFruit = fruit;
+    _openBrands(fruit);
+    pushNav('brand-hub');
+}
+
+function selectBrand(brand) {
+    activeBrand = brand;
+    document.getElementById('brandName').innerText = brand;
+    document.getElementById('fruit-hub').classList.add('hidden');
+    document.getElementById('middle-hub').classList.add('hidden');
+    document.getElementById('brand-hub').classList.add('hidden');
     document.getElementById('appInterface').classList.remove('hidden');
-    updateFavoriteUI();
-    renderHistory();
-    setTimeout(() => document.getElementById('codeIn').focus(), 100);
+    const dd = document.getElementById('defect-detector-hub');
+    if (dd) dd.classList.add('hidden');
+    pushNav('calculator');
 }
 
-// Open Defect Detector Hub
 function openDefectDetector() {
-    hideAllViews();
-    document.getElementById('defect-hub').classList.remove('hidden');
+    _openDefectDetector();
+    pushNav('defect-hub');
 }
 
-// Open Defect Detector directly from favorites
-function openDefectDetectorDirect(fruit, type) {
-    window.defectActiveFruit = fruit;
-    window.defectActiveType = type;
-    hideAllViews();
-    document.getElementById('defect-scan-view').classList.remove('hidden');
+function openDefectScanner(fruit) {
     const fruitNames = { banana: 'Banana', mango: 'Mango', avocado: 'Avocado' };
-    const typeLabel = type === 'external' ? t('external') : t('internal');
-    document.getElementById('defectScanTitle').innerText = fruitNames[fruit] + ' — ' + typeLabel;
-    updateDefectFavoriteUI();
-    DefectDetector.selectType(type);
+    activeFruit = fruit;
+    document.getElementById('defectScannerTitle').innerText = 'Scan ' + fruitNames[fruit] + ' for Defects';
+    const dd = document.getElementById('defect-detector-hub');
+    if (dd) dd.classList.add('hidden');
+    const ds = document.getElementById('defect-scanner-view');
+    if (ds) ds.classList.remove('hidden');
+    pushNav('defect-scanner');
 }
 
-// Open Colour Scanner
-function openColourScanner() {
-    hideAllViews();
-    document.getElementById('colour-scanner-view').classList.remove('hidden');
-    updateColourFavoriteUI();
-    ColourScanner.init();
-    ColourScanner.setScanMode('single');
+function backToDefectHub() {
+    const ds = document.getElementById('defect-scanner-view');
+    if (ds) ds.classList.add('hidden');
+    const dd = document.getElementById('defect-detector-hub');
+    if (dd) dd.classList.remove('hidden');
+    pushNav('defect-hub');
 }
 
-// Open News
-function openNews() {
-    hideAllViews();
-    document.getElementById('news-view').classList.remove('hidden');
-    NewsManager.init();
+function backToFruitHub() {
+    const dd = document.getElementById('defect-detector-hub');
+    if (dd) dd.classList.add('hidden');
+    showHub();
 }
 
-// Toggle Menu Drawer
+// ── MENU DRAWER ───────────────────────────────────────────────
 function toggleMenu() {
-    document.getElementById('menu-drawer').classList.toggle('open');
-    document.getElementById('menu-overlay').classList.toggle('open');
+    document.getElementById('menu-drawer').classList.toggle('hidden');
+    document.getElementById('menu-overlay').classList.toggle('hidden');
 }
 
-// Toggle Theme
+// ── THEME ─────────────────────────────────────────────────────
 function toggleTheme() {
     document.body.classList.toggle('light-theme');
-    const isLight = document.body.classList.contains('light-theme');
-    document.getElementById('themeText').innerText = isLight ? t('lightMode') : t('darkMode');
-    localStorage.setItem('pulpTheme', isLight ? 'light' : 'dark');
+    const themeText = document.getElementById('themeText');
+    themeText.innerText = document.body.classList.contains('light-theme') ? 'Light Mode' : 'Dark Mode';
+    localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
+}
+
+function loadTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+        document.body.classList.add('light-theme');
+        const themeText = document.getElementById('themeText');
+        if (themeText) themeText.innerText = 'Light Mode';
+    }
 }

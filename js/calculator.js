@@ -98,6 +98,14 @@ function checkFruit(historicalCode = null) {
     let d = dChar - 64;
     if (yDigit === '2') d += 26;
 
+    // Validate day is within the actual days of that month
+    const daysInMonth = new Date(now.getFullYear(), m + 1, 0).getDate();
+    if (d > daysInMonth) {
+        box.classList.add('hidden');
+        triggerShake();
+        return;
+    }
+
     let hDate = new Date(now.getFullYear(), m, d);
     if (hDate > now) hDate.setFullYear(now.getFullYear() - 1);
 

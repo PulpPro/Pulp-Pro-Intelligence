@@ -20,6 +20,41 @@
 </head>
 <body>
 
+<!-- ACCESS GATE -->
+<div id="access-gate" class="hidden" style="position:fixed;inset:0;background:#050505;z-index:99998;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;">
+<div style="width:64px;height:64px;background:#a6e22e;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:20px;">🍌</div>
+<div style="font-size:11px;font-weight:900;color:#a6e22e;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;">Pulp Pro</div>
+<div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:-0.5px;margin-bottom:8px;text-align:center;">Access Required</div>
+<div style="font-size:12px;color:rgba(255,255,255,0.35);line-height:1.6;text-align:center;margin-bottom:28px;max-width:280px;">Authorised team members only. Enter your access code to continue.</div>
+<input id="gateCodeInput" type="text" placeholder="Enter access code" maxlength="20" style="width:100%;max-width:320px;background:rgba(255,255,255,0.04);border:1.5px solid rgba(166,226,46,0.3);border-radius:14px;padding:14px 16px;font-size:1.1rem;font-weight:900;color:#fff;text-align:center;letter-spacing:3px;margin-bottom:12px;outline:none;text-transform:uppercase;" onkeypress="if(event.key==='Enter') submitCode()">
+<div id="gateError" style="display:none;font-size:11px;color:#ff4d4d;font-weight:700;margin-bottom:10px;text-align:center;"></div>
+<button id="gateUnlockBtn" onclick="submitCode()" style="width:100%;max-width:320px;background:#a6e22e;color:#000;border:none;border-radius:100px;padding:14px;font-weight:900;font-size:13px;text-transform:uppercase;letter-spacing:1px;cursor:pointer;margin-bottom:20px;">Unlock App</button>
+<div style="display:flex;align-items:center;gap:10px;width:100%;max-width:320px;margin-bottom:16px;">
+<div style="flex:1;height:1px;background:rgba(255,255,255,0.07);"></div>
+<div style="font-size:9px;color:rgba(255,255,255,0.2);font-weight:700;text-transform:uppercase;letter-spacing:1px;white-space:nowrap;">Don't have a code?</div>
+<div style="flex:1;height:1px;background:rgba(255,255,255,0.07);"></div>
+</div>
+<button onclick="requestCode()" style="width:100%;max-width:320px;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:100px;padding:13px;font-weight:700;font-size:12px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;cursor:pointer;margin-bottom:10px;"><i class="bi bi-envelope"></i> Request Access Code</button>
+<button onclick="showDevLogin()" style="width:100%;max-width:320px;background:transparent;border:1px solid rgba(166,226,46,0.15);border-radius:100px;padding:13px;font-weight:700;font-size:12px;color:rgba(166,226,46,0.5);text-transform:uppercase;letter-spacing:1px;cursor:pointer;"><i class="bi bi-lock"></i> Developer Login</button>
+<div style="font-size:8px;color:rgba(255,255,255,0.1);text-align:center;margin-top:24px;text-transform:uppercase;letter-spacing:0.5px;">Pulp Pro · Authorised use only</div>
+</div>
+
+<!-- DEV LOGIN MODAL -->
+<div id="dev-login-modal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:32px;">
+<div style="background:#111;border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:32px 24px;width:100%;max-width:320px;">
+<div style="font-size:14px;font-weight:900;color:#fff;margin-bottom:4px;">Developer Login</div>
+<div style="font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:24px;">Admin access only</div>
+<input id="devUsername" type="email" placeholder="Username" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px 14px;font-size:13px;color:#fff;margin-bottom:10px;outline:none;">
+<input id="devPassword" type="password" placeholder="Password" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px 14px;font-size:13px;color:#fff;margin-bottom:10px;outline:none;" onkeypress="if(event.key==='Enter') submitDevLogin()">
+<div id="devLoginError" style="display:none;font-size:11px;color:#ff4d4d;font-weight:700;margin-bottom:10px;"></div>
+<button id="devLoginBtn" onclick="submitDevLogin()" style="width:100%;background:#a6e22e;color:#000;border:none;border-radius:100px;padding:13px;font-weight:900;font-size:13px;text-transform:uppercase;letter-spacing:1px;cursor:pointer;margin-bottom:10px;">Login</button>
+<button onclick="hideDevLogin()" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,0.08);border-radius:100px;padding:12px;font-weight:700;font-size:12px;color:rgba(255,255,255,0.35);text-transform:uppercase;cursor:pointer;">Cancel</button>
+</div>
+</div>
+
+<!-- APP WRAPPER -->
+<div id="app-wrapper" class="hidden">
+
 <!-- Splash Screen -->
 <div id="splash-screen">
 <img src="edited-image.png" class="splash-logo">
@@ -43,15 +78,46 @@
 
 <!-- Side Drawer -->
 <div id="menu-drawer">
-<div style="text-align:center; margin-bottom:40px;">
+<div style="text-align:center; margin-bottom:28px;">
 <img src="edited-image.png" style="width:50px; margin-bottom:10px;">
 <div style="font-weight:900; color:var(--pulp-lime);">PULP PRO</div>
 </div>
+
+<div id="admin-badge" class="hidden" style="display:flex;align-items:center;gap:8px;background:rgba(166,226,46,0.08);border:1px solid rgba(166,226,46,0.2);border-radius:10px;padding:10px 12px;margin-bottom:16px;">
+<div style="width:7px;height:7px;border-radius:50%;background:#a6e22e;flex-shrink:0;"></div>
+<div>
+<div style="font-size:9px;font-weight:900;color:#a6e22e;text-transform:uppercase;letter-spacing:1.5px;">Developer Mode</div>
+<div style="font-size:8px;color:rgba(166,226,46,0.5);font-weight:700;margin-top:1px;">Logged in as Admin</div>
+</div>
+</div>
+
 <div class="menu-item" onclick="showHub(); toggleMenu();"><span>&#x1F3E0; Home</span></div>
 <div class="settings-label">App Settings</div>
 <div class="menu-item" onclick="toggleTheme()"><span>&#x1F313; <span id="themeText">Dark Mode</span></span></div>
 <div class="menu-item" onclick="clearHistory()" style="color:var(--pulp-red);"><span>&#x26A0;&#xFE0F; Clear Logs</span></div>
 <div class="menu-item" onclick="sendFeedback()"><span>&#x1F4AC; Send Feedback</span></div>
+
+<div id="admin-menu-section" class="hidden">
+<div class="settings-label" style="color:rgba(166,226,46,0.5);">Admin</div>
+<div class="menu-item" onclick="toggleCodeGenerator()" style="color:#a6e22e;background:rgba(166,226,46,0.05);border:1px solid rgba(166,226,46,0.12);border-radius:10px;margin-bottom:4px;"><span><i class="bi bi-key"></i> Generate Access Code</span></div>
+<div id="code-gen-panel" class="hidden" style="background:#0a1a06;border:1px solid rgba(166,226,46,0.2);border-radius:14px;padding:14px;margin-bottom:8px;">
+<div style="font-size:8px;font-weight:900;color:rgba(166,226,46,0.6);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;">New Access Code</div>
+<input id="codePersonName" type="text" placeholder="Enter person's name e.g. Jan" style="width:100%;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px 10px;font-size:12px;color:#fff;margin-bottom:8px;outline:none;">
+<div id="generated-code-display" class="hidden" style="background:rgba(0,0,0,0.4);border:1px solid rgba(166,226,46,0.25);border-radius:10px;padding:10px 12px;margin-bottom:8px;text-align:center;">
+<div id="generatedCodeFor" style="font-size:8px;color:rgba(166,226,46,0.5);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;"></div>
+<div id="generatedCode" style="font-size:18px;font-weight:900;color:#fff;letter-spacing:4px;font-family:monospace;"></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+<button id="generateCodeBtn" onclick="generateCode()" style="background:#a6e22e;color:#000;border:none;border-radius:8px;padding:9px;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1px;cursor:pointer;"><i class="bi bi-arrow-repeat"></i> Generate</button>
+<button id="copyCodeBtn" onclick="copyGeneratedCode()" style="background:rgba(166,226,46,0.1);color:#a6e22e;border:1px solid rgba(166,226,46,0.2);border-radius:8px;padding:9px;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1px;cursor:pointer;"><i class="bi bi-clipboard"></i> Copy</button>
+</div>
+</div>
+<div class="menu-item" onclick="adminLogout()" style="color:rgba(255,77,77,0.6);"><span><i class="bi bi-box-arrow-right"></i> Logout</span></div>
+</div>
+
+<div id="dev-login-btn" style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06);">
+<div class="menu-item" onclick="toggleMenu(); showDevLogin();" style="color:rgba(166,226,46,0.4);"><span><i class="bi bi-lock"></i> Developer Login</span></div>
+</div>
 </div>
 <div id="menu-overlay" onclick="toggleMenu()"></div>
 
@@ -286,6 +352,8 @@ if ('serviceWorker' in navigator) {
     });
 }
 </script>
+
+</div><!-- end app-wrapper -->
 
 <script src="js/app.js"></script>
 <script src="js/history.js"></script>

@@ -436,7 +436,7 @@ const ColourScanner = (() => {
     // ── GENERATE BATCH REPORT CANVAS ─────────────────────────
     async function generateBatchReportCanvas({label, shelf, status, colour, note, count, scans, photos, timestamp}) {
         const W = 1080;
-        const PHOTO_H = 400; // each box photo height
+        const PHOTO_H = 280; // each box photo height - reduced for better iMessage display
         const BOX_INFO_H = 120;
         const HEADER_H = 90;
         const AVG_H = 200;
@@ -557,24 +557,37 @@ const ColourScanner = (() => {
     }
 
     async function shareReport() {
-        const label = document.getElementById('csSingleLabel')?.innerText || '';
-        const shelf = document.getElementById('csSingleShelf')?.innerText || '';
-        const status = document.getElementById('csSingleStatus')?.innerText || '';
-        const colour = document.getElementById('csSingleSwatch')?.style.background || '#78c830';
-        const note = getNote('csNoteInput'), photo = capturedPhotos[0];
-        const canvas = await generateReportCanvas({ label, shelf, status, colour, note, photo, timestamp: getNow() });
-        await shareCanvas(canvas, 'pulp-pro-colour-scan.png');
+        const btn = document.getElementById('csCopySingle') || document.querySelector('[onclick*="shareReport"]');
+        const shareBtn = document.querySelector('[onclick*="shareReport()"]');
+        if (shareBtn) { shareBtn.disabled = true; shareBtn.style.opacity = '0.5'; }
+        try {
+            const label = document.getElementById('csSingleLabel')?.innerText || '';
+            const shelf = document.getElementById('csSingleShelf')?.innerText || '';
+            const status = document.getElementById('csSingleStatus')?.innerText || '';
+            const colour = document.getElementById('csSingleSwatch')?.style.background || '#78c830';
+            const note = getNote('csNoteInput'), photo = capturedPhotos[0];
+            const canvas = await generateReportCanvas({ label, shelf, status, colour, note, photo, timestamp: getNow() });
+            await shareCanvas(canvas, 'pulp-pro-colour-scan.png');
+        } finally {
+            if (shareBtn) { shareBtn.disabled = false; shareBtn.style.opacity = ''; }
+        }
     }
 
     async function shareBatchReport() {
-        const label = document.getElementById('csBatchLabel')?.innerText || '';
-        const shelf = document.getElementById('csBatchShelf')?.innerText || '';
-        const status = document.getElementById('csBatchStatus')?.innerText || '';
-        const colour = document.getElementById('csBatchSwatch')?.style.background || '#98c428';
-        const note = getNote('csBatchNoteInput');
-        const count = document.getElementById('csBatchCount')?.innerText || '';
-        const canvas = await generateBatchReportCanvas({ label, shelf, status, colour, note, count, scans: multiScans, photos: capturedPhotos, timestamp: getNow() });
-        await shareCanvas(canvas, 'pulp-pro-batch-scan.png');
+        const shareBtn = document.querySelector('[onclick*="shareBatchReport()"]');
+        if (shareBtn) { shareBtn.disabled = true; shareBtn.style.opacity = '0.5'; }
+        try {
+            const label = document.getElementById('csBatchLabel')?.innerText || '';
+            const shelf = document.getElementById('csBatchShelf')?.innerText || '';
+            const status = document.getElementById('csBatchStatus')?.innerText || '';
+            const colour = document.getElementById('csBatchSwatch')?.style.background || '#98c428';
+            const note = getNote('csBatchNoteInput');
+            const count = document.getElementById('csBatchCount')?.innerText || '';
+            const canvas = await generateBatchReportCanvas({ label, shelf, status, colour, note, count, scans: multiScans, photos: capturedPhotos, timestamp: getNow() });
+            await shareCanvas(canvas, 'pulp-pro-batch-scan.png');
+        } finally {
+            if (shareBtn) { shareBtn.disabled = false; shareBtn.style.opacity = ''; }
+        }
     }
 
     // ── COPY ──────────────────────────────────────────────────

@@ -10,7 +10,7 @@ function showHub() {
     document.getElementById('middle-hub').classList.add('hidden');
     document.getElementById('brand-hub').classList.add('hidden');
     document.getElementById('appInterface').classList.add('hidden');
-    document.getElementById('defect-detector-hub').classList.add('hidden');
+    document.getElementById('defect-hub').classList.add('hidden');
 }
 
 // Open middle hub for fruit selection
@@ -26,7 +26,7 @@ function openMiddleHub(fruit) {
     document.getElementById('fruit-hub').classList.add('hidden');
     document.getElementById('middle-hub').classList.remove('hidden');
     document.getElementById('appInterface').classList.add('hidden');
-    document.getElementById('defect-detector-hub').classList.add('hidden');
+    document.getElementById('defect-hub').classList.add('hidden');
 }
 
 // Open brands hub
@@ -43,7 +43,7 @@ function openBrands(fruit) {
     document.getElementById('middle-hub').classList.add('hidden');
     document.getElementById('brand-hub').classList.remove('hidden');
     document.getElementById('appInterface').classList.add('hidden');
-    document.getElementById('defect-detector-hub').classList.add('hidden');
+    document.getElementById('defect-hub').classList.add('hidden');
     
     renderBrands(fruit);
 }
@@ -56,7 +56,7 @@ function selectBrand(brand) {
     document.getElementById('middle-hub').classList.add('hidden');
     document.getElementById('brand-hub').classList.add('hidden');
     document.getElementById('appInterface').classList.remove('hidden');
-    document.getElementById('defect-detector-hub').classList.add('hidden');
+    document.getElementById('defect-hub').classList.add('hidden');
 }
 
 // Open defect detector hub
@@ -65,7 +65,7 @@ function openDefectDetector() {
     document.getElementById('middle-hub').classList.add('hidden');
     document.getElementById('brand-hub').classList.add('hidden');
     document.getElementById('appInterface').classList.add('hidden');
-    document.getElementById('defect-detector-hub').classList.remove('hidden');
+    document.getElementById('defect-hub').classList.remove('hidden');
 }
 
 // Open specific fruit defect scanner
@@ -78,19 +78,19 @@ function openDefectScanner(fruit) {
     
     activeFruit = fruit;
     document.getElementById('defectScannerTitle').innerText = 'Scan ' + fruitNames[fruit] + ' for Defects';
-    document.getElementById('defect-detector-hub').classList.add('hidden');
+    document.getElementById('defect-hub').classList.add('hidden');
     document.getElementById('defect-scanner-view').classList.remove('hidden');
 }
 
 // Back from defect scanner to defect hub
 function backToDefectHub() {
     document.getElementById('defect-scanner-view').classList.add('hidden');
-    document.getElementById('defect-detector-hub').classList.remove('hidden');
+    document.getElementById('defect-hub').classList.remove('hidden');
 }
 
 // Back from defect hub to main fruit hub
 function backToFruitHub() {
-    document.getElementById('defect-detector-hub').classList.add('hidden');
+    document.getElementById('defect-hub').classList.add('hidden');
     document.getElementById('fruit-hub').classList.remove('hidden');
 }
 

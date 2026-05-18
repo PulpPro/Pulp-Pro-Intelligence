@@ -1,31 +1,19 @@
-const CACHE_VERSION = 'v1.1';
+const CACHE_VERSION = 'v2.0';
 const CACHE_NAME = 'pulp-pro-' + CACHE_VERSION;
 const ASSETS = [
     '/Pulp-Pro-Intelligence/',
     '/Pulp-Pro-Intelligence/index.html',
     '/Pulp-Pro-Intelligence/manifest.json',
     '/Pulp-Pro-Intelligence/edited-image.png',
-    '/Pulp-Pro-Intelligence/banana.png',
-    '/Pulp-Pro-Intelligence/mango.png',
-    '/Pulp-Pro-Intelligence/avocado.png',
-    '/Pulp-Pro-Intelligence/rotten.png',
     '/Pulp-Pro-Intelligence/colour.png',
-    '/Pulp-Pro-Intelligence/news.png',
     '/Pulp-Pro-Intelligence/css/theme.css',
     '/Pulp-Pro-Intelligence/css/layout.css',
     '/Pulp-Pro-Intelligence/css/components.css',
-    '/Pulp-Pro-Intelligence/js/translations.js',
     '/Pulp-Pro-Intelligence/js/app.js',
     '/Pulp-Pro-Intelligence/js/navigation.js',
-    '/Pulp-Pro-Intelligence/js/brands.js',
-    '/Pulp-Pro-Intelligence/js/favorites.js',
     '/Pulp-Pro-Intelligence/js/history.js',
     '/Pulp-Pro-Intelligence/js/calculator.js',
-    '/Pulp-Pro-Intelligence/js/defects-data.js',
-    '/Pulp-Pro-Intelligence/js/defect-detector.js',
     '/Pulp-Pro-Intelligence/js/colour-scanner.js',
-    '/Pulp-Pro-Intelligence/js/news.js',
-    'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
     'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css'
 ];
 
@@ -57,7 +45,6 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
     const isHTML = event.request.headers.get('accept')?.includes('text/html');
-
     if (isHTML) {
         event.respondWith(
             fetch(event.request)

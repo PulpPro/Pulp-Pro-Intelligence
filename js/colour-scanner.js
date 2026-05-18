@@ -568,14 +568,19 @@ const ColourScanner = (() => {
     }
 
     async function shareBatchReport() {
-        const label = document.getElementById('csBatchLabel')?.innerText || '';
-        const shelf = document.getElementById('csBatchShelf')?.innerText || '';
-        const status = document.getElementById('csBatchStatus')?.innerText || '';
-        const colour = document.getElementById('csBatchSwatch')?.style.background || '#98c428';
-        const note = getNote('csBatchNoteInput');
-        const count = document.getElementById('csBatchCount')?.innerText || '';
-        const canvas = await generateBatchReportCanvas({ label, shelf, status, colour, note, count, scans: multiScans, photos: capturedPhotos, timestamp: getNow() });
-        await shareCanvas(canvas, 'pulp-pro-batch-scan.png');
+        try {
+            const label = document.getElementById('csBatchLabel')?.innerText || '';
+            const shelf = document.getElementById('csBatchShelf')?.innerText || '';
+            const status = document.getElementById('csBatchStatus')?.innerText || '';
+            const colour = document.getElementById('csBatchSwatch')?.style.background || '#98c428';
+            const note = getNote('csBatchNoteInput');
+            const count = document.getElementById('csBatchCount')?.innerText || '';
+            const canvas = await generateBatchReportCanvas({ label, shelf, status, colour, note, count, scans: multiScans, photos: capturedPhotos, timestamp: getNow() });
+            await shareCanvas(canvas, 'pulp-pro-batch-scan.png');
+        } catch(err) {
+            console.error('Batch share failed:', err);
+            alert('Share failed: ' + err.message);
+        }
     }
 
     // ── COPY ──────────────────────────────────────────────────

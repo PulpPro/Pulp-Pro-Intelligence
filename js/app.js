@@ -21,7 +21,7 @@ window.addEventListener('load', () => {
     renderHistory();
     setTimeout(() => {
         document.body.classList.add('loaded');
-    }, 2600);
+    }, 1200);
 });
 
 // Theme Toggle

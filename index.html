@@ -57,10 +57,90 @@
 
 <!-- HOME -->
 <div id="fruit-hub" class="nav-view">
-<div class="hub-title">Pulp Pro</div>
-<div class="list-container">
-    <div class="list-btn" onclick="openAgeChecker()">&#x1F4C5; Age Checker &mdash; Chiquita</div>
-    <div class="list-btn" onclick="openColourScanner()">&#x1F3A8; Colour Scanner</div>
+<style>
+.home-hero-tag{display:inline-flex;align-items:center;gap:7px;background:rgba(166,226,46,0.07);border:1px solid rgba(166,226,46,0.16);border-radius:100px;padding:6px 14px;margin-bottom:20px}
+.home-hero-dot{width:6px;height:6px;border-radius:50%;background:#a6e22e;animation:livePulse 2s infinite}
+@keyframes livePulse{0%,100%{opacity:1}50%{opacity:0.25}}
+.home-hero-tag span{font-size:0.5rem;font-weight:800;color:#a6e22e;letter-spacing:1.5px;text-transform:uppercase}
+.home-h1{font-size:clamp(2rem,8vw,2.8rem);font-weight:900;letter-spacing:-1.5px;line-height:1.05;color:var(--text-main);margin-bottom:12px}
+.home-h1 em{color:#a6e22e;font-style:normal}
+.home-sub{font-size:0.82rem;color:rgba(255,255,255,0.32);line-height:1.7;margin-bottom:32px;font-weight:400;max-width:480px}
+.tool-cards{display:flex;flex-direction:column;gap:12px;max-width:600px}
+.tc{border-radius:22px;overflow:hidden;cursor:pointer;transition:transform 0.2s,border-color 0.2s;position:relative}
+.tc:hover{transform:translateY(-3px)}
+.tc:active{transform:scale(0.98)}
+.tc-age{background:linear-gradient(135deg,#0a1a06 0%,#0d1209 100%);border:1px solid rgba(166,226,46,0.18);padding:24px 26px}
+.tc-colour{background:#0f0f0f;border:1px solid rgba(255,255,255,0.07);padding:24px 26px}
+.tc-tag{font-size:0.48rem;font-weight:900;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.tc-age .tc-tag{color:rgba(166,226,46,0.55)}
+.tc-colour .tc-tag{color:rgba(255,255,255,0.28)}
+.tc-title{font-size:1.3rem;font-weight:900;color:#fff;letter-spacing:-0.3px;margin-bottom:3px}
+.tc-sub{font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:18px}
+.tc-age .tc-sub{color:rgba(166,226,46,0.4)}
+.tc-colour .tc-sub{color:rgba(255,255,255,0.22)}
+.tc-preview{display:flex;align-items:center;gap:10px}
+.code-pill{background:rgba(0,0,0,0.4);border:1px solid rgba(166,226,46,0.2);border-radius:10px;padding:9px 14px;font-size:1.1rem;font-weight:900;color:#fff;letter-spacing:5px;font-family:monospace}
+.result-pill{background:rgba(166,226,46,0.1);border:1px solid rgba(166,226,46,0.25);border-radius:10px;padding:9px 14px;text-align:center}
+.result-pill .days{font-size:1.1rem;font-weight:900;color:#a6e22e;line-height:1}
+.result-pill .rlbl{font-size:0.45rem;font-weight:800;color:rgba(166,226,46,0.6);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+.tc-arrow{margin-left:auto;width:34px;height:34px;background:rgba(166,226,46,0.1);border:1px solid rgba(166,226,46,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#a6e22e;font-size:1rem;flex-shrink:0}
+.colour-scale{display:flex;gap:4px;margin-bottom:10px}
+.cs-step{flex:1;height:26px;border-radius:6px}
+.cs-step.sel{outline:2px solid #fff;outline-offset:2px}
+.colour-readout{display:flex;justify-content:space-between;align-items:center}
+.cr-stage{font-size:1rem;font-weight:900;color:#fff}
+.cr-name{font-size:0.48rem;color:rgba(255,255,255,0.3);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+.cr-shelf{font-size:0.82rem;font-weight:900;color:#a6e22e;text-align:right}
+.cr-status{font-size:0.48rem;color:rgba(255,255,255,0.3);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:2px;text-align:right}
+.home-bottom{display:flex;gap:32px;margin-top:28px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.05);max-width:600px}
+.hbstat-num{font-size:1.1rem;font-weight:900;color:#a6e22e;letter-spacing:-0.5px}
+.hbstat-lbl{font-size:0.45rem;font-weight:700;color:rgba(255,255,255,0.22);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+</style>
+
+<div class="home-hero-tag"><div class="home-hero-dot"></div><span>Live fruit intelligence</span></div>
+<div class="home-h1">Know your fruit.<br><em>Before it arrives.</em></div>
+<div class="home-sub">Professional tools for the fruit floor. Built fast, works offline.</div>
+
+<div class="tool-cards">
+    <div class="tc tc-age" onclick="openAgeChecker()">
+        <div class="tc-tag">Chiquita · Age Checker</div>
+        <div class="tc-title">Banana Age</div>
+        <div class="tc-sub">Enter 3-letter code → instant result</div>
+        <div class="tc-preview">
+            <div class="code-pill">CF1</div>
+            <div style="color:rgba(255,255,255,0.2);font-size:0.9rem;">→</div>
+            <div class="result-pill">
+                <div class="days">14d</div>
+                <div class="rlbl">Perfect</div>
+            </div>
+            <div class="tc-arrow">›</div>
+        </div>
+    </div>
+
+    <div class="tc tc-colour" onclick="openColourScanner()">
+        <div class="tc-tag">AI · Classic · Camera</div>
+        <div class="tc-title">Colour Scanner</div>
+        <div class="tc-sub">Point camera · get colour stage</div>
+        <div class="colour-scale">
+            <div class="cs-step" style="background:#2d5a1b"></div>
+            <div class="cs-step" style="background:#4a8a25"></div>
+            <div class="cs-step" style="background:#78c830"></div>
+            <div class="cs-step sel" style="background:#a6e22e"></div>
+            <div class="cs-step" style="background:#d4c426"></div>
+            <div class="cs-step" style="background:#f5a623"></div>
+            <div class="cs-step" style="background:#e8650a"></div>
+        </div>
+        <div class="colour-readout">
+            <div><div class="cr-stage">Stage 3.5</div><div class="cr-name">Yellow-Green</div></div>
+            <div><div class="cr-shelf">5–7 days</div><div class="cr-status">Perfect</div></div>
+        </div>
+    </div>
+</div>
+
+<div class="home-bottom">
+    <div><div class="hbstat-num">Free</div><div class="hbstat-lbl">Always</div></div>
+    <div><div class="hbstat-num">Offline</div><div class="hbstat-lbl">Works</div></div>
+    <div><div class="hbstat-num">iOS · Web</div><div class="hbstat-lbl">Platform</div></div>
 </div>
 </div>
 

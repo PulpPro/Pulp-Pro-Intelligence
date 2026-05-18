@@ -1,13 +1,8 @@
 // Register Service Worker
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        // Unregister all old service workers then re-register fresh
-        navigator.serviceWorker.getRegistrations().then(registrations => {
-            const unregs = registrations.map(r => r.unregister());
-            return Promise.all(unregs);
-        }).then(() => {
-            return navigator.serviceWorker.register('sw.js');
-        }).catch(err => console.log('SW failed', err));
+        navigator.serviceWorker.register('sw.js')
+            .catch(err => console.log('SW failed', err));
     });
 }
 

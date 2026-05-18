@@ -100,16 +100,18 @@
 <div id="admin-menu-section" class="hidden">
 <div class="settings-label" style="color:rgba(166,226,46,0.5);">Admin</div>
 <div class="menu-item" onclick="toggleCodeGenerator()" style="color:#a6e22e;background:rgba(166,226,46,0.05);border:1px solid rgba(166,226,46,0.12);border-radius:10px;margin-bottom:4px;"><span><i class="bi bi-key"></i> Generate Access Code</span></div>
-<div id="code-gen-panel" class="hidden" style="background:#0a1a06;border:1px solid rgba(166,226,46,0.2);border-radius:14px;padding:14px;margin-bottom:8px;">
-<div style="font-size:8px;font-weight:900;color:rgba(166,226,46,0.6);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;">New Access Code</div>
-<input id="codePersonName" type="text" placeholder="Person's name e.g. Jan" style="width:100%;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px 10px;font-size:12px;font-weight:400;color:#fff;margin-bottom:8px;outline:none;text-transform:none;letter-spacing:normal;">
-<div id="generated-code-display" class="hidden" style="background:rgba(0,0,0,0.4);border:1px solid rgba(166,226,46,0.25);border-radius:10px;padding:10px 12px;margin-bottom:8px;text-align:center;">
-<div id="generatedCodeFor" style="font-size:8px;color:rgba(166,226,46,0.5);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;"></div>
-<div id="generatedCode" style="font-size:18px;font-weight:900;color:#fff;letter-spacing:4px;font-family:monospace;"></div>
+<div id="code-gen-panel" class="hidden" style="margin-bottom:8px;">
+<div style="background:#0a1a06;border:1px solid rgba(166,226,46,0.2);border-radius:12px;padding:12px;margin-bottom:6px;">
+<div style="font-size:8px;font-weight:900;color:rgba(166,226,46,0.6);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Name</div>
+<input id="codePersonName" type="text" placeholder="e.g. Jan" style="width:100%;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px 10px;font-size:12px;color:#fff;outline:none;text-transform:none;letter-spacing:normal;font-family:-apple-system,sans-serif;">
+</div>
+<div id="generated-code-display" class="hidden" style="background:#0a1a06;border:1px solid rgba(166,226,46,0.25);border-radius:12px;padding:12px;margin-bottom:6px;text-align:center;">
+<div id="generatedCodeFor" style="font-size:8px;color:rgba(166,226,46,0.5);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;"></div>
+<div id="generatedCode" style="font-size:16px;font-weight:900;color:#fff;letter-spacing:3px;font-family:monospace;"></div>
 </div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-<button id="generateCodeBtn" onclick="generateCode()" style="background:#a6e22e;color:#000;border:none;border-radius:8px;padding:9px;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1px;cursor:pointer;"><i class="bi bi-arrow-repeat"></i> Generate</button>
-<button id="copyCodeBtn" onclick="copyGeneratedCode()" style="background:rgba(166,226,46,0.1);color:#a6e22e;border:1px solid rgba(166,226,46,0.2);border-radius:8px;padding:9px;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1px;cursor:pointer;"><i class="bi bi-clipboard"></i> Copy</button>
+<button id="generateCodeBtn" onclick="generateCode()" style="background:#a6e22e;color:#000;border:none;border-radius:8px;padding:10px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1px;cursor:pointer;font-family:-apple-system,sans-serif;"><i class="bi bi-arrow-repeat"></i> Generate</button>
+<button id="copyCodeBtn" onclick="copyGeneratedCode()" style="background:rgba(166,226,46,0.1);color:#a6e22e;border:1px solid rgba(166,226,46,0.2);border-radius:8px;padding:10px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1px;cursor:pointer;font-family:-apple-system,sans-serif;"><i class="bi bi-clipboard"></i> Copy</button>
 </div>
 </div>
 <div class="menu-item" onclick="adminLogout()" style="color:rgba(255,77,77,0.6);"><span><i class="bi bi-box-arrow-right"></i> Logout</span></div>

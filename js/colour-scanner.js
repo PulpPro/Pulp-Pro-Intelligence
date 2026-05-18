@@ -439,7 +439,7 @@ const ColourScanner = (() => {
         const PHOTO_H = 280; // each box photo height - reduced for better iMessage display
         const BOX_INFO_H = 120;
         const HEADER_H = 90;
-        const AVG_H = 200;
+        const AVG_H = 260;
         const SCALE_H = 80;
         const FOOTER_H = 70;
         const NOTE_H = note ? 80 : 0;
@@ -501,16 +501,18 @@ const ColourScanner = (() => {
         ctx.fillStyle = 'rgba(166,226,46,0.06)'; roundRect(ctx, 40, y, W-80, AVG_H - 20, 20); ctx.fill();
         ctx.strokeStyle = 'rgba(166,226,46,0.15)'; ctx.lineWidth = 1; roundRect(ctx, 40, y, W-80, AVG_H - 20, 20); ctx.stroke();
 
-        ctx.fillStyle = 'rgba(166,226,46,0.6)'; ctx.font = 'bold 22px -apple-system, sans-serif'; ctx.fillText('BATCH AVERAGE', 60, y+44);
-        ctx.fillStyle = colour; roundRect(ctx, 60, y+60, 80, 80, 16); ctx.fill();
-        ctx.fillStyle = '#ffffff'; ctx.font = 'bold 42px -apple-system, sans-serif'; ctx.fillText(label, 160, y+112);
+        ctx.fillStyle = 'rgba(166,226,46,0.7)'; ctx.font = 'bold 22px -apple-system, sans-serif'; ctx.fillText('BATCH AVERAGE', 60, y + 38);
+
+        ctx.fillStyle = colour; roundRect(ctx, 60, y + 56, 70, 70, 14); ctx.fill();
+        ctx.fillStyle = '#ffffff'; ctx.font = 'bold 42px -apple-system, sans-serif'; ctx.fillText(label, 150, y + 108);
 
         const avgRows = [['Boxes Scanned', count], ['Shelf Life', shelf], ['Status', status]];
-        let ay = y + 152;
+        let ay = y + 148;
         avgRows.forEach(([k, v]) => {
-            ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.font = '400 22px -apple-system, sans-serif'; ctx.fillText(k.toUpperCase(), 60, ay);
+            ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.font = '400 22px -apple-system, sans-serif'; ctx.fillText(k.toUpperCase(), 60, ay);
             ctx.fillStyle = '#ffffff'; ctx.font = 'bold 24px -apple-system, sans-serif'; ctx.textAlign = 'right'; ctx.fillText(v, W-60, ay); ctx.textAlign = 'left';
-            ay += 42;
+            ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.fillRect(60, ay + 10, W-120, 1);
+            ay += 46;
         });
         y += AVG_H + 10;
 

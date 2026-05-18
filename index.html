@@ -17,141 +17,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/knn-classifier"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
-
-<style>
-/* ── HOME GRID ─────────────────────────────── */
-.home-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    width: 100%;
-    padding-bottom: 20px;
-}
-.hc {
-    position: relative;
-    border-radius: 20px;
-    overflow: hidden;
-    cursor: pointer;
-    border: 1px solid rgba(255,255,255,0.07);
-    background: #141414;
-    transition: transform 0.2s ease, border-color 0.2s ease;
-    display: flex;
-    flex-direction: column;
-}
-.hc:hover { transform: translateY(-3px); border-color: rgba(166,226,46,0.35); }
-.hc:active { transform: scale(0.98); }
-.hc-img {
-    width: 100%; height: 120px;
-    object-fit: cover; display: block; flex-shrink: 0;
-}
-.hc-label {
-    padding: 10px 12px 12px;
-    background: #141414; flex: 1;
-    display: flex; flex-direction: column; justify-content: center;
-}
-.hc-name {
-    font-size: 0.78rem; font-weight: 900;
-    text-transform: uppercase; letter-spacing: 1.5px;
-    color: #fff; display: block;
-}
-.hc-sub {
-    font-size: 0.48rem; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 1px;
-    color: rgba(255,255,255,0.35); display: block; margin-top: 2px;
-}
-.hc-soon {
-    font-size: 0.5rem; font-weight: 900;
-    text-transform: uppercase; letter-spacing: 1px;
-    color: #ff8c00; display: block; margin-top: 2px;
-}
-.hc-banana {
-    grid-column: 1 / -1; flex-direction: row;
-    align-items: stretch; height: 110px;
-    border: 1px solid rgba(166,226,46,0.2);
-    background: #0d1a06; border-radius: 22px;
-}
-.hc-banana .hc-img {
-    width: 38%; height: 110px;
-    object-fit: cover; flex-shrink: 0; border-radius: 0;
-}
-.hc-banana .hc-label {
-    flex: 1; display: flex; flex-direction: column;
-    justify-content: center; padding: 14px 14px 14px 16px;
-    background: transparent;
-}
-.hc-banana .hc-name { font-size: 1.05rem; letter-spacing: 2px; color: #fff; }
-.hc-banana .hc-sub  { color: rgba(166,226,46,0.6); margin-top: 4px; font-size: 0.5rem; }
-.hc-banana-explore {
-    display: inline-block; margin-top: 10px;
-    background: rgba(166,226,46,0.12);
-    border: 1px solid rgba(166,226,46,0.25);
-    color: #a6e22e; font-size: 0.52rem; font-weight: 900;
-    text-transform: uppercase; letter-spacing: 1px;
-    padding: 5px 12px; border-radius: 20px; width: fit-content;
-}
-.hc-news {
-    grid-column: 1 / -1; flex-direction: row;
-    align-items: center; min-height: 80px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 20px; padding: 0 20px; gap: 16px;
-}
-.hc-news .hc-img { display: none; }
-.hc-news-icon { font-size: 2rem; flex-shrink: 0; line-height: 1; }
-.hc-news .hc-label {
-    flex: 1; padding: 0; background: transparent;
-    display: flex; flex-direction: column; justify-content: center;
-}
-.hc-news .hc-name { font-size: 0.85rem; letter-spacing: 1.5px; }
-.hc-news .hc-sub  { font-size: 0.52rem; margin-top: 4px; color: rgba(255,255,255,0.3); }
-.hc-news-arrow { font-size: 1.3rem; color: rgba(255,255,255,0.2); flex-shrink: 0; }
-
-@media (min-width: 900px) {
-    .home-grid {
-        grid-template-columns: 2fr 1fr 1fr;
-        grid-template-rows: 240px 170px 90px;
-        gap: 12px; padding-bottom: 20px;
-    }
-    .hc-banana {
-        grid-column: 1 / 2; grid-row: 1 / 3;
-        flex-direction: column; height: 100%;
-        align-items: stretch; border-radius: 26px;
-    }
-    .hc-banana .hc-img { width: 100%; height: 62%; object-fit: cover; flex-shrink: 0; border-radius: 0; }
-    .hc-banana .hc-label { flex: 1; padding: 22px 26px; justify-content: center; background: transparent; }
-    .hc-banana .hc-name { font-size: 1.8rem; letter-spacing: 3px; }
-    .hc-banana .hc-sub  { font-size: 0.6rem; margin-top: 6px; }
-    .hc-banana-explore  { margin-top: 16px; font-size: 0.6rem; padding: 8px 18px; }
-    .hc:nth-child(2) { grid-column: 2; grid-row: 1; border-radius: 24px; }
-    .hc:nth-child(3) { grid-column: 3; grid-row: 1; border-radius: 24px; }
-    .hc:nth-child(4) { grid-column: 2; grid-row: 2; border-radius: 24px; }
-    .hc:nth-child(5) { grid-column: 3; grid-row: 2; border-radius: 24px; }
-    .hc-news {
-        grid-column: 1 / -1; grid-row: 3;
-        min-height: 90px; border-radius: 20px;
-        padding: 0 32px; gap: 22px;
-    }
-    .hc-news-icon { font-size: 2.2rem; }
-    .hc-news .hc-name { font-size: 1rem; }
-    .hc-news .hc-sub  { font-size: 0.58rem; }
-    .hc-news-arrow { font-size: 1.4rem; }
-    .hc:not(.hc-banana):not(.hc-news) .hc-img   { height: 65%; }
-    .hc:not(.hc-banana):not(.hc-news) .hc-name  { font-size: 0.88rem; }
-    .hc:not(.hc-banana):not(.hc-news) .hc-label { padding: 12px 16px 14px; }
-}
-
-/* ── ARTICLE SELECTOR ──────────────────────── */
-.article-btn.active {
-    background: rgba(166,226,46,0.08) !important;
-    border-color: var(--pulp-lime) !important;
-    color: var(--pulp-lime) !important;
-}
-.scan-mode-btn.active {
-    background: rgba(166,226,46,0.08) !important;
-    border-color: var(--pulp-lime) !important;
-    color: var(--pulp-lime) !important;
-}
-</style>
 </head>
 <body>
 
@@ -183,168 +48,70 @@
 <div style="font-weight:900; color:var(--pulp-lime);">PULP PRO</div>
 </div>
 <div class="menu-item" onclick="showHub(); toggleMenu();"><span>&#x1F3E0; Home</span></div>
-<div class="menu-item" onclick="openNews(); toggleMenu();"><span>&#x1F4F0; News</span></div>
 <div class="settings-label">App Settings</div>
 <div class="menu-item" onclick="toggleTheme()"><span>&#x1F313; <span id="themeText">Dark Mode</span></span></div>
-<div class="menu-item" onclick="toggleLanguage()"><span>&#x1F310; <span id="langText">&#x1F1F3;&#x1F1F1; Nederlands</span></span></div>
 <div class="menu-item" onclick="clearHistory()" style="color:var(--pulp-red);"><span>&#x26A0;&#xFE0F; Clear Logs</span></div>
 <div class="menu-item" onclick="sendFeedback()"><span>&#x1F4AC; Send Feedback</span></div>
-<div id="menu-fav-container">
-<div class="menu-item" onclick="toggleMenuFavs()"><span>&#x2B50; Favorites</span><i class="bi bi-chevron-down" id="favChevron"></i></div>
-<div id="menu-fav-list"></div>
-</div>
 </div>
 <div id="menu-overlay" onclick="toggleMenu()"></div>
 
-<!-- Fruit Hub -->
+<!-- HOME -->
 <div id="fruit-hub" class="nav-view">
-<div class="hub-title">Select Commodity</div>
-<div class="home-grid">
-    <div class="hc hc-banana" onclick="openMiddleHub('banana')">
-        <img class="hc-img" src="banana.png" alt="banana">
-        <div class="hc-label">
-            <span class="hc-name">Banana</span>
-            <span class="hc-sub">Age checker · Defects · Colour</span>
-            <span class="hc-banana-explore">Explore →</span>
-        </div>
-    </div>
-    <div class="hc" onclick="openMiddleHub('mango')">
-        <img class="hc-img" src="mango.png" alt="mango">
-        <div class="hc-label">
-            <span class="hc-name">Mango</span>
-            <span class="hc-soon">(Soon)</span>
-        </div>
-    </div>
-    <div class="hc" onclick="openMiddleHub('avocado')">
-        <img class="hc-img" src="avocado.png" alt="avocado">
-        <div class="hc-label">
-            <span class="hc-name">Avocado</span>
-            <span class="hc-soon">(Soon)</span>
-        </div>
-    </div>
-    <div class="hc" onclick="openDefectDetector()">
-        <img class="hc-img" src="rotten.png" alt="defect">
-        <div class="hc-label">
-            <span class="hc-name">Defect Detector</span>
-            <span class="hc-sub">Camera · AI scan</span>
-        </div>
-    </div>
-    <div class="hc" onclick="openColourScanner()">
-        <img class="hc-img" src="colour.png" alt="colour">
-        <div class="hc-label">
-            <span class="hc-name">Colour Scanner</span>
-            <span class="hc-sub">Classic · AI model</span>
-        </div>
-    </div>
-    <div class="hc hc-news" onclick="openNews()">
-        <span class="hc-news-icon">📰</span>
-        <div class="hc-label">
-            <span class="hc-name">Industry News</span>
-            <span class="hc-sub">AGF · FreshPlaza · Fresh Fruit Portal · Good Fruit Grower</span>
-        </div>
-        <span class="hc-news-arrow">›</span>
-    </div>
-</div>
-<div id="favorites-section" class="hidden">
-<div class="hub-title" style="color:var(--pulp-amber); font-size:0.8rem; margin-top:20px;">Saved Favorites</div>
-<div class="fav-grid" id="fav-grid"></div>
-</div>
-</div>
-
-<!-- Middle Hub -->
-<div id="middle-hub" class="nav-view hidden">
-<div class="hub-title" id="middleHubTitle">Banana Menu</div>
-<div class="list-container" id="middleHubButtons"></div>
-<button class="btn-main btn-back" onclick="showHub()" id="backToHubBtn">&larr; Back</button>
-</div>
-
-<!-- Defect Hub -->
-<div id="defect-hub" class="nav-view hidden">
-<div class="hub-title">Defect Detector</div>
+<div class="hub-title">Pulp Pro</div>
 <div class="list-container">
-<div class="list-btn" onclick="DefectDetector.selectFruit('banana')">&#x1F34C; Banana</div>
-<div class="list-btn" onclick="DefectDetector.selectFruit('mango')">&#x1F96D; Mango</div>
-<div class="list-btn" onclick="DefectDetector.selectFruit('avocado')">&#x1F951; Avocado</div>
-</div>
-<button class="btn-main btn-back" onclick="showHub()">&larr; Back</button>
-</div>
-
-<!-- Defect Type View -->
-<div id="defect-type-view" class="nav-view hidden">
-<div class="hub-title" id="defectTypeTitle">Banana &mdash; Select Type</div>
-<div style="max-width:400px; margin:0 auto;">
-<div class="type-btn" onclick="DefectDetector.selectType('external')">
-<div class="type-btn-title" id="extDefectsBtn">&#x1F50D; External Defects</div>
-<div class="type-btn-desc" id="defectTypeDesc_external">Skin, colour, bruising, cuts, mould</div>
-</div>
-<div class="type-btn" onclick="DefectDetector.selectType('internal')">
-<div class="type-btn-title" id="intDefectsBtn">&#x1F52C; Internal Defects</div>
-<div class="type-btn-desc" id="defectTypeDesc_internal">Flesh, rot, discolouration, flavour</div>
-</div>
-</div>
-<button class="btn-main btn-back" onclick="DefectDetector.showDefectView('defect-hub')">&larr; Back</button>
-</div>
-
-<!-- Defect Scan View -->
-<div id="defect-scan-view" class="nav-view hidden">
-<div style="max-width:400px; margin:0 auto; position:relative;">
-<i class="bi bi-star-fill fav-toggle" id="defectFavStar" onclick="toggleFavorite('defect')" style="position:absolute; top:0; right:0; z-index:10;"></i>
-<div class="hub-title" id="defectScanTitle" style="padding-right:40px;">Banana &mdash; External</div>
-<div class="camera-wrapper">
-<video id="defectVideo" autoplay playsinline muted style="display:none;"></video>
-<canvas id="defectCanvas" style="display:none;"></canvas>
-<div id="cameraPlaceholder" style="display:flex; flex-direction:column; align-items:center; gap:8px; padding:30px; min-height:200px;">
-<i class="bi bi-camera" style="font-size:2rem; opacity:0.25; color:var(--text-main);"></i>
-<span style="font-size:0.55rem; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:var(--text-dim);">Camera not available</span>
-</div>
-<button class="capture-btn" id="defectScanActionBtn" onclick="DefectDetector.doScan()">
-<i class="bi bi-camera-fill"></i> Scan
-</button>
-</div>
-<div style="margin:10px 0 14px; text-align:center;">
-<span id="defectDisclaimer" style="font-size:0.55rem; font-weight:700; color:var(--pulp-red); text-transform:uppercase; letter-spacing:1px; opacity:0.8;">
-&#x26A0;&#xFE0F; Camera detection is colour-based. Accuracy may vary. Always verify results manually.
-</span>
-</div>
-<div id="defectScanResults" class="hidden"></div>
-<button class="btn-main btn-back" style="margin-top:10px;" onclick="DefectDetector.showDefectView('defect-type-view'); DefectDetector.stopCamera();">&larr; Back</button>
+    <div class="list-btn" onclick="openAgeChecker()">&#x1F4C5; Age Checker &mdash; Chiquita</div>
+    <div class="list-btn" onclick="openColourScanner()">&#x1F3A8; Colour Scanner</div>
 </div>
 </div>
 
-<!-- Defect Info View -->
-<div id="defect-info-view" class="nav-view hidden">
-<div class="hub-title" id="defectInfoTitle">Defect Info</div>
-<div style="max-width:400px; margin:0 auto;">
-<div id="defectInfoContent"></div>
-<button class="btn-main btn-back" onclick="DefectDetector.showDefectView('defect-scan-view')" id="backToScanBtn">&larr; Back to Scan</button>
-</div>
+<!-- AGE CHECKER -->
+<div class="app-container hidden" id="appInterface">
+<div class="app-card" id="appCard">
+<i class="bi bi-star-fill fav-toggle" id="favStar" onclick="toggleFavorite('calculator')"></i>
+<img src="edited-image.png" style="width:50px; margin-bottom:10px;">
+<div id="brandName" style="font-size: 1.4rem; font-weight: 900; color: var(--pulp-lime); text-transform: uppercase;">Chiquita</div>
+<div id="commodityLabel" style="font-weight: 900; letter-spacing: 4px; opacity: 0.5; font-size: 0.7rem; margin-bottom: 20px; color:var(--text-main);">BANANA AGE CHECKER</div>
+
+<!-- ARTICLE SELECTOR -->
+<div style="font-size:0.52rem; font-weight:900; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">Select Article</div>
+<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px; margin-bottom:18px;">
+    <button type="button" class="article-btn active" data-article="Chiquita 18kg" onclick="setArticle('Chiquita 18kg')" style="background:var(--input-bg); border:1.5px solid var(--border-glass); border-radius:12px; padding:12px 4px; font-size:0.55rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; cursor:pointer; line-height:1.4;">Chiquita<br>18kg</button>
+    <button type="button" class="article-btn" data-article="Chiquita Geel" onclick="setArticle('Chiquita Geel')" style="background:var(--input-bg); border:1.5px solid var(--border-glass); border-radius:12px; padding:12px 4px; font-size:0.55rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; cursor:pointer; line-height:1.4;">Chiquita<br>Geel</button>
+    <button type="button" class="article-btn" data-article="Chiquita Groene" onclick="setArticle('Chiquita Groene')" style="background:var(--input-bg); border:1.5px solid var(--border-glass); border-radius:12px; padding:12px 4px; font-size:0.55rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; cursor:pointer; line-height:1.4;">Chiquita<br>Groene</button>
 </div>
 
-<!-- Defect Report View -->
-<div id="defect-report-view" class="nav-view hidden">
-<div class="hub-title">Defect Report</div>
-<div style="max-width:400px; margin:0 auto;">
-<div class="report-card">
-<div class="grade-circle" id="reportGradeCircle">
-<div class="grade-letter" id="reportGradeLetter">A</div>
-<div class="grade-sub">Grade</div>
-</div>
-<div class="report-row"><span class="report-key">Fruit</span><span class="report-val" id="reportFruit">&mdash;</span></div>
-<div class="report-row"><span class="report-key">Date</span><span class="report-val" id="reportTimestamp">&mdash;</span></div>
-<div class="report-row"><span class="report-key">Defects Found</span><span class="report-val" id="reportDefectCount">&mdash;</span></div>
-<div class="report-row"><span class="report-key">Severity</span><span class="report-val" id="reportSeverity">&mdash;</span></div>
-<div class="report-row"><span class="report-key">Status</span><span class="report-val" id="reportStatus">&mdash;</span></div>
-</div>
-<div class="report-defects-title">Defect Breakdown</div>
-<div class="report-defects-scroll" id="reportDefectList"></div>
-<button id="copyReportBtn" onclick="DefectDetector.copyReport ? DefectDetector.copyReport() : null">
-<i class="bi bi-clipboard"></i> Copy Report
-</button>
-<button class="btn-main btn-back" onclick="DefectDetector.showDefectView('defect-hub')">&larr; New Scan</button>
-</div>
+<!-- SCAN MODE -->
+<div style="font-size:0.52rem; font-weight:900; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">Scan Mode</div>
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:18px;">
+    <button type="button" id="singleModeBtn" class="scan-mode-btn active" onclick="setScanMode('single')" style="background:var(--input-bg); border:1.5px solid var(--border-glass); border-radius:12px; padding:11px; font-size:0.62rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; cursor:pointer;">Single Scan</button>
+    <button type="button" id="multiModeBtn" class="scan-mode-btn" onclick="setScanMode('multi')" style="background:var(--input-bg); border:1.5px solid var(--border-glass); border-radius:12px; padding:11px; font-size:0.62rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; cursor:pointer;">Multi Scan</button>
 </div>
 
-<!-- Colour Scanner View -->
+<!-- INPUT -->
+<div class="input-wrapper"><input type="text" id="codeIn" placeholder="---" maxlength="3" autofocus></div>
+
+<!-- BATCH LIST -->
+<div id="batchList" class="hidden" style="background:var(--input-bg); border:1px solid var(--border-glass); border-radius:16px; margin-bottom:14px; overflow:hidden;"></div>
+
+<button onclick="checkFruit()" class="btn-main" id="calcBtn">Calculate</button>
+
+<!-- SINGLE RESULT -->
+<div id="resBox" class="result-display hidden">
+<div id="statusLabel" style="font-weight:900;">READY</div>
+<div id="daysValue">--</div>
+<div id="dateText" style="font-size: 1.3rem; font-weight: 900; margin-top: 10px;">-- -- ----</div>
+<button class="btn btn-copy" onclick="copyResult()" id="copyBtn"><i class="bi bi-clipboard"></i> COPY</button>
+</div>
+
+<!-- BATCH COPY -->
+<button id="batchCopyBtn" class="btn btn-copy hidden" onclick="copyBatch()" style="width:100%; justify-content:center; margin-top:10px;"><i class="bi bi-clipboard"></i> COPY</button>
+
+<button class="btn-main btn-back" style="margin-top:25px;" onclick="showHub()">&#x2190; Back</button>
+</div>
+<div id="historySection" class="history-section"><div id="historyList"></div></div>
+</div>
+
+<!-- COLOUR SCANNER -->
 <div id="colour-scanner-view" class="nav-view hidden">
 <div style="max-width:400px; margin:0 auto; position:relative;">
 <i class="bi bi-star-fill fav-toggle" id="colourFavStar" onclick="toggleFavorite('colour')" style="position:absolute; top:0; right:0; z-index:10;"></i>
@@ -393,15 +160,6 @@
 <div id="csAIConfidence" style="display:none; font-size:0.5rem; font-weight:700; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; opacity:0.8;"></div>
 <div class="report-row"><span class="report-key" id="shelfLifeLabel">Shelf Life</span><span class="report-val" id="csSingleShelf">&mdash;</span></div>
 <div class="report-row"><span class="report-key" id="statusLabel2">Status</span><span class="report-val" id="csSingleStatus">&mdash;</span></div>
-<div id="csNotePreview" class="hidden" style="background:rgba(166,226,46,0.06); border:1px solid rgba(166,226,46,0.15); border-radius:12px; padding:8px 12px; margin-top:10px;">
-<div style="font-size:0.45rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:2px; margin-bottom:4px;">&#x1F4DD; Note</div>
-<div id="csNotePreviewText" style="font-size:0.68rem; color:var(--text-dim); font-weight:600; line-height:1.4;"></div>
-</div>
-</div>
-<div style="background:var(--glass-card); border:1px solid var(--border-glass); border-radius:20px; padding:14px; margin-bottom:12px;">
-<div style="font-size:0.5rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">&#x1F4DD; Add a note <span style="color:rgba(255,255,255,0.15); font-size:0.45rem;">(optional)</span></div>
-<textarea id="csNoteInput" placeholder="e.g. Supplier X, Pallet 4, Cell 3..." maxlength="120" oninput="ColourScanner.updateNotePreview(this.value)" style="width:100%; background:var(--input-bg); border:1px solid var(--border-glass); border-radius:12px; padding:10px 12px; color:var(--text-main); font-size:0.7rem; font-family:-apple-system,sans-serif; font-weight:600; resize:none; outline:none; min-height:60px;"></textarea>
-<div id="csNoteCharCount" style="font-size:0.45rem; color:rgba(255,255,255,0.2); text-align:right; margin-top:4px; font-weight:700;">0 / 120</div>
 </div>
 <button class="btn-main" style="margin-bottom:8px;" onclick="ColourScanner.shareReport()"><i class="bi bi-share-fill"></i> Share Report Card</button>
 <button id="csCopySingle" class="btn-copy" style="width:100%; justify-content:center; margin-bottom:10px;" onclick="ColourScanner.copySingleResult()"><i class="bi bi-clipboard"></i> Copy Text Report</button>
@@ -421,128 +179,33 @@
 <div class="report-row"><span class="report-key" id="boxesScannedLabel">Boxes Scanned</span><span class="report-val" id="csBatchCount">&mdash;</span></div>
 <div class="report-row"><span class="report-key" id="shelfLifeEstLabel">Shelf Life Est.</span><span class="report-val" id="csBatchShelf">&mdash;</span></div>
 <div class="report-row"><span class="report-key" id="batchStatusLabel">Batch Status</span><span class="report-val" id="csBatchStatus">&mdash;</span></div>
-<div id="csBatchNotePreview" class="hidden" style="background:rgba(166,226,46,0.06); border:1px solid rgba(166,226,46,0.15); border-radius:12px; padding:8px 12px; margin-top:10px;">
-<div style="font-size:0.45rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:2px; margin-bottom:4px;">&#x1F4DD; Note</div>
-<div id="csBatchNotePreviewText" style="font-size:0.68rem; color:var(--text-dim); font-weight:600; line-height:1.4;"></div>
-</div>
-</div>
-<div style="background:var(--glass-card); border:1px solid var(--border-glass); border-radius:20px; padding:14px; margin-bottom:12px;">
-<div style="font-size:0.5rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">&#x1F4DD; Add a note <span style="color:rgba(255,255,255,0.15); font-size:0.45rem;">(optional)</span></div>
-<textarea id="csBatchNoteInput" placeholder="e.g. Supplier X, Pallet 4, Cell 3..." maxlength="120" oninput="ColourScanner.updateBatchNotePreview(this.value)" style="width:100%; background:var(--input-bg); border:1px solid var(--border-glass); border-radius:12px; padding:10px 12px; color:var(--text-main); font-size:0.7rem; font-family:-apple-system,sans-serif; font-weight:600; resize:none; outline:none; min-height:60px;"></textarea>
-<div id="csBatchNoteCharCount" style="font-size:0.45rem; color:rgba(255,255,255,0.2); text-align:right; margin-top:4px; font-weight:700;">0 / 120</div>
 </div>
 <button class="btn-main" style="margin-bottom:8px;" onclick="ColourScanner.shareBatchReport()"><i class="bi bi-share-fill"></i> Share Batch Report</button>
 <button id="csCopyBatch" class="btn-copy" style="width:100%; justify-content:center; margin-bottom:10px;" onclick="ColourScanner.copyBatchResult()"><i class="bi bi-clipboard"></i> Copy Text Report</button>
 <button class="btn-main btn-back" onclick="ColourScanner.resetScanner()" id="csNewBatchScanBtn">&larr; New Scan</button>
 </div>
-<button class="btn-main btn-back" style="margin-top:10px;" onclick="ColourScanner.close()" id="csBackBtn">&larr; Back</button>
+<button class="btn-main btn-back" style="margin-top:10px;" onclick="showHub()" id="csBackBtn">&larr; Back</button>
 </div>
 </div>
 
-<!-- News View -->
-<div id="news-view" class="nav-view hidden">
-<div style="max-width:1200px; margin:0 auto;">
-<div id="news-list-view">
-<div class="hub-title">&#x1F4F0; Fruit Industry News</div>
-<div id="newsCacheStatus"></div>
-<div class="news-filter-row">
-<div class="news-filter-tab active" data-filter="all" onclick="NewsManager.setFilter('all')">All</div>
-<div class="news-filter-tab" data-filter="AGF.nl" onclick="NewsManager.setFilter('AGF.nl')">&#x1F33F; AGF.nl</div>
-<div class="news-filter-tab" data-filter="FreshPlaza" onclick="NewsManager.setFilter('FreshPlaza')">&#x1F34A; FreshPlaza</div>
-<div class="news-filter-tab" data-filter="Fresh Fruit Portal" onclick="NewsManager.setFilter('Fresh Fruit Portal')">&#x1F347; Fresh Fruit Portal</div>
-<div class="news-filter-tab" data-filter="Good Fruit Grower" onclick="NewsManager.setFilter('Good Fruit Grower')">&#x1F34E; Good Fruit Grower</div>
-</div>
-<div id="newsArticleList"></div>
-<button class="btn-main btn-back" style="margin-top:10px;" onclick="showHub()">&larr; Back</button>
-</div>
-<div id="news-article-view" class="hidden">
-<div id="articleHero" class="article-hero-wrap">
-<img id="articleHeroImg" src="" alt="" style="display:none;">
-<div id="articleHeroBg" class="article-hero-bg"></div>
-<div class="article-hero-overlay"></div>
-<div class="article-back-btn" onclick="NewsManager.closeArticle()">&larr; Back</div>
-<div id="articleCatBadge" class="news-cat-badge"></div>
-</div>
-<div class="article-body">
-<div class="article-title" id="articleTitle"></div>
-<div class="article-meta">
-<span class="article-source" id="articleSource"></span>
-<div class="news-dot"></div>
-<span class="news-time" id="articleTime"></span>
-<div class="news-dot"></div>
-<span class="news-time" id="articleDate"></span>
-<span class="article-country" id="articleCountry"></span>
-</div>
-<div class="article-summary-label">Summary</div>
-<div class="article-summary-text" id="articleSummary"></div>
-<button class="article-read-btn" id="articleReadBtn">
-<i class="bi bi-box-arrow-up-right"></i> Read Full Article
-</button>
-<button class="article-share-btn" id="articleShareBtn">
-<i class="bi bi-share-fill"></i> Share Article
-</button>
-<div class="article-disclaimer">
-Full article content is available on the publisher's website.<br>
-Pulp Pro is not affiliated with any news source.
-</div>
-</div>
-</div>
-</div>
-</div>
-
-<!-- App Interface (Calculator) -->
-<div class="app-container hidden" id="appInterface">
-<div class="app-card" id="appCard">
-<i class="bi bi-star-fill fav-toggle" id="favStar" onclick="toggleFavorite('calculator')"></i>
-<img src="edited-image.png" style="width:50px; margin-bottom:10px;">
-<div id="brandName" style="font-size:1.4rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase;">Chiquita</div>
-<div id="commodityLabel" style="font-weight:900; letter-spacing:4px; opacity:0.5; font-size:0.7rem; margin-bottom:20px; color:var(--text-main);">BANANA AGE CHECKER</div>
-
-<!-- ARTICLE SELECTOR -->
-<div style="font-size:0.52rem; font-weight:900; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">Select Article</div>
-<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px; margin-bottom:18px;">
-    <button type="button" class="article-btn active" data-article="Chiquita 18kg" onclick="setArticle('Chiquita 18kg')" style="background:var(--input-bg); border:1.5px solid var(--border-glass); border-radius:12px; padding:12px 4px; font-size:0.55rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; cursor:pointer; line-height:1.4;">Chiquita<br>18kg</button>
-    <button type="button" class="article-btn" data-article="Chiquita Geel" onclick="setArticle('Chiquita Geel')" style="background:var(--input-bg); border:1.5px solid var(--border-glass); border-radius:12px; padding:12px 4px; font-size:0.55rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; cursor:pointer; line-height:1.4;">Chiquita<br>Geel</button>
-    <button type="button" class="article-btn" data-article="Chiquita Groene" onclick="setArticle('Chiquita Groene')" style="background:var(--input-bg); border:1.5px solid var(--border-glass); border-radius:12px; padding:12px 4px; font-size:0.55rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; cursor:pointer; line-height:1.4;">Chiquita<br>Groene</button>
-</div>
-
-<!-- SCAN MODE -->
-<div style="font-size:0.52rem; font-weight:900; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">Scan Mode</div>
-<div style="display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:18px;">
-    <button type="button" id="singleModeBtn" class="scan-mode-btn active" onclick="setScanMode('single')" style="background:var(--input-bg); border:1.5px solid var(--border-glass); border-radius:12px; padding:11px; font-size:0.62rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; cursor:pointer;">Single Scan</button>
-    <button type="button" id="multiModeBtn" class="scan-mode-btn" onclick="setScanMode('multi')" style="background:var(--input-bg); border:1.5px solid var(--border-glass); border-radius:12px; padding:11px; font-size:0.62rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; cursor:pointer;">Multi Scan</button>
-</div>
-
-<!-- INPUT -->
-<div class="input-wrapper"><input type="text" id="codeIn" placeholder="---" maxlength="3" autofocus></div>
-
-<!-- BATCH LIST (multi scan) -->
-<div id="batchList" class="hidden" style="background:var(--input-bg); border:1px solid var(--border-glass); border-radius:16px; margin-bottom:14px; overflow:hidden;"></div>
-<button id="batchReportBtn" class="btn-main hidden" style="margin-bottom:15px;" onclick="showBatchReport()">Get Batch Report &rarr;</button>
-
-<button onclick="checkFruit()" class="btn-main" id="calcBtn">Calculate</button>
-
-<!-- SINGLE RESULT -->
-<div id="resBox" class="result-display hidden">
-<div id="statusLabel" style="font-weight:900;">READY</div>
-<div id="daysValue">--</div>
-<div id="dateText" style="font-size:1.3rem; font-weight:900; margin-top:10px;">-- -- ----</div>
-<button class="btn btn-copy" onclick="copyResult()" id="copyBtn"><i class="bi bi-clipboard"></i> COPY</button>
-</div>
-
-<!-- BATCH COPY -->
-<button id="batchCopyBtn" class="btn btn-copy hidden" onclick="copyBatch()" style="width:100%; justify-content:center; margin-top:10px;"><i class="bi bi-clipboard"></i> COPY</button>
-
-<button class="btn-main btn-back" style="margin-top:25px;" onclick="openMiddleHub(activeFruit)" id="backToBrandsBtn">&larr; Back</button>
-</div>
-<div id="historySection" class="history-section"><div id="historyList"></div></div>
-</div>
+<style>
+.article-btn.active {
+    background: rgba(166,226,46,0.08) !important;
+    border-color: var(--pulp-lime) !important;
+    color: var(--pulp-lime) !important;
+}
+.scan-mode-btn.active {
+    background: rgba(166,226,46,0.08) !important;
+    border-color: var(--pulp-lime) !important;
+    color: var(--pulp-lime) !important;
+}
+</style>
 
 <script>
 if ('serviceWorker' in navigator) {
-window.addEventListener('load', () => {
-navigator.serviceWorker.register('sw.js').catch(err => console.log('SW failed', err));
-});
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(err => console.log('SW failed', err));
+    });
 }
 </script>
 
@@ -552,13 +215,6 @@ navigator.serviceWorker.register('sw.js').catch(err => console.log('SW failed', 
 <script src="js/history.js"></script>
 <script src="js/navigation.js"></script>
 <script src="js/calculator.js"></script>
-<script src="js/defects-data.js"></script>
-<script src="js/defect-detector.js"></script>
 <script src="js/colour-scanner.js"></script>
-<script src="js/news.js"></script>
-<script src="js/fruit-defects-data.js"></script>
-<script src="js/fruit-defects.js"></script>
-<script src="js/origin-report.js"></script>
-
 </body>
 </html>

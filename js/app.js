@@ -19,6 +19,7 @@ window.addEventListener('load', () => {
         document.getElementById('themeText').innerText = 'Light Mode';
     }
     renderHistory();
+    checkAccess();
     setTimeout(() => {
         document.body.classList.add('loaded');
     }, 1200);

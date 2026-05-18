@@ -506,6 +506,7 @@ const ColourScanner = (() => {
         ctx.fillStyle = colour; roundRect(ctx, 60, y + 58, 80, 80, 16); ctx.fill();
         ctx.fillStyle = '#ffffff'; ctx.font = 'bold 40px -apple-system, sans-serif'; ctx.fillText(label, 160, y + 88);
         ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.font = '400 22px -apple-system, sans-serif'; ctx.fillText(shelf + '  ·  ' + status, 160, y + 120);
+        const avgRows = [['Boxes Scanned', count], ['Shelf Life', shelf], ['Status', status]];
         let ay = y + 165;
         avgRows.forEach(([k, v]) => {
             ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.font = '400 22px -apple-system, sans-serif'; ctx.fillText(k.toUpperCase(), 60, ay);

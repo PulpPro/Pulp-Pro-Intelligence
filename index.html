@@ -67,7 +67,6 @@
 <!-- AGE CHECKER -->
 <div class="app-container hidden" id="appInterface">
 <div class="app-card" id="appCard">
-<i class="bi bi-star-fill fav-toggle" id="favStar" onclick="toggleFavorite('calculator')"></i>
 <img src="edited-image.png" style="width:50px; margin-bottom:10px;">
 <div id="brandName" style="font-size: 1.4rem; font-weight: 900; color: var(--pulp-lime); text-transform: uppercase;">Chiquita</div>
 <div id="commodityLabel" style="font-weight: 900; letter-spacing: 4px; opacity: 0.5; font-size: 0.7rem; margin-bottom: 20px; color:var(--text-main);">BANANA AGE CHECKER</div>
@@ -114,7 +113,6 @@
 <!-- COLOUR SCANNER -->
 <div id="colour-scanner-view" class="nav-view hidden">
 <div style="max-width:400px; margin:0 auto; position:relative;">
-<i class="bi bi-star-fill fav-toggle" id="colourFavStar" onclick="toggleFavorite('colour')" style="position:absolute; top:0; right:0; z-index:10;"></i>
 <div style="text-align:center; margin-bottom:14px;">
 <img src="edited-image.png" style="width:46px; border-radius:14px; margin-bottom:6px;">
 <div style="font-size:0.6rem; font-weight:900; color:var(--pulp-lime); letter-spacing:3px; text-transform:uppercase;">Pulp Pro</div>
@@ -209,9 +207,7 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
-<script src="js/translations.js"></script>
 <script src="js/app.js"></script>
-<script src="js/favorites.js"></script>
 <script src="js/history.js"></script>
 <script src="js/navigation.js"></script>
 <script src="js/calculator.js"></script>

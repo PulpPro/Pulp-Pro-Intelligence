@@ -4,6 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Pulp Pro</title>
+<script>
+// iOS PWA blank screen fix — if body is empty after 2s, force reload
+window.addEventListener('load', function() {
+    setTimeout(function() {
+        if (!document.body || document.body.innerHTML.trim() === '') {
+            window.location.reload(true);
+        }
+    }, 2000);
+});
+// If page loads with no content at all, reload immediately
+if (document.readyState === 'complete' && document.body && document.body.innerHTML.trim() === '') {
+    window.location.reload(true);
+}
+</script>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -360,7 +374,18 @@
 <script>
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(err => console.log('SW failed', err));
+        navigator.serviceWorker.register('sw.js')
+            .then(reg => {
+                reg.addEventListener('updatefound', () => {
+                    const newWorker = reg.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            document.getElementById('updateBanner').classList.remove('hidden');
+                        }
+                    });
+                });
+            })
+            .catch(err => console.log('SW failed', err));
     });
 }
 </script>

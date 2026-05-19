@@ -13,13 +13,7 @@ let activeBrand = '';
 
 // App Init
 window.addEventListener('load', () => {
-    const savedTheme = localStorage.getItem('pulpTheme');
-    if (savedTheme === 'light') {
-        document.body.classList.add('light-theme');
-        document.getElementById('themeText').innerText = 'Light Mode';
-    }
     renderHistory();
-    checkAccess();
     setTimeout(() => {
         document.body.classList.add('loaded');
     }, 1200);

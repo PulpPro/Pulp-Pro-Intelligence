@@ -254,3 +254,7 @@ function loadTheme() {
         if (el) el.innerText = 'Light Mode';
     }
 }
+
+function openAbout() {
+    window.open('pulp-pro-intro.html', '_blank');
+}

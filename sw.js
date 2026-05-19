@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2.1';
+const CACHE_VERSION = 'v2.2';
 const CACHE_NAME = 'pulp-pro-' + CACHE_VERSION;
 const ASSETS = [
     '/Pulp-Pro-Intelligence/',
@@ -21,8 +21,9 @@ self.addEventListener('install', (event) => {
     self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            console.log('Pulp Pro: Caching assets ' + CACHE_VERSION);
-            return cache.addAll(ASSETS);
+            return Promise.allSettled(
+                ASSETS.map(url => cache.add(url).catch(e => console.warn('Failed to cache:', url, e)))
+            );
         })
     );
 });
@@ -32,10 +33,7 @@ self.addEventListener('activate', (event) => {
         Promise.all([
             caches.keys().then((keys) => {
                 return Promise.all(
-                    keys.filter(key => key !== CACHE_NAME).map(key => {
-                        console.log('Pulp Pro: Removing old cache', key);
-                        return caches.delete(key);
-                    })
+                    keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
                 );
             }),
             self.clients.claim()
@@ -44,32 +42,40 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-    const isHTML = event.request.headers.get('accept')?.includes('text/html');
-    if (isHTML) {
-        event.respondWith(
-            fetch(event.request)
-                .then((response) => {
-                    const clone = response.clone();
-                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-                    return response;
-                })
-                .catch(() => caches.match(event.request))
-        );
-    } else {
-        event.respondWith(
-            caches.match(event.request).then((response) => {
-                return response || fetch(event.request).then((networkResponse) => {
-                    const clone = networkResponse.clone();
-                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-                    return networkResponse;
-                });
-            })
-        );
-    }
+    // Skip non-GET and cross-origin except CDN
+    if (event.request.method !== 'GET') return;
+
+    const url = new URL(event.request.url);
+    const isAPI = url.hostname.includes('pulpprobrain.workers.dev');
+    if (isAPI) return; // Never cache API calls
+
+    event.respondWith(
+        caches.match(event.request).then((cached) => {
+            if (cached) {
+                // Return cache immediately, update in background
+                fetch(event.request).then((response) => {
+                    if (response && response.status === 200) {
+                        caches.open(CACHE_NAME).then(cache => cache.put(event.request, response));
+                    }
+                }).catch(() => {});
+                return cached;
+            }
+            // Not in cache — fetch from network and cache it
+            return fetch(event.request).then((response) => {
+                if (!response || response.status !== 200) return response;
+                const clone = response.clone();
+                caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+                return response;
+            }).catch(() => {
+                // Offline fallback — return index.html for navigation requests
+                if (event.request.headers.get('accept')?.includes('text/html')) {
+                    return caches.match('/Pulp-Pro-Intelligence/index.html');
+                }
+            });
+        })
+    );
 });
 
 self.addEventListener('message', (event) => {
-    if (event.data === 'skipWaiting') {
-        self.skipWaiting();
-    }
+    if (event.data === 'skipWaiting') self.skipWaiting();
 });

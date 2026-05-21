@@ -308,7 +308,7 @@ function toggleRevokePanel() {
 
 async function loadActiveUsers() {
     const list = document.getElementById('revoke-list');
-    list.innerHTML = 'Loading...';
+    list.innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:11px;padding:4px 0;">Loading...</div>';
     try {
         const res = await fetch(ACCESS_WORKER + '/list-codes', {
             method: 'POST',
@@ -316,19 +316,28 @@ async function loadActiveUsers() {
             body: JSON.stringify({ adminPassword: ADMIN_PASSWORD })
         });
         const data = await res.json();
-        const active = data.codes.filter(c => c.type === 'active');
-        if (active.length === 0) {
-            list.innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:11px;padding:4px 0;">No active users</div>';
+        if (!data.codes || data.codes.length === 0) {
+            list.innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:11px;padding:4px 0;">No codes found</div>';
             return;
         }
-        list.innerHTML = active.map(c => `
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
-                <div>
-                    <div style="font-size:11px;font-weight:700;color:#fff;">${c.name}</div>
-                    <div style="font-size:9px;color:rgba(255,255,255,0.3);margin-top:1px;">${c.code}</div>
+        list.innerHTML = data.codes.map(c => {
+            const isActive = c.type === 'active';
+            const badgeColor = isActive ? 'rgba(166,226,46,0.15)' : 'rgba(255,140,0,0.15)';
+            const badgeTextColor = isActive ? '#a6e22e' : '#ff8c00';
+            const badgeBorder = isActive ? 'rgba(166,226,46,0.3)' : 'rgba(255,140,0,0.3)';
+            const badgeText = isActive ? 'Active' : 'Pending';
+            return `
+            <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <div style="font-size:11px;font-weight:700;color:#fff;">${c.name || 'Unknown'}</div>
+                        <span style="font-size:7px;font-weight:800;color:${badgeTextColor};background:${badgeColor};border:1px solid ${badgeBorder};border-radius:20px;padding:2px 7px;text-transform:uppercase;letter-spacing:0.5px;">${badgeText}</span>
+                    </div>
+                    <button onclick="revokeUser('${c.code}', '${c.name || 'this user'}')" style="background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,0.3);border-radius:6px;padding:4px 9px;font-size:7px;font-weight:700;color:rgba(255,77,77,0.8);text-transform:uppercase;cursor:pointer;font-family:-apple-system,sans-serif;letter-spacing:0.5px;">Revoke</button>
                 </div>
-                <button onclick="revokeUser('${c.code}', '${c.name}')" style="background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,0.3);border-radius:6px;padding:5px 10px;font-size:8px;font-weight:700;color:rgba(255,77,77,0.8);text-transform:uppercase;cursor:pointer;font-family:-apple-system,sans-serif;">Revoke</button>
-            </div>`).join('');
+                <div style="font-size:9px;color:rgba(255,255,255,0.25);font-family:monospace;">${c.code}</div>
+            </div>`;
+        }).join('');
     } catch (e) {
         list.innerHTML = '<div style="color:rgba(255,77,77,0.6);font-size:11px;">Error loading users</div>';
     }

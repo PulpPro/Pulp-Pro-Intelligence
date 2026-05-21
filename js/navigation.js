@@ -172,42 +172,108 @@ function copyGeneratedCode() {
     const name = document.getElementById('codePersonName').value.trim();
     const appUrl = 'https://pulp-pro-intelligence.pulpprobrain.workers.dev';
 
-    const text = `Your Pulp Pro Access Code:
-${code}
+    const html = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,Arial,sans-serif;">
+<div style="max-width:520px;margin:24px auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e0e0e0;">
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  <div style="background:#0a1a06;padding:24px;text-align:center;">
+    <div style="font-size:32px;margin-bottom:10px;">🍌</div>
+    <div style="font-size:18px;font-weight:600;color:#ffffff;margin-bottom:4px;">Welcome to Pulp Pro</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.4);">Your access code is ready</div>
+  </div>
 
-HOW TO INSTALL THE APP
+  <div style="padding:24px;">
 
-iPhone (iOS):
-1. Open Safari and go to ${appUrl}
-2. Tap the Share button (box with arrow) at the bottom
-3. Tap "Add to Home Screen"
-4. Tap Add — the app icon appears on your home screen
+    <p style="font-size:14px;color:#222222;line-height:1.7;margin:0 0 20px 0;">Hi ${name},<br><br>You've been given access to <strong>Pulp Pro Intelligence</strong> — a professional tool built for the fruit floor. Your personal access code is below. It is one-time use and personal to you.</p>
 
-Android:
-1. Open Chrome and go to ${appUrl}
-2. Tap the three dots menu (top right)
-3. Tap "Add to Home Screen"
-4. Tap Add — the app icon appears on your home screen
+    <div style="background:#0a1a06;border:1px solid rgba(166,226,46,0.3);border-radius:12px;padding:22px;text-align:center;margin-bottom:24px;">
+      <div style="font-size:10px;font-weight:600;color:rgba(166,226,46,0.7);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;">Your access code</div>
+      <div style="font-size:30px;font-weight:700;color:#a6e22e;letter-spacing:8px;font-family:monospace;margin-bottom:8px;">${code}</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.25);">One-time use &middot; Personal to you &middot; Do not share</div>
+    </div>
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    <div style="font-size:11px;font-weight:600;color:#999999;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;">How to install</div>
 
-IMPORTANT — Browser & App Cache:
-The app saves data locally on your device so it works offline. If you ever clear your browser history or website data, you will need to re-enter your access code. To avoid this, always open the app from the home screen icon, not from the browser address bar.
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:20px;">
+      <tr>
+        <td width="49%" valign="top" style="background:#f9f9f9;border:1px solid #e8e8e8;border-radius:8px;padding:14px;">
+          <div style="font-size:13px;font-weight:600;color:#222222;margin-bottom:10px;">📱 iPhone</div>
+          <div style="font-size:11px;color:#555555;padding:5px 0;border-bottom:1px solid #eeeeee;">
+            <span style="display:inline-block;width:16px;height:16px;background:#a6e22e;border-radius:50%;font-size:9px;font-weight:700;color:#000000;text-align:center;line-height:16px;margin-right:6px;">1</span>Open link in Safari
+          </div>
+          <div style="font-size:11px;color:#555555;padding:5px 0;border-bottom:1px solid #eeeeee;">
+            <span style="display:inline-block;width:16px;height:16px;background:#a6e22e;border-radius:50%;font-size:9px;font-weight:700;color:#000000;text-align:center;line-height:16px;margin-right:6px;">2</span>Tap Share &rarr; Add to Home Screen
+          </div>
+          <div style="font-size:11px;color:#555555;padding:5px 0;">
+            <span style="display:inline-block;width:16px;height:16px;background:#a6e22e;border-radius:50%;font-size:9px;font-weight:700;color:#000000;text-align:center;line-height:16px;margin-right:6px;">3</span>Open app and enter code
+          </div>
+        </td>
+        <td width="2%">&nbsp;</td>
+        <td width="49%" valign="top" style="background:#f9f9f9;border:1px solid #e8e8e8;border-radius:8px;padding:14px;">
+          <div style="font-size:13px;font-weight:600;color:#222222;margin-bottom:10px;">🤖 Android</div>
+          <div style="font-size:11px;color:#555555;padding:5px 0;border-bottom:1px solid #eeeeee;">
+            <span style="display:inline-block;width:16px;height:16px;background:#a6e22e;border-radius:50%;font-size:9px;font-weight:700;color:#000000;text-align:center;line-height:16px;margin-right:6px;">1</span>Open link in Chrome
+          </div>
+          <div style="font-size:11px;color:#555555;padding:5px 0;border-bottom:1px solid #eeeeee;">
+            <span style="display:inline-block;width:16px;height:16px;background:#a6e22e;border-radius:50%;font-size:9px;font-weight:700;color:#000000;text-align:center;line-height:16px;margin-right:6px;">2</span>Tap &#8942; &rarr; Add to Home Screen
+          </div>
+          <div style="font-size:11px;color:#555555;padding:5px 0;">
+            <span style="display:inline-block;width:16px;height:16px;background:#a6e22e;border-radius:50%;font-size:9px;font-weight:700;color:#000000;text-align:center;line-height:16px;margin-right:6px;">3</span>Open app and enter code
+          </div>
+        </td>
+      </tr>
+    </table>
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    <div style="background:#f9f9f9;border:1px solid #e8e8e8;border-left:3px solid #a6e22e;border-radius:0 8px 8px 0;padding:12px 14px;margin-bottom:24px;">
+      <div style="font-size:11px;font-weight:600;color:#222222;margin-bottom:4px;">Important &mdash; always open from your home screen</div>
+      <div style="font-size:11px;color:#555555;line-height:1.6;">The app works fully offline once installed. Always launch it from the home screen icon &mdash; not from the browser &mdash; to keep your access code saved.</div>
+    </div>
 
-Need help? Reply to this email.
+    <div style="text-align:center;">
+      <a href="${appUrl}" style="display:inline-block;background:#a6e22e;color:#000000;border-radius:100px;padding:12px 32px;font-size:13px;font-weight:600;text-decoration:none;letter-spacing:0.3px;">Open Pulp Pro &rarr;</a>
+    </div>
 
-Pulp Pro Intelligence
-${appUrl}`;
+  </div>
 
-    navigator.clipboard.writeText(text).then(() => {
-        const btn = document.getElementById('copyCodeBtn');
-        btn.innerText = '✓ Copied!';
-        setTimeout(() => btn.innerText = 'Copy Code + Instructions', 2000);
-    });
+  <div style="background:#f5f5f5;border-top:1px solid #e8e8e8;padding:14px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td>
+          <div style="font-size:12px;font-weight:600;color:#222222;">Pulp Pro Intelligence</div>
+          <div style="font-size:11px;color:#999999;">Questions? Reply to this email.</div>
+        </td>
+        <td align="right">
+          <a href="${appUrl}" style="font-size:10px;color:#a6e22e;text-decoration:none;">${appUrl.replace('https://','')}</a>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+</div>
+</body></html>`;
+
+    // Copy both HTML and plain text to clipboard
+    try {
+        const htmlBlob = new Blob([html], { type: 'text/html' });
+        const textBlob = new Blob([`Hi ${name},\n\nYou've been given access to Pulp Pro Intelligence.\n\nYour access code: ${code}\n\nInstall the app: ${appUrl}\n\niPhone: Open in Safari → Share → Add to Home Screen → Enter code\nAndroid: Open in Chrome → ⋮ Menu → Add to Home Screen → Enter code\n\nAlways open from your home screen icon to keep your code saved.\n\nQuestions? Reply to this email.\nPulp Pro Intelligence`], { type: 'text/plain' });
+        const item = new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob });
+        navigator.clipboard.write([item]).then(() => {
+            const btn = document.getElementById('copyCodeBtn');
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
+            setTimeout(() => { btn.innerHTML = original; }, 2500);
+        });
+    } catch (e) {
+        // Fallback to plain text if ClipboardItem not supported
+        const plain = `Hi ${name},\n\nYou've been given access to Pulp Pro Intelligence.\n\nYour access code: ${code}\n\nInstall: ${appUrl}\n\niPhone: Open in Safari → Share → Add to Home Screen → Enter code\nAndroid: Open in Chrome → ⋮ Menu → Add to Home Screen → Enter code\n\nAlways open from your home screen icon.\n\nPulp Pro Intelligence`;
+        navigator.clipboard.writeText(plain).then(() => {
+            const btn = document.getElementById('copyCodeBtn');
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
+            setTimeout(() => { btn.innerHTML = original; }, 2500);
+        });
+    }
 }
 
 // ── NAVIGATION ────────────────────────────────────────────────

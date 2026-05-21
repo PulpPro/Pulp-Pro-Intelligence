@@ -5,18 +5,42 @@ const ADMIN_PASSWORD = 'BananaBoss1.';
 let isAdminLoggedIn = false;
 
 // ── ACCESS GATE ───────────────────────────────────────────────
-function checkAccess() {
+async function checkAccess() {
     const code = localStorage.getItem('pulpProAccessCode');
     const isAdmin = localStorage.getItem('pulpProAdmin') === 'true';
-    if (isAdmin || code) {
-        if (isAdmin) {
-            isAdminLoggedIn = true;
-            renderAdminMenu();
-        }
+
+    if (isAdmin) {
+        isAdminLoggedIn = true;
+        renderAdminMenu();
         showApp();
-    } else {
-        showGate();
+        return;
     }
+
+    if (code) {
+        // Verify access is still active with KV
+        try {
+            const res = await fetch(ACCESS_WORKER + '/check-access', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code })
+            });
+            const data = await res.json();
+            if (data.valid) {
+                showApp();
+            } else {
+                // Access revoked — clear localStorage and show gate
+                localStorage.removeItem('pulpProAccessCode');
+                localStorage.removeItem('pulpProUserName');
+                showGate();
+            }
+        } catch (e) {
+            // Network error — allow offline access if code exists in localStorage
+            showApp();
+        }
+        return;
+    }
+
+    showGate();
 }
 
 function showGate() {
@@ -276,7 +300,56 @@ function copyGeneratedCode() {
     }
 }
 
-// ── NAVIGATION ────────────────────────────────────────────────
+function toggleRevokePanel() {
+    const panel = document.getElementById('revoke-panel');
+    panel.classList.toggle('hidden');
+    if (!panel.classList.contains('hidden')) loadActiveUsers();
+}
+
+async function loadActiveUsers() {
+    const list = document.getElementById('revoke-list');
+    list.innerHTML = 'Loading...';
+    try {
+        const res = await fetch(ACCESS_WORKER + '/list-codes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ adminPassword: ADMIN_PASSWORD })
+        });
+        const data = await res.json();
+        const active = data.codes.filter(c => c.type === 'active');
+        if (active.length === 0) {
+            list.innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:11px;padding:4px 0;">No active users</div>';
+            return;
+        }
+        list.innerHTML = active.map(c => `
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                <div>
+                    <div style="font-size:11px;font-weight:700;color:#fff;">${c.name}</div>
+                    <div style="font-size:9px;color:rgba(255,255,255,0.3);margin-top:1px;">${c.code}</div>
+                </div>
+                <button onclick="revokeUser('${c.code}', '${c.name}')" style="background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,0.3);border-radius:6px;padding:5px 10px;font-size:8px;font-weight:700;color:rgba(255,77,77,0.8);text-transform:uppercase;cursor:pointer;font-family:-apple-system,sans-serif;">Revoke</button>
+            </div>`).join('');
+    } catch (e) {
+        list.innerHTML = '<div style="color:rgba(255,77,77,0.6);font-size:11px;">Error loading users</div>';
+    }
+}
+
+async function revokeUser(code, name) {
+    if (!confirm(`Revoke access for ${name}? They will be locked out immediately.`)) return;
+    try {
+        const res = await fetch(ACCESS_WORKER + '/revoke-user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, adminPassword: ADMIN_PASSWORD })
+        });
+        const data = await res.json();
+        if (data.success) {
+            loadActiveUsers();
+        }
+    } catch (e) {
+        alert('Error revoking access.');
+    }
+}
 function showHub() {
     document.getElementById('fruit-hub').classList.remove('hidden');
     document.getElementById('appInterface').classList.add('hidden');

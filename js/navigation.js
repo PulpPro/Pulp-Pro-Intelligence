@@ -231,7 +231,7 @@ function copyGeneratedCode() {
     </div>
 
     <div style="text-align:center;">
-      <a href="${appUrl}" style="display:inline-block;background:#a6e22e;color:#000000;border-radius:100px;padding:12px 32px;font-size:13px;font-weight:600;text-decoration:none;letter-spacing:0.3px;">Open Pulp Pro &rarr;</a>
+      <a href="https://pulp-pro-intelligence.pulpprobrain.workers.dev" style="display:inline-block;background:#a6e22e;color:#000000;border-radius:100px;padding:12px 32px;font-size:13px;font-weight:600;text-decoration:none;letter-spacing:0.3px;">Open Pulp Pro &rarr;</a>
     </div>
 
   </div>
@@ -244,7 +244,7 @@ function copyGeneratedCode() {
           <div style="font-size:11px;color:#999999;">Questions? Reply to this email.</div>
         </td>
         <td align="right">
-          <a href="${appUrl}" style="font-size:10px;color:#a6e22e;text-decoration:none;">${appUrl.replace('https://','')}</a>
+          <a href="https://pulp-pro-intelligence.pulpprobrain.workers.dev" style="font-size:10px;color:#5a8a1a;text-decoration:none;">pulp-pro-intelligence.pulpprobrain.workers.dev</a>
         </td>
       </tr>
     </table>

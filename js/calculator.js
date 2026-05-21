@@ -198,7 +198,7 @@ function copyResult() {
 
     if (document.getElementById('resBox').classList.contains('hidden')) return;
 
-    const plainText = `Pulp Pro Intelligence — https://pulp-pro-intelligence.pulpprobrain.workers.dev\nArticle: ${activeArticle}\nCode: ${code}  Age: ${days} Days  Harvest Date: ${date}`;
+    const plainText = `Pulp Pro Intelligence\nArticle: ${activeArticle}\nCode: ${code}  Age: ${days} Days  Harvest Date: ${date}`;
 
     try {
         const blobText = new Blob([plainText], { type: 'text/plain' });
@@ -218,7 +218,7 @@ function copyBatch() {
     if (batchResults.length === 0) return;
 
     const lines = batchResults.map(r => `Code: ${r.code}  Age: ${r.days} Days  Harvest Date: ${r.date}`).join('\n');
-    const plainText = `Pulp Pro Intelligence — https://pulp-pro-intelligence.pulpprobrain.workers.dev\nArticle: ${activeArticle}\n\n${lines}`;
+    const plainText = `Pulp Pro Intelligence\nArticle: ${activeArticle}\n\n${lines}`;
 
     try {
         const blobText = new Blob([plainText], { type: 'text/plain' });

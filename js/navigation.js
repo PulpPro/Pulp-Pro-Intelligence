@@ -177,20 +177,20 @@ function copyGeneratedCode() {
 <body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,Arial,sans-serif;">
 <div style="max-width:520px;margin:24px auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e0e0e0;">
 
-  <div style="background:#0a1a06;padding:24px;text-align:center;">
-    <div style="font-size:32px;margin-bottom:10px;">🍌</div>
-    <div style="font-size:18px;font-weight:600;color:#ffffff;margin-bottom:4px;">Welcome to Pulp Pro</div>
-    <div style="font-size:12px;color:rgba(255,255,255,0.4);">Your access code is ready</div>
+  <div style="background:#f0f7e6;border-bottom:3px solid #a6e22e;padding:28px 24px;text-align:center;">
+    <div style="font-size:36px;margin-bottom:10px;">🍌</div>
+    <div style="font-size:20px;font-weight:600;color:#1a1a1a;margin-bottom:4px;">Welcome to Pulp Pro</div>
+    <div style="font-size:12px;color:#666666;">Your access code is ready</div>
   </div>
 
   <div style="padding:24px;">
 
     <p style="font-size:14px;color:#222222;line-height:1.7;margin:0 0 20px 0;">Hi ${name},<br><br>You've been given access to <strong>Pulp Pro Intelligence</strong> — a professional tool built for the fruit floor. Your personal access code is below. It is one-time use and personal to you.</p>
 
-    <div style="background:#0a1a06;border:1px solid rgba(166,226,46,0.3);border-radius:12px;padding:22px;text-align:center;margin-bottom:24px;">
-      <div style="font-size:10px;font-weight:600;color:rgba(166,226,46,0.7);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;">Your access code</div>
-      <div style="font-size:30px;font-weight:700;color:#a6e22e;letter-spacing:8px;font-family:monospace;margin-bottom:8px;">${code}</div>
-      <div style="font-size:10px;color:rgba(255,255,255,0.25);">One-time use &middot; Personal to you &middot; Do not share</div>
+    <div style="background:#f0f7e6;border:2px solid #a6e22e;border-radius:12px;padding:22px;text-align:center;margin-bottom:24px;">
+      <div style="font-size:10px;font-weight:600;color:#5a8a1a;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;">Your access code</div>
+      <div style="font-size:30px;font-weight:700;color:#3a6a0a;letter-spacing:8px;font-family:monospace;margin-bottom:8px;">${code}</div>
+      <div style="font-size:10px;color:#888888;">One-time use &middot; Personal to you &middot; Do not share</div>
     </div>
 
     <div style="font-size:11px;font-weight:600;color:#999999;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;">How to install</div>

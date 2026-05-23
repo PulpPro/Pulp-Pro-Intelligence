@@ -23,7 +23,7 @@ function setScanMode(mode) {
 
     if (mode === 'single') {
         document.getElementById('batchList').classList.add('hidden');
-        document.getElementById('batchCopyBtn').classList.add('hidden');
+        document.getElementById('batchActionBtns').classList.add('hidden');
         document.getElementById('resBox').classList.add('hidden');
         batchResults = [];
         inputField.value = '';
@@ -156,11 +156,10 @@ function checkFruit(historicalCode = null) {
 // Render batch list
 function renderBatchList() {
     const list = document.getElementById('batchList');
-    const copyBtn = document.getElementById('batchCopyBtn');
 
     if (batchResults.length === 0) {
         list.innerHTML = '<div style="padding:14px;text-align:center;font-size:0.65rem;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:1px;">Enter codes to start scanning</div>';
-        copyBtn.classList.add('hidden');
+        document.getElementById('batchActionBtns').classList.add('hidden');
         return;
     }
 
@@ -175,7 +174,7 @@ function renderBatchList() {
         </div>
     `).join('');
 
-    copyBtn.classList.remove('hidden');
+    document.getElementById('batchActionBtns').classList.remove('hidden');
 }
 
 // Remove batch item

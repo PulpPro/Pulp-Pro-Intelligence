@@ -359,10 +359,14 @@ async function revokeUser(code, name) {
         alert('Error revoking access.');
     }
 }
+
+// ── NAVIGATION ────────────────────────────────────────────────
 function showHub() {
     document.getElementById('fruit-hub').classList.remove('hidden');
     document.getElementById('appInterface').classList.add('hidden');
     document.getElementById('colour-scanner-view').classList.add('hidden');
+    const pulpaiView = document.getElementById('pulpai-view');
+    if (pulpaiView) pulpaiView.classList.add('hidden');
 }
 
 function openAgeChecker() {

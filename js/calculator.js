@@ -233,6 +233,29 @@ function copyBatch() {
     }
 }
 
+// Email single result
+function emailResult() {
+    const days = document.getElementById('daysValue').innerText;
+    const date = document.getElementById('dateText').innerText;
+    const code = document.getElementById('codeIn').value.toUpperCase();
+
+    if (document.getElementById('resBox').classList.contains('hidden')) return;
+
+    const subject = encodeURIComponent(`${activeArticle} Oud Fruit Ordernummer:`);
+    const body = encodeURIComponent(`Article: ${activeArticle}\nCode: ${code}  Age: ${days} Days  Harvest Date: ${date}`);
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+}
+
+// Email batch result
+function emailBatch() {
+    if (batchResults.length === 0) return;
+
+    const lines = batchResults.map(r => `Code: ${r.code}  Age: ${r.days} Days  Harvest Date: ${r.date}`).join('\n');
+    const subject = encodeURIComponent(`${activeArticle} Oud Fruit Ordernummer:`);
+    const body = encodeURIComponent(`Article: ${activeArticle}\n${lines}`);
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+}
+
 // Copy success feedback
 function showCopySuccess(btnId) {
     const btn = document.getElementById(btnId);

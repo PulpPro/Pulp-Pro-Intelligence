@@ -269,11 +269,17 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 <div id="statusLabel" style="font-weight:900;">READY</div>
 <div id="daysValue">--</div>
 <div id="dateText" style="font-size: 1.3rem; font-weight: 900; margin-top: 10px;">-- -- ----</div>
-<button class="btn btn-copy" onclick="copyResult()" id="copyBtn"><i class="bi bi-clipboard"></i> COPY</button>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
+    <button class="btn btn-copy" onclick="copyResult()" id="copyBtn"><i class="bi bi-clipboard"></i> COPY</button>
+    <button class="btn btn-copy" onclick="emailResult()" id="emailBtn"><i class="bi bi-envelope"></i> EMAIL</button>
+</div>
 </div>
 
-<!-- BATCH COPY -->
-<button id="batchCopyBtn" class="btn btn-copy hidden" onclick="copyBatch()" style="width:100%; justify-content:center; margin-top:10px;"><i class="bi bi-clipboard"></i> COPY</button>
+<!-- BATCH COPY + EMAIL -->
+<div id="batchActionBtns" class="hidden" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
+    <button id="batchCopyBtn" class="btn btn-copy" onclick="copyBatch()" style="justify-content:center;"><i class="bi bi-clipboard"></i> COPY</button>
+    <button id="batchEmailBtn" class="btn btn-copy" onclick="emailBatch()" style="justify-content:center;"><i class="bi bi-envelope"></i> EMAIL</button>
+</div>
 
 <button class="btn-main btn-back" style="margin-top:25px;" onclick="showHub()">&#x2190; Back</button>
 </div>

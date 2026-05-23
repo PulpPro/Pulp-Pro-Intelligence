@@ -393,32 +393,32 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
                 <canvas id="pulpai-menu-orb" width="42" height="42" style="border-radius:50%;position:absolute;inset:0;"></canvas>
             </div>
             <div style="flex:1;">
-                <div style="font-size:15px;font-weight:900;color:#fff;letter-spacing:-0.3px;">Pulp AI</div>
-                <div style="font-size:9px;color:rgba(166,226,46,0.6);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:1px;">Fruit &amp; Veg Intelligence</div>
+                <div style="font-size:17px;font-weight:900;color:#fff;letter-spacing:-0.3px;">Pulp AI</div>
+                <div style="font-size:10px;color:rgba(166,226,46,0.6);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:2px;">Fruit &amp; Veg Intelligence</div>
             </div>
-            <button onclick="newPulpAIChat()" style="width:32px;height:32px;border-radius:10px;background:rgba(166,226,46,0.08);border:1px solid rgba(166,226,46,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;color:#a6e22e;cursor:pointer;font-family:-apple-system,sans-serif;flex-shrink:0;">+</button>
-            <button onclick="closePulpAI()" style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;font-size:13px;color:rgba(255,255,255,0.4);cursor:pointer;font-family:-apple-system,sans-serif;flex-shrink:0;">✕</button>
+            <button onclick="newPulpAIChat()" style="width:36px;height:36px;border-radius:11px;background:rgba(166,226,46,0.08);border:1px solid rgba(166,226,46,0.2);display:flex;align-items:center;justify-content:center;font-size:20px;color:#a6e22e;cursor:pointer;font-family:-apple-system,sans-serif;flex-shrink:0;">+</button>
+            <button onclick="closePulpAI()" style="width:36px;height:36px;border-radius:11px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;font-size:15px;color:rgba(255,255,255,0.4);cursor:pointer;font-family:-apple-system,sans-serif;flex-shrink:0;">✕</button>
         </div>
         <!-- Usage bar -->
-        <div style="padding:8px 16px;border-bottom:1px solid rgba(255,255,255,0.04);background:#060606;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                <div style="font-size:8px;font-weight:700;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:1px;">Monthly messages</div>
-                <div id="pulpai-usage-count" style="font-size:8px;font-weight:800;color:#a6e22e;">0 / 500</div>
+        <div style="padding:9px 16px;border-bottom:1px solid rgba(255,255,255,0.04);background:#060606;flex-shrink:0;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+                <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px;">Monthly messages</div>
+                <div id="pulpai-usage-count" style="font-size:10px;font-weight:800;color:#a6e22e;">0 / 1,000</div>
             </div>
-            <div style="height:2px;background:rgba(255,255,255,0.05);border-radius:100px;overflow:hidden;">
+            <div style="height:3px;background:rgba(255,255,255,0.05);border-radius:100px;overflow:hidden;">
                 <div id="pulpai-usage-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#78c830,#a6e22e);border-radius:100px;transition:width 0.5s,background 0.3s;"></div>
             </div>
-            <div style="font-size:8px;color:rgba(255,255,255,0.18);margin-top:3px;text-align:right;">Resets 1st of each month</div>
+            <div style="font-size:9px;color:rgba(255,255,255,0.18);margin-top:4px;text-align:right;">Resets 1st of each month · Shared across all users</div>
         </div>
         <!-- Warning bar -->
-        <div id="pulpai-limit-warn" style="display:none;padding:8px 16px;background:rgba(255,140,0,0.06);border-bottom:1px solid rgba(255,140,0,0.12);justify-content:center;"></div>
-        <!-- Chat list -->
-        <div id="pulpai-chat-list" style="flex:1;overflow-y:auto;padding:12px 16px;"></div>
-        <!-- Quick input at bottom -->
-        <div style="padding:10px 14px;border-top:1px solid rgba(255,255,255,0.05);background:#060606;">
-            <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:100px;padding:8px 14px;" onclick="newPulpAIChat()" style="cursor:pointer;">
-                <div style="font-size:12px;color:rgba(255,255,255,0.2);flex:1;">Ask Pulp AI anything...</div>
-                <div style="width:26px;height:26px;border-radius:50%;background:#a6e22e;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#000;">↑</div>
+        <div id="pulpai-limit-warn" style="display:none;padding:8px 16px;background:rgba(255,140,0,0.06);border-bottom:1px solid rgba(255,140,0,0.12);justify-content:center;flex-shrink:0;"></div>
+        <!-- Chat list — fills remaining space -->
+        <div id="pulpai-chat-list" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0;padding:14px 16px;"></div>
+        <!-- Quick input — sticks to bottom -->
+        <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,0.05);background:#060606;flex-shrink:0;">
+            <div onclick="newPulpAIChat()" style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:100px;padding:12px 18px;cursor:pointer;">
+                <div style="font-size:14px;color:rgba(255,255,255,0.22);flex:1;letter-spacing:normal;text-transform:none;">Ask Pulp AI anything...</div>
+                <div style="width:30px;height:30px;border-radius:50%;background:#a6e22e;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#000;flex-shrink:0;">↑</div>
             </div>
         </div>
     </div>

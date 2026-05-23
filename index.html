@@ -225,6 +225,26 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
             <div><div class="cr-shelf">5–7 days</div><div class="cr-status">Perfect</div></div>
         </div>
     </div>
+
+    <!-- PULP AI TILE -->
+    <div class="tc" onclick="openPulpAI()" style="position:relative;overflow:hidden;min-height:150px;border:1px solid rgba(166,226,46,0.2);">
+        <canvas id="pulpai-tile-canvas" style="position:absolute;inset:0;width:100%;height:100%;border-radius:22px;"></canvas>
+        <div style="position:relative;z-index:2;padding:24px 26px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <div class="tc-tag" style="color:rgba(166,226,46,0.5);">Powered by Pulp Pro Intelligence</div>
+                <div style="display:flex;align-items:center;gap:4px;background:rgba(166,226,46,0.1);border:1px solid rgba(166,226,46,0.2);border-radius:100px;padding:3px 9px;">
+                    <div style="width:4px;height:4px;border-radius:50%;background:#a6e22e;animation:livePulse 2s infinite;"></div>
+                    <div style="font-size:7px;font-weight:800;color:rgba(166,226,46,0.8);text-transform:uppercase;letter-spacing:1px;">Live AI</div>
+                </div>
+            </div>
+            <div class="tc-title">Pulp <span style="color:#a6e22e;">AI</span></div>
+            <div class="tc-sub" style="color:rgba(255,255,255,0.3);margin-bottom:14px;">Ask anything · Expert answers</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+                <div style="display:flex;justify-content:flex-end;"><div style="background:rgba(166,226,46,0.1);border:1px solid rgba(166,226,46,0.18);border-radius:10px;border-bottom-right-radius:2px;padding:6px 10px;font-size:10px;color:rgba(255,255,255,0.7);max-width:80%;">What causes crown rot?</div></div>
+                <div style="display:flex;gap:6px;align-items:flex-start;"><div style="background:rgba(14,14,14,0.9);border:1px solid rgba(255,255,255,0.07);border-radius:10px;border-bottom-left-radius:2px;padding:6px 10px;font-size:10px;color:rgba(255,255,255,0.65);max-width:82%;"><strong style="color:#a6e22e;">High humidity</strong> above 85% triggers Fusarium fungi...</div></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="home-bottom">
@@ -362,8 +382,115 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 </div>
 </div>
 
+<!-- PULP AI VIEW -->
+<div id="pulpai-view" class="nav-view hidden" style="padding:0;display:flex;flex-direction:column;height:100%;position:relative;">
+
+    <!-- LIST SCREEN -->
+    <div id="pulpai-list-screen" style="display:flex;flex-direction:column;height:100%;">
+        <!-- Header -->
+        <div style="padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.05);background:#060606;display:flex;align-items:center;gap:10px;flex-shrink:0;">
+            <div style="position:relative;width:42px;height:42px;flex-shrink:0;">
+                <canvas id="pulpai-menu-orb" width="42" height="42" style="border-radius:50%;position:absolute;inset:0;"></canvas>
+            </div>
+            <div style="flex:1;">
+                <div style="font-size:15px;font-weight:900;color:#fff;letter-spacing:-0.3px;">Pulp AI</div>
+                <div style="font-size:9px;color:rgba(166,226,46,0.6);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:1px;">Fruit &amp; Veg Intelligence</div>
+            </div>
+            <button onclick="newPulpAIChat()" style="width:32px;height:32px;border-radius:10px;background:rgba(166,226,46,0.08);border:1px solid rgba(166,226,46,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;color:#a6e22e;cursor:pointer;font-family:-apple-system,sans-serif;flex-shrink:0;">+</button>
+            <button onclick="closePulpAI()" style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;font-size:13px;color:rgba(255,255,255,0.4);cursor:pointer;font-family:-apple-system,sans-serif;flex-shrink:0;">✕</button>
+        </div>
+        <!-- Usage bar -->
+        <div style="padding:8px 16px;border-bottom:1px solid rgba(255,255,255,0.04);background:#060606;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <div style="font-size:8px;font-weight:700;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:1px;">Monthly messages</div>
+                <div id="pulpai-usage-count" style="font-size:8px;font-weight:800;color:#a6e22e;">0 / 500</div>
+            </div>
+            <div style="height:2px;background:rgba(255,255,255,0.05);border-radius:100px;overflow:hidden;">
+                <div id="pulpai-usage-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#78c830,#a6e22e);border-radius:100px;transition:width 0.5s,background 0.3s;"></div>
+            </div>
+            <div style="font-size:8px;color:rgba(255,255,255,0.18);margin-top:3px;text-align:right;">Resets 1st of each month</div>
+        </div>
+        <!-- Warning bar -->
+        <div id="pulpai-limit-warn" style="display:none;padding:8px 16px;background:rgba(255,140,0,0.06);border-bottom:1px solid rgba(255,140,0,0.12);justify-content:center;"></div>
+        <!-- Chat list -->
+        <div id="pulpai-chat-list" style="flex:1;overflow-y:auto;padding:12px 16px;"></div>
+        <!-- Quick input at bottom -->
+        <div style="padding:10px 14px;border-top:1px solid rgba(255,255,255,0.05);background:#060606;">
+            <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:100px;padding:8px 14px;" onclick="newPulpAIChat()" style="cursor:pointer;">
+                <div style="font-size:12px;color:rgba(255,255,255,0.2);flex:1;">Ask Pulp AI anything...</div>
+                <div style="width:26px;height:26px;border-radius:50%;background:#a6e22e;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#000;">↑</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHAT SCREEN -->
+    <div id="pulpai-chat-screen" class="hidden" style="display:flex;flex-direction:column;height:100%;position:relative;">
+        <!-- Perimeter glow canvas -->
+        <canvas id="pulpai-glow-canvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;"></canvas>
+        <!-- Header -->
+        <div style="padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.05);background:rgba(5,5,5,0.97);display:flex;align-items:center;gap:8px;flex-shrink:0;position:relative;z-index:10;">
+            <button onclick="backToChatList()" style="width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;font-size:13px;color:rgba(255,255,255,0.4);cursor:pointer;font-family:-apple-system,sans-serif;flex-shrink:0;">←</button>
+            <div style="position:relative;width:28px;height:28px;flex-shrink:0;">
+                <canvas id="pulpai-chat-orb" width="28" height="28" style="border-radius:50%;position:absolute;inset:0;"></canvas>
+            </div>
+            <div style="flex:1;min-width:0;">
+                <div id="pulpai-chat-title" style="font-size:12px;font-weight:800;color:#fff;letter-spacing:-0.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Conversation</div>
+                <div style="font-size:9px;color:rgba(166,226,46,0.55);font-weight:600;margin-top:1px;">Pulp AI · Fruit &amp; Veg Expert</div>
+            </div>
+        </div>
+        <!-- Usage bar -->
+        <div style="padding:5px 14px;border-bottom:1px solid rgba(255,255,255,0.04);background:rgba(5,5,5,0.97);position:relative;z-index:10;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+                <div style="font-size:7px;font-weight:700;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:1px;">Monthly</div>
+                <div id="pulpai-usage-count-chat" style="font-size:7px;font-weight:800;color:#a6e22e;">— / 500</div>
+            </div>
+            <div style="height:2px;background:rgba(255,255,255,0.05);border-radius:100px;overflow:hidden;">
+                <div id="pulpai-usage-bar-chat" style="height:100%;width:0%;background:linear-gradient(90deg,#78c830,#a6e22e);border-radius:100px;transition:width 0.5s;"></div>
+            </div>
+        </div>
+        <!-- Messages -->
+        <div id="pulpai-messages" style="flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:10px;position:relative;z-index:1;"></div>
+        <!-- Typing indicator -->
+        <div id="pulpai-typing" style="display:none;padding:0 14px 8px;position:relative;z-index:1;">
+            <div style="display:flex;align-items:flex-start;gap:6px;">
+                <div style="width:20px;height:20px;border-radius:50%;background:#a6e22e;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;color:#000;flex-shrink:0;">P</div>
+                <div style="display:flex;align-items:center;gap:4px;padding:8px 12px;background:rgba(14,14,14,0.95);border:1px solid rgba(255,255,255,0.07);border-radius:12px;border-bottom-left-radius:3px;">
+                    <div class="pulpai-td"></div><div class="pulpai-td"></div><div class="pulpai-td"></div>
+                </div>
+            </div>
+        </div>
+        <!-- Input bar -->
+        <div style="background:rgba(5,5,5,0.97);border-top:1px solid rgba(255,255,255,0.05);padding:10px 12px;display:flex;align-items:center;gap:8px;flex-shrink:0;position:relative;z-index:10;">
+            <div style="flex:1;display:flex;align-items:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:100px;padding:0 14px;">
+                <input id="pulpai-input" type="text" placeholder="Ask about fruit &amp; vegetables..." style="flex:1;background:transparent;border:none;padding:9px 0;font-size:12px;color:#fff;outline:none;font-family:-apple-system,sans-serif;">
+            </div>
+            <button id="pulpai-send-btn" onclick="sendPulpAIMessage()" style="width:34px;height:34px;border-radius:50%;background:#a6e22e;border:none;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#000;cursor:pointer;flex-shrink:0;font-family:-apple-system,sans-serif;">↑</button>
+        </div>
+    </div>
+</div>
+
 <style>
-.article-btn.active {
+/* Pulp AI message styles */
+.pulpai-msg-u{display:flex;justify-content:flex-end;}
+.pulpai-msg-a{display:flex;align-items:flex-start;gap:6px;}
+.pulpai-avatar{width:20px;height:20px;border-radius:50%;overflow:hidden;position:relative;flex-shrink:0;margin-top:2px;}
+.pulpai-orb-canvas{position:absolute;inset:0;border-radius:50%;}
+.pulpai-msg-name{font-size:8px;font-weight:700;color:rgba(166,226,46,0.6);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;}
+.pulpai-bub-u{background:rgba(166,226,46,0.1);border:1px solid rgba(166,226,46,0.18);border-radius:14px;border-bottom-right-radius:3px;padding:9px 12px;font-size:12px;color:#fff;line-height:1.65;max-width:84%;}
+.pulpai-bub-a{background:rgba(14,14,14,0.95);border:1px solid rgba(255,255,255,0.07);border-radius:14px;border-bottom-left-radius:3px;padding:9px 12px;font-size:12px;color:rgba(255,255,255,0.82);line-height:1.65;max-width:84%;}
+.pulpai-bub-a strong{color:#a6e22e;font-weight:700;}
+.pulpai-chat-item{display:flex;align-items:center;gap:10px;padding:11px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:14px;margin-bottom:6px;cursor:pointer;transition:border-color 0.15s;}
+.pulpai-chat-item:hover{border-color:rgba(166,226,46,0.2);}
+.pulpai-chat-icon{width:32px;height:32px;border-radius:10px;background:rgba(166,226,46,0.06);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.pulpai-chat-info{flex:1;min-width:0;}
+.pulpai-chat-title{font-size:12px;font-weight:700;color:#fff;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pulpai-chat-preview{font-size:10px;color:rgba(255,255,255,0.3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pulpai-chat-arrow{font-size:14px;color:rgba(255,255,255,0.2);}
+.pulpai-td{width:5px;height:5px;border-radius:50%;background:rgba(166,226,46,0.6);animation:pulpaiTd 1.3s infinite;}
+.pulpai-td:nth-child(2){animation-delay:0.2s;}
+.pulpai-td:nth-child(3){animation-delay:0.4s;}
+@keyframes pulpaiTd{0%,60%,100%{transform:translateY(0);opacity:0.25;}30%{transform:translateY(-5px);opacity:1;}}
+</style>
     background: rgba(166,226,46,0.08) !important;
     border-color: var(--pulp-lime) !important;
     color: var(--pulp-lime) !important;
@@ -409,6 +536,7 @@ if ('serviceWorker' in navigator) {
 <script src="js/navigation.js"></script>
 <script src="js/calculator.js"></script>
 <script src="js/colour-scanner.js"></script>
+<script src="js/pulp-ai.js"></script>
 <script>checkAccess();</script>
 </body>
 </html>

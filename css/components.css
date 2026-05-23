@@ -559,8 +559,10 @@ body.pulpai-open #menu-trigger { display: none !important; }
 #pulpai-list-screen {
     display: flex;
     flex-direction: column;
+    flex: 1;
     height: 100%;
     overflow: hidden;
+    min-height: 0;
 }
 
 /* Chat list scrollable area */
@@ -568,9 +570,20 @@ body.pulpai-open #menu-trigger { display: none !important; }
     flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    min-height: 0;
+    padding: 14px 16px;
 }
 
-/* Chat screen fills full height */
+/* Bigger chat items */
+.pulpai-chat-item { display: flex; align-items: center; gap: 12px; padding: 15px 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; margin-bottom: 10px; cursor: pointer; transition: border-color 0.15s; }
+.pulpai-chat-item:hover { border-color: rgba(166,226,46,0.2); }
+.pulpai-chat-icon { width: 40px; height: 40px; border-radius: 12px; background: rgba(166,226,46,0.07); border: 1px solid rgba(166,226,46,0.1); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; color: rgba(166,226,46,0.6); }
+.pulpai-chat-info { flex: 1; min-width: 0; }
+.pulpai-chat-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; letter-spacing: normal; text-transform: none; }
+.pulpai-chat-preview { font-size: 13px; color: rgba(255,255,255,0.35); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; letter-spacing: normal; }
+.pulpai-chat-arrow { font-size: 16px; color: rgba(255,255,255,0.2); }
+.pulpai-chat-delete { width: 32px; height: 32px; border-radius: 9px; background: rgba(255,77,77,0.08); border: 1px solid rgba(255,77,77,0.2); display: flex; align-items: center; justify-content: center; font-size: 14px; color: rgba(255,77,77,0.6); cursor: pointer; flex-shrink: 0; transition: all 0.15s; }
+.pulpai-chat-delete:hover { background: rgba(255,77,77,0.15); border-color: rgba(255,77,77,0.4); color: #ff4d4d; }
 #pulpai-chat-screen {
     display: flex;
     flex-direction: column;
@@ -580,12 +593,13 @@ body.pulpai-open #menu-trigger { display: none !important; }
 }
 #pulpai-chat-screen.hidden { display: none !important; }
 
-/* Messages area scrollable */
+/* Messages area scrollable — shrinks when keyboard opens */
 #pulpai-messages {
     flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     padding-bottom: 8px;
+    min-height: 0;
 }
 
 /* Input bar always sticks to bottom */

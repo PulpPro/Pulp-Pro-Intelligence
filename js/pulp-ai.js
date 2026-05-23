@@ -320,17 +320,18 @@ function renderChatList() {
     const container = document.getElementById('pulpai-chat-list');
     if (!container) return;
     if (pulpAIChats.length === 0) {
-        container.innerHTML = `<div style="text-align:center;padding:32px 20px;font-size:12px;color:rgba(255,255,255,0.25);">No chats yet. Start a conversation below.</div>`;
+        container.innerHTML = `<div style="text-align:center;padding:32px 20px;font-size:12px;color:rgba(255,255,255,0.25);letter-spacing:normal;text-transform:none;">No chats yet. Start a conversation below.</div>`;
         return;
     }
     container.innerHTML = pulpAIChats.map(c => `
-        <div class="pulpai-chat-item" onclick="openChat('${c.id}')">
-            <div class="pulpai-chat-icon">💬</div>
-            <div class="pulpai-chat-info">
+        <div class="pulpai-chat-item">
+            <div class="pulpai-chat-icon" onclick="openChat('${c.id}')">💬</div>
+            <div class="pulpai-chat-info" onclick="openChat('${c.id}')">
                 <div class="pulpai-chat-title">${escapeHtml(c.title)}</div>
                 <div class="pulpai-chat-preview">${c.messages.length > 0 ? escapeHtml(c.messages[c.messages.length-1].content).slice(0,50)+'...' : 'No messages yet'}</div>
             </div>
-            <div class="pulpai-chat-arrow">›</div>
+            <div class="pulpai-chat-delete" onclick="deleteChat('${c.id}')">✕</div>
+            <div class="pulpai-chat-arrow" onclick="openChat('${c.id}')">›</div>
         </div>`).join('');
 }
 
@@ -373,8 +374,9 @@ function openPulpAI() {
     document.getElementById('appInterface').classList.add('hidden');
     document.getElementById('colour-scanner-view').classList.add('hidden');
     document.getElementById('pulpai-view').classList.remove('hidden');
+    const menuTrigger = document.getElementById('menu-trigger');
+    if (menuTrigger) menuTrigger.style.display = 'none';
     renderChatList();
-    // Init menu orb
     setTimeout(() => {
         const menuOrb = document.getElementById('pulpai-menu-orb');
         if (menuOrb) createAura(menuOrb, 42);
@@ -405,6 +407,12 @@ function newPulpAIChat() {
     openChat(id);
 }
 
+function deleteChat(chatId) {
+    pulpAIChats = pulpAIChats.filter(c => c.id !== chatId);
+    saveChats();
+    renderChatList();
+}
+
 function backToChatList() {
     currentChatId = null;
     _glowMode = 'idle';
@@ -416,6 +424,8 @@ function backToChatList() {
 function closePulpAI() {
     document.getElementById('pulpai-view').classList.add('hidden');
     document.getElementById('fruit-hub').classList.remove('hidden');
+    const menuTrigger = document.getElementById('menu-trigger');
+    if (menuTrigger) menuTrigger.style.display = '';
 }
 
 // ── TILE AURA INIT ───────────────────────────────────────────────────────

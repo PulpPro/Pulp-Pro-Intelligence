@@ -1,10 +1,12 @@
 // ── PULP AI ──────────────────────────────────────────────────────────────
 const WORKER_URL = 'https://pulppro-access.pulpprobrain.workers.dev';
 
-let pulpAIChats = [];         // all chat sessions
-let currentChatId = null;     // active chat id
-let pulpAIUsage = { personal: 0, personalLimit: 500, pool: 0, poolLimit: 5000, adminUsed: 0, adminLimit: 700 };
+let pulpAIChats = [];
+let currentChatId = null;
+let pulpAIUsage = { used: 0, limit: 1000 };
 let isAIThinking = false;
+let pulpAIMicActive = false;
+let pulpAIRecognition = null;
 
 // ── AURA ENGINE ──────────────────────────────────────────────────────────
 function createAura(canvas, size) {
@@ -61,8 +63,8 @@ function createAura(canvas, size) {
     draw();
 }
 
-// ── PERIMETER GLOW ───────────────────────────────────────────────────────
-function startPerimeterGlow(canvas, getMode) {
+// ── PERIMETER GLOW — Change 8: constant always-on ────────────────────────
+function startPerimeterGlow(canvas) {
     const parent = canvas.parentElement;
     function resize() {
         canvas.width = parent.offsetWidth || 390;
@@ -74,179 +76,193 @@ function startPerimeterGlow(canvas, getMode) {
     function draw() {
         const W = canvas.width, H = canvas.height;
         const t = (Date.now()-start)*0.001;
-        const mode = getMode();
         ctx.clearRect(0,0,W,H);
-        if (mode === 'idle') {
-            [[0,0],[W,0],[0,H],[W,H]].forEach(([cx,cy]) => {
-                const pulse = 0.10 + Math.sin(t*0.7+cx*0.01)*0.04;
-                const g = ctx.createRadialGradient(cx,cy,0,cx,cy,110);
-                g.addColorStop(0,`rgba(166,226,46,${pulse})`);
-                g.addColorStop(1,'rgba(166,226,46,0)');
-                ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-            });
-            const bg = ctx.createRadialGradient(W/2,H,0,W/2,H,150);
-            bg.addColorStop(0,`rgba(166,226,46,${0.07+Math.sin(t*0.5)*0.03})`);
-            bg.addColorStop(1,'rgba(166,226,46,0)');
-            ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
-        } else {
-            // thinking — bright sweep
-            const intensity = 0.45 + Math.sin(t*2.5)*0.2;
+        // Always-on corner glow — constant breathing
+        const isThinking = isAIThinking;
+        const baseIntensity = isThinking ? 0.28 : 0.13;
+        const speed = isThinking ? 2.5 : 0.5;
+        [[0,0],[W,0],[0,H],[W,H]].forEach(([cx,cy],i) => {
+            const p = baseIntensity + Math.sin(t*speed+i*0.8)*0.06;
+            const g = ctx.createRadialGradient(cx,cy,0,cx,cy,130);
+            g.addColorStop(0,`rgba(166,226,46,${p})`);
+            g.addColorStop(0.5,`rgba(166,226,46,${p*0.35})`);
+            g.addColorStop(1,'rgba(166,226,46,0)');
+            ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+        });
+        // Left edge
+        const lp = (isThinking ? 0.18 : 0.07) + Math.sin(t*(isThinking?1.8:0.6))*0.04;
+        const lg = ctx.createLinearGradient(0,0,55,0);
+        lg.addColorStop(0,`rgba(166,226,46,${lp})`);
+        lg.addColorStop(1,'rgba(166,226,46,0)');
+        ctx.fillStyle=lg; ctx.fillRect(0,0,55,H);
+        // Right edge
+        const rg = ctx.createLinearGradient(W-55,0,W,0);
+        rg.addColorStop(0,'rgba(166,226,46,0)');
+        rg.addColorStop(1,`rgba(166,226,46,${lp})`);
+        ctx.fillStyle=rg; ctx.fillRect(W-55,0,55,H);
+        // Bottom bloom
+        const bp = (isThinking ? 0.22 : 0.09) + Math.sin(t*(isThinking?3:0.4))*0.04;
+        const bsweep = isThinking ? (Math.sin(t*2.2)+1)/2 : 0.5;
+        const bg = ctx.createRadialGradient(W*(0.3+bsweep*0.4),H,0,W*(0.3+bsweep*0.4),H,170);
+        bg.addColorStop(0,`rgba(166,226,46,${bp})`);
+        bg.addColorStop(1,'rgba(166,226,46,0)');
+        ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+        // Thinking: top sweep
+        if (isThinking) {
             const sweep = (Math.sin(t*1.8)+1)/2;
-            // top edge
             const tg = ctx.createLinearGradient(0,0,W,0);
             tg.addColorStop(0,'rgba(166,226,46,0)');
-            tg.addColorStop(sweep,`rgba(200,245,80,${intensity})`);
-            tg.addColorStop(Math.min(sweep+0.3,1),`rgba(166,226,46,${intensity*0.3})`);
+            tg.addColorStop(sweep,`rgba(200,245,80,0.45)`);
+            tg.addColorStop(Math.min(sweep+0.3,1),'rgba(166,226,46,0.15)');
             tg.addColorStop(1,'rgba(166,226,46,0)');
             ctx.save(); ctx.fillStyle=tg; ctx.fillRect(0,0,W,50);
             const tmask=ctx.createLinearGradient(0,0,0,50);
             tmask.addColorStop(0,'rgba(0,0,0,0)'); tmask.addColorStop(1,'rgba(0,0,0,1)');
-            ctx.fillStyle=tmask; ctx.globalCompositeOperation='destination-out'; ctx.fillRect(0,0,W,50); ctx.restore();
-            // left edge
-            const lsweep=(Math.sin(t*1.4+1)+1)/2;
-            const lg=ctx.createLinearGradient(0,0,0,H);
-            lg.addColorStop(0,'rgba(120,200,40,0)'); lg.addColorStop(lsweep,`rgba(120,200,40,${intensity*0.7})`); lg.addColorStop(1,'rgba(120,200,40,0)');
-            ctx.save(); ctx.fillStyle=lg; ctx.fillRect(0,0,55,H);
-            const lmask=ctx.createLinearGradient(0,0,55,0);
-            lmask.addColorStop(0,'rgba(0,0,0,0)'); lmask.addColorStop(1,'rgba(0,0,0,1)');
-            ctx.fillStyle=lmask; ctx.globalCompositeOperation='destination-out'; ctx.fillRect(0,0,55,H); ctx.restore();
-            // right edge
-            const rsweep=(Math.sin(t*1.6+2)+1)/2;
-            const rg=ctx.createLinearGradient(0,0,0,H);
-            rg.addColorStop(0,'rgba(190,235,50,0)'); rg.addColorStop(rsweep,`rgba(190,235,50,${intensity*0.65})`); rg.addColorStop(1,'rgba(190,235,50,0)');
-            ctx.save(); ctx.fillStyle=rg; ctx.fillRect(W-55,0,55,H);
-            const rmask=ctx.createLinearGradient(W-55,0,W,0);
-            rmask.addColorStop(0,'rgba(0,0,0,1)'); rmask.addColorStop(1,'rgba(0,0,0,0)');
-            ctx.fillStyle=rmask; ctx.globalCompositeOperation='destination-out'; ctx.fillRect(W-55,0,55,H); ctx.restore();
-            // bottom bloom
-            const bi=0.5+Math.sin(t*3)*0.2;
-            const bsweep=(Math.sin(t*2.2)+1)/2;
-            const bg2=ctx.createRadialGradient(W*(0.3+bsweep*0.4),H,0,W*(0.3+bsweep*0.4),H,170);
-            bg2.addColorStop(0,`rgba(166,226,46,${bi})`); bg2.addColorStop(0.4,`rgba(166,226,46,${bi*0.3})`); bg2.addColorStop(1,'rgba(166,226,46,0)');
-            ctx.fillStyle=bg2; ctx.fillRect(0,0,W,H);
-            // corner sparks
-            [[0,0],[W,0],[0,H],[W,H]].forEach(([cx,cy],idx) => {
-                const cp=Math.max(0,Math.sin(t*2+idx*1.5))*intensity*0.45;
-                const cg=ctx.createRadialGradient(cx,cy,0,cx,cy,75);
-                cg.addColorStop(0,`rgba(220,255,100,${cp})`); cg.addColorStop(1,'rgba(166,226,46,0)');
-                ctx.fillStyle=cg; ctx.fillRect(0,0,W,H);
-            });
+            ctx.fillStyle=tmask; ctx.globalCompositeOperation='destination-out'; ctx.fillRect(0,0,W,50);
+            ctx.restore();
         }
         requestAnimationFrame(draw);
     }
     draw();
 }
 
-// ── KV CHAT STORAGE ──────────────────────────────────────────────────────
+// ── CHAT STORAGE ─────────────────────────────────────────────────────────
 function getChatStorageKey() {
     const code = localStorage.getItem('pulpProAccessCode') || 'admin';
     return `pulpai_chats_${code}`;
 }
-
 function loadChats() {
     try {
         const stored = localStorage.getItem(getChatStorageKey());
         pulpAIChats = stored ? JSON.parse(stored) : [];
     } catch(e) { pulpAIChats = []; }
 }
-
 function saveChats() {
-    try {
-        localStorage.setItem(getChatStorageKey(), JSON.stringify(pulpAIChats));
-    } catch(e) {}
+    try { localStorage.setItem(getChatStorageKey(), JSON.stringify(pulpAIChats)); } catch(e) {}
 }
-
 function newChat() {
     const id = 'chat_' + Date.now();
     pulpAIChats.unshift({ id, title: 'New conversation', messages: [], createdAt: new Date().toISOString() });
     saveChats();
     return id;
 }
+function getChatById(id) { return pulpAIChats.find(c => c.id === id); }
 
-function getChatById(id) {
-    return pulpAIChats.find(c => c.id === id);
-}
-
-// ── USAGE BAR ────────────────────────────────────────────────────────────
+// ── USAGE BAR — Change 6: single shared pool ─────────────────────────────
 function updateUsageBar() {
-    const isAdmin = localStorage.getItem('pulpProAdmin') === 'true';
+    const used = pulpAIUsage.used || 0;
+    const limit = pulpAIUsage.limit || 1000;
+    const pct = Math.min(100, Math.round((used / limit) * 100));
+    const color = pct >= 90 ? '#ff5050' : pct >= 75 ? '#ff8c00' : '#a6e22e';
 
-    // ── List screen bar ──
-    const bar = document.getElementById('pulpai-usage-bar');
-    const count = document.getElementById('pulpai-usage-count');
+    ['pulpai-usage-bar','pulpai-usage-bar-chat'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.style.width = pct + '%'; el.style.background = color; }
+    });
+    ['pulpai-usage-count','pulpai-usage-count-chat'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.innerText = `${used} / ${limit}`; el.style.color = color; }
+    });
+
     const warn = document.getElementById('pulpai-limit-warn');
-
-    if (isAdmin) {
-        // Admin sees all 3 pools
-        const adminPct = Math.min(100, Math.round((pulpAIUsage.adminUsed / pulpAIUsage.adminLimit) * 100));
-        const poolPct = Math.min(100, Math.round((pulpAIUsage.pool / pulpAIUsage.poolLimit) * 100));
-        const totalUsed = pulpAIUsage.adminUsed + pulpAIUsage.pool;
-        const totalLimit = 5700;
-        const totalPct = Math.min(100, Math.round((totalUsed / totalLimit) * 100));
-
-        if (bar) {
-            bar.style.width = adminPct + '%';
-            bar.style.background = adminPct >= 90 ? '#ff5050' : adminPct >= 75 ? '#ff8c00' : '#a6e22e';
+    if (warn) {
+        if (pct >= 90) {
+            warn.style.display = 'flex';
+            warn.innerHTML = `<span style="font-size:10px;color:rgba(255,80,80,0.9);">Monthly limit almost reached · ${limit - used} messages left</span>`;
+        } else if (pct >= 75) {
+            warn.style.display = 'flex';
+            warn.innerHTML = `<span style="font-size:10px;color:rgba(255,140,0,0.8);">${limit - used} messages remaining this month · Resets 1st</span>`;
+        } else {
+            warn.style.display = 'none';
         }
-        if (count) {
-            count.innerHTML = `
-                <div style="display:flex;flex-direction:column;gap:3px;text-align:right;">
-                    <div style="font-size:9px;font-weight:800;color:#a6e22e;">Your pool: ${pulpAIUsage.adminUsed} / ${pulpAIUsage.adminLimit}</div>
-                    <div style="font-size:9px;font-weight:700;color:rgba(166,226,46,0.55);">User pool: ${pulpAIUsage.pool} / ${pulpAIUsage.poolLimit}</div>
-                    <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.3);">Total: ${totalUsed} / ${totalLimit}</div>
-                </div>`;
-        }
-        if (warn) warn.style.display = 'none';
-    } else {
-        // Regular user sees personal bar only
-        const used = pulpAIUsage.personal;
-        const limit = pulpAIUsage.personalLimit;
-        const pct = Math.min(100, Math.round((used / limit) * 100));
-        const color = pct >= 90 ? '#ff5050' : pct >= 75 ? '#ff8c00' : '#a6e22e';
-        if (bar) { bar.style.width = pct + '%'; bar.style.background = color; }
-        if (count) { count.innerText = used + ' / ' + limit; count.style.color = color; }
-        if (warn) {
-            if (pct >= 75 && pct < 100) {
-                warn.style.display = 'flex';
-                warn.innerHTML = `<span style="font-size:10px;color:rgba(255,140,0,0.8);">⚡ ${limit - used} messages remaining this month · Resets 1st</span>`;
-            } else if (pct >= 100) {
-                warn.style.display = 'flex';
-                warn.innerHTML = `<span style="font-size:10px;color:rgba(255,80,80,0.9);">🔒 Monthly limit reached · Resets 1st of next month</span>`;
-            } else {
-                warn.style.display = 'none';
-            }
-        }
-    }
-
-    // ── Chat screen bar ──
-    const barChat = document.getElementById('pulpai-usage-bar-chat');
-    const countChat = document.getElementById('pulpai-usage-count-chat');
-    if (isAdmin) {
-        const adminPct = Math.min(100, Math.round((pulpAIUsage.adminUsed / pulpAIUsage.adminLimit) * 100));
-        if (barChat) { barChat.style.width = adminPct + '%'; barChat.style.background = adminPct >= 90 ? '#ff5050' : adminPct >= 75 ? '#ff8c00' : '#a6e22e'; }
-        if (countChat) { countChat.innerText = `${pulpAIUsage.adminUsed}/${pulpAIUsage.adminLimit} your pool · ${pulpAIUsage.pool}/${pulpAIUsage.poolLimit} shared`; countChat.style.color = '#a6e22e'; countChat.style.fontSize = '9px'; }
-    } else {
-        const used = pulpAIUsage.personal;
-        const limit = pulpAIUsage.personalLimit;
-        const pct = Math.min(100, Math.round((used / limit) * 100));
-        const color = pct >= 90 ? '#ff5050' : pct >= 75 ? '#ff8c00' : '#a6e22e';
-        if (barChat) { barChat.style.width = pct + '%'; barChat.style.background = color; }
-        if (countChat) { countChat.innerText = used + ' / ' + limit; countChat.style.color = color; }
     }
 }
 
 async function fetchUsage() {
     try {
-        const code = localStorage.getItem('pulpProAccessCode') || '';
         const res = await fetch(WORKER_URL + '/pulp-ai-usage', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userCode: code })
+            body: JSON.stringify({})
         });
         const data = await res.json();
         pulpAIUsage = data;
         updateUsageBar();
     } catch(e) {}
+}
+
+// ── MIC — Change 11: Android only ────────────────────────────────────────
+function initMic() {
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    const micBtn = document.getElementById('pulpai-mic-btn');
+    if (!micBtn) return;
+    if (!isAndroid || !('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+        micBtn.style.display = 'none';
+        return;
+    }
+    micBtn.style.display = 'flex';
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    pulpAIRecognition = new SpeechRecognition();
+    const lang = localStorage.getItem('pulpai_lang') || 'nl-NL';
+    pulpAIRecognition.lang = lang;
+    pulpAIRecognition.continuous = false;
+    pulpAIRecognition.interimResults = true;
+    pulpAIRecognition.onstart = () => {
+        pulpAIMicActive = true;
+        micBtn.style.background = 'rgba(166,226,46,0.2)';
+        micBtn.style.borderColor = 'rgba(166,226,46,0.5)';
+    };
+    pulpAIRecognition.onresult = (e) => {
+        let transcript = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+            transcript += e.results[i][0].transcript;
+        }
+        const input = document.getElementById('pulpai-input');
+        if (input) input.value = applyVocabCorrections(transcript);
+    };
+    pulpAIRecognition.onend = () => {
+        pulpAIMicActive = false;
+        micBtn.style.background = 'rgba(166,226,46,0.07)';
+        micBtn.style.borderColor = 'rgba(166,226,46,0.15)';
+    };
+    pulpAIRecognition.onerror = () => {
+        pulpAIMicActive = false;
+        micBtn.style.background = 'rgba(166,226,46,0.07)';
+        micBtn.style.borderColor = 'rgba(166,226,46,0.15)';
+    };
+}
+
+function toggleMic() {
+    if (!pulpAIRecognition) return;
+    if (pulpAIMicActive) {
+        pulpAIRecognition.stop();
+    } else {
+        pulpAIRecognition.start();
+    }
+}
+
+// ── VOCAB CORRECTIONS — Change 19 ────────────────────────────────────────
+function applyVocabCorrections(text) {
+    const corrections = {
+        // Cel corrections — Dutch/English
+        '\\bsell\\b': 'cel', '\\bcell\\b': 'cel', '\\bsale\\b': 'cel', '\\bsel\\b': 'cel',
+        '\\bselle\\b': 'cel', '\\bcelle\\b': 'cel',
+        // Fruit terms
+        '\\bfusearium\\b': 'Fusarium', '\\bfusareum\\b': 'Fusarium', '\\bfuzarium\\b': 'Fusarium',
+        '\\betheline\\b': 'ethylene', '\\bethiline\\b': 'ethylene', '\\bethyleen\\b': 'ethyleen',
+        '\\bcheckita\\b': 'Chiquita', '\\bchiquetta\\b': 'Chiquita', '\\bshikita\\b': 'Chiquita',
+        '\\bcrown rot\\b': 'crown rot', '\\bcrownrot\\b': 'crown rot',
+        '\\bkroonrot\\b': 'kroonrot', '\\bkroon rot\\b': 'kroonrot',
+        '\\bripening\\b': 'ripening', '\\brijping\\b': 'rijping',
+        '\\bkolkrot\\b': 'kolkrot', '\\bcolk rot\\b': 'kolkrot',
+    };
+    let result = text;
+    Object.entries(corrections).forEach(([pattern, replacement]) => {
+        result = result.replace(new RegExp(pattern, 'gi'), replacement);
+    });
+    // Fix cel + number pattern: "cel 8", "cell 8", "sell 8"
+    result = result.replace(/\b(?:sell|cell|sale|sel|selle|celle)\s*(\d+)/gi, 'cel $1');
+    return result;
 }
 
 // ── SEND MESSAGE ─────────────────────────────────────────────────────────
@@ -257,60 +273,62 @@ async function sendPulpAIMessage() {
     const chat = getChatById(currentChatId);
     if (!chat) return;
 
-    // Check limit
-    const isAdmin = localStorage.getItem('pulpProAdmin') === 'true';
-    const used = isAdmin ? pulpAIUsage.adminUsed : pulpAIUsage.personal;
-    const limit = isAdmin ? pulpAIUsage.adminLimit : pulpAIUsage.personalLimit;
-    if (used >= limit) {
+    if (pulpAIUsage.used >= pulpAIUsage.limit) {
         showPulpAILimitScreen();
         return;
     }
 
     input.value = '';
     isAIThinking = true;
-    setGlowMode('thinking');
 
-    // Add user message
-    const userName = localStorage.getItem('pulpProUserName') || 'there';
     chat.messages.push({ role: 'user', content: text });
     saveChats();
     renderChatMessages(currentChatId);
     scrollChatToBottom();
 
-    // Show typing
     const typingEl = document.getElementById('pulpai-typing');
     if (typingEl) typingEl.style.display = 'flex';
     scrollChatToBottom();
 
     try {
         const code = localStorage.getItem('pulpProAccessCode') || '';
+        const isAdmin = localStorage.getItem('pulpProAdmin') === 'true';
         const res = await fetch(WORKER_URL + '/pulp-ai', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 messages: chat.messages.map(m => ({ role: m.role, content: m.content })),
                 userCode: code,
-                isAdmin,
-                userName
+                isAdmin
             })
         });
         const data = await res.json();
         if (typingEl) typingEl.style.display = 'none';
 
-        if (data.error === 'monthly_limit_reached' || data.error === 'pool_limit_reached') {
+        if (data.error === 'monthly_limit_reached') {
             isAIThinking = false;
-            setGlowMode('idle');
             showPulpAILimitScreen();
             return;
         }
 
-        chat.messages.push({ role: 'assistant', content: data.reply });
+        // Check for reminder JSON in response
+        let reply = data.reply;
+        const reminderMatch = reply.match(/REMINDER_JSON:(\{.*?\})/);
+        if (reminderMatch) {
+            try {
+                const reminderData = JSON.parse(reminderMatch[1]);
+                reply = reply.replace(/REMINDER_JSON:\{.*?\}/, '').trim();
+                saveReminderFromAI(reminderData);
+            } catch(e) {}
+        }
+
+        chat.messages.push({ role: 'assistant', content: reply });
         if (data.usage) { pulpAIUsage = data.usage; updateUsageBar(); }
 
-        // Generate smart title from AI response if still default
-        if (chat.title === 'New conversation' || chat.messages.filter(m => m.role === 'assistant').length === 1) {
-            const words = data.reply.replace(/[*#\n]/g, ' ').split(' ').filter(w => w.length > 3);
-            chat.title = words.slice(0, 5).join(' ').slice(0, 45) || chat.title;
+        // Smart title from first AI response
+        if (chat.title === 'New conversation' && chat.messages.filter(m => m.role === 'assistant').length === 1) {
+            const words = reply.replace(/[*#\n<>]/g, ' ').split(' ').filter(w => w.length > 3);
+            chat.title = words.slice(0, 5).join(' ').slice(0, 45) || 'New conversation';
         }
         saveChats();
         renderChatMessages(currentChatId);
@@ -324,15 +342,106 @@ async function sendPulpAIMessage() {
     }
 
     isAIThinking = false;
-    setGlowMode('idle');
 }
 
-// ── GLOW MODE ────────────────────────────────────────────────────────────
-let _glowMode = 'idle';
-function setGlowMode(mode) { _glowMode = mode; }
-function getGlowMode() { return _glowMode; }
+// ── REMINDER FROM AI ──────────────────────────────────────────────────────
+function saveReminderFromAI(data) {
+    try {
+        const reminders = JSON.parse(localStorage.getItem('pulpai_reminders') || '[]');
+        reminders.push({
+            id: 'rem_' + Date.now(),
+            text: data.text,
+            datetime: data.datetime,
+            source: 'ai',
+            done: false,
+            createdAt: new Date().toISOString()
+        });
+        localStorage.setItem('pulpai_reminders', JSON.stringify(reminders));
+    } catch(e) {}
+}
 
-// ── RENDER HELPERS ───────────────────────────────────────────────────────
+// ── PHOTO ANALYSIS — Change 10 ────────────────────────────────────────────
+function togglePhotoPopup() {
+    const popup = document.getElementById('pulpai-photo-popup');
+    if (!popup) return;
+    popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
+}
+
+function triggerCamera() {
+    document.getElementById('pulpai-camera-input').click();
+}
+
+function triggerGallery() {
+    document.getElementById('pulpai-gallery-input').click();
+}
+
+async function handlePhotoSelected(file) {
+    if (!file) return;
+    const fruitText = (document.getElementById('pulpai-fruit-input') || {}).value || '';
+    if (!fruitText.trim()) {
+        alert('Please type the fruit or vegetable name first.');
+        return;
+    }
+    const popup = document.getElementById('pulpai-photo-popup');
+    if (popup) popup.style.display = 'none';
+
+    const chat = getChatById(currentChatId);
+    if (!chat) return;
+    if (pulpAIUsage.used >= pulpAIUsage.limit) { showPulpAILimitScreen(); return; }
+
+    isAIThinking = true;
+
+    const userMsg = `[Photo: ${fruitText}] Please analyse this ${fruitText} for defects and quality.`;
+    chat.messages.push({ role: 'user', content: userMsg });
+    saveChats();
+    renderChatMessages(currentChatId);
+    scrollChatToBottom();
+
+    const typingEl = document.getElementById('pulpai-typing');
+    if (typingEl) typingEl.style.display = 'flex';
+
+    try {
+        const base64 = await fileToBase64(file);
+        const code = localStorage.getItem('pulpProAccessCode') || '';
+        const isAdmin = localStorage.getItem('pulpProAdmin') === 'true';
+        const res = await fetch(WORKER_URL + '/pulp-ai', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                messages: [{ role: 'user', content: `Analyse this ${fruitText}` }],
+                userCode: code,
+                isAdmin,
+                imageBase64: base64,
+                imageFruit: fruitText
+            })
+        });
+        const data = await res.json();
+        if (typingEl) typingEl.style.display = 'none';
+        const reply = data.reply || 'Could not analyse the image.';
+        chat.messages.push({ role: 'assistant', content: reply });
+        if (data.usage) { pulpAIUsage = data.usage; updateUsageBar(); }
+        saveChats();
+        renderChatMessages(currentChatId);
+        scrollChatToBottom();
+    } catch(e) {
+        if (typingEl) typingEl.style.display = 'none';
+        chat.messages.push({ role: 'assistant', content: 'Could not analyse the image. Please try again.' });
+        saveChats();
+        renderChatMessages(currentChatId);
+    }
+    isAIThinking = false;
+}
+
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+// ── RENDER HELPERS ────────────────────────────────────────────────────────
 function renderChatMessages(chatId) {
     const chat = getChatById(chatId);
     const container = document.getElementById('pulpai-messages');
@@ -347,7 +456,6 @@ function renderChatMessages(chatId) {
             </div>`;
         }
     }).join('');
-    // Init orbs on new message bubbles
     container.querySelectorAll('.pulpai-orb-canvas').forEach(c => createAura(c, 20));
 }
 
@@ -355,18 +463,24 @@ function renderChatList() {
     const container = document.getElementById('pulpai-chat-list');
     if (!container) return;
     if (pulpAIChats.length === 0) {
-        container.innerHTML = `<div style="text-align:center;padding:32px 20px;font-size:12px;color:rgba(255,255,255,0.25);letter-spacing:normal;text-transform:none;">No chats yet. Start a conversation below.</div>`;
+        container.innerHTML = `<div style="text-align:center;padding:32px 20px;font-size:14px;color:rgba(255,255,255,0.25);letter-spacing:normal;text-transform:none;">No chats yet. Start a conversation below.</div>`;
         return;
     }
     container.innerHTML = pulpAIChats.map(c => `
         <div class="pulpai-chat-item">
-            <div class="pulpai-chat-icon" onclick="openChat('${c.id}')">💬</div>
+            <div class="pulpai-chat-icon" onclick="openChat('${c.id}')">
+                <i class="bi bi-chat-text"></i>
+            </div>
             <div class="pulpai-chat-info" onclick="openChat('${c.id}')">
                 <div class="pulpai-chat-title">${escapeHtml(c.title)}</div>
-                <div class="pulpai-chat-preview">${c.messages.length > 0 ? escapeHtml(c.messages[c.messages.length-1].content).slice(0,50)+'...' : 'No messages yet'}</div>
+                <div class="pulpai-chat-preview">${c.messages.length > 0 ? escapeHtml(c.messages[c.messages.length-1].content).slice(0,55)+'...' : 'No messages yet'}</div>
             </div>
-            <div class="pulpai-chat-delete" onclick="deleteChat('${c.id}')">✕</div>
-            <div class="pulpai-chat-arrow" onclick="openChat('${c.id}')">›</div>
+            <div class="pulpai-chat-delete" onclick="deleteChat('${c.id}')">
+                <i class="bi bi-x"></i>
+            </div>
+            <div class="pulpai-chat-arrow" onclick="openChat('${c.id}')">
+                <i class="bi bi-chevron-right"></i>
+            </div>
         </div>`).join('');
 }
 
@@ -374,9 +488,43 @@ function escapeHtml(str) {
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ── Change 9: rich text formatting ────────────────────────────────────────
 function formatAIText(text) {
     // Bold **text**
     text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // Markdown table
+    if (text.includes('|')) {
+        const lines = text.split('\n');
+        let inTable = false;
+        let tableHtml = '';
+        let output = [];
+        lines.forEach((line, idx) => {
+            if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
+                if (!inTable) {
+                    inTable = true;
+                    tableHtml = '<table class="pulpai-table">';
+                }
+                // Skip separator rows
+                if (line.replace(/[\s|:-]/g,'').length === 0) return;
+                const cells = line.split('|').filter(c => c.trim() !== '');
+                const tag = (idx === 0 || lines[idx-1]?.replace(/[\s|:-]/g,'').length === 0) ? 'th' : 'td';
+                tableHtml += '<tr>' + cells.map(c => `<${tag}>${c.trim()}</${tag}>`).join('') + '</tr>';
+            } else {
+                if (inTable) {
+                    tableHtml += '</table>';
+                    output.push(tableHtml);
+                    tableHtml = '';
+                    inTable = false;
+                }
+                output.push(line);
+            }
+        });
+        if (inTable) { tableHtml += '</table>'; output.push(tableHtml); }
+        text = output.join('\n');
+    }
+    // Bullet points
+    text = text.replace(/^[•\-\*]\s+(.+)$/gm, '<li>$1</li>');
+    text = text.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
     // Line breaks
     text = text.replace(/\n/g, '<br>');
     return text;
@@ -391,9 +539,9 @@ function showPulpAILimitScreen() {
     const messages = document.getElementById('pulpai-messages');
     if (!messages) return;
     messages.innerHTML += `<div style="text-align:center;padding:24px 16px;display:flex;flex-direction:column;align-items:center;gap:12px;">
-        <div style="font-size:32px;">🔒</div>
-        <div style="font-size:14px;font-weight:700;color:#fff;">Monthly limit reached</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.4);line-height:1.6;max-width:240px;">You've used all your messages for this month. Your limit resets on the 1st.</div>
+        <i class="bi bi-lock-fill" style="font-size:28px;color:rgba(255,80,80,0.7)"></i>
+        <div style="font-size:15px;font-weight:700;color:#fff;letter-spacing:normal;text-transform:none;">Monthly limit reached</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.4);line-height:1.6;max-width:240px;letter-spacing:normal;text-transform:none;">All 1,000 messages used this month. Resets on the 1st.</div>
     </div>`;
     const input = document.getElementById('pulpai-input');
     const sendBtn = document.getElementById('pulpai-send-btn');
@@ -401,7 +549,7 @@ function showPulpAILimitScreen() {
     if (sendBtn) sendBtn.style.opacity = '0.3';
 }
 
-// ── NAVIGATION ───────────────────────────────────────────────────────────
+// ── NAVIGATION ────────────────────────────────────────────────────────────
 function openPulpAI() {
     loadChats();
     fetchUsage();
@@ -427,14 +575,17 @@ function openChat(chatId) {
     if (titleEl && chat) titleEl.innerText = chat.title;
     renderChatMessages(chatId);
     scrollChatToBottom();
-    // Init chat orb and perimeter glow
     setTimeout(() => {
         const chatOrb = document.getElementById('pulpai-chat-orb');
         if (chatOrb) createAura(chatOrb, 28);
         const glowCanvas = document.getElementById('pulpai-glow-canvas');
-        if (glowCanvas) startPerimeterGlow(glowCanvas, getGlowMode);
+        if (glowCanvas) startPerimeterGlow(glowCanvas);
+        initMic();
     }, 100);
     fetchUsage();
+    // Hide photo popup
+    const popup = document.getElementById('pulpai-photo-popup');
+    if (popup) popup.style.display = 'none';
 }
 
 function newPulpAIChat() {
@@ -450,7 +601,7 @@ function deleteChat(chatId) {
 
 function backToChatList() {
     currentChatId = null;
-    _glowMode = 'idle';
+    isAIThinking = false;
     document.getElementById('pulpai-chat-screen').classList.add('hidden');
     document.getElementById('pulpai-list-screen').classList.remove('hidden');
     renderChatList();
@@ -463,7 +614,6 @@ function closePulpAI() {
     if (menuTrigger) menuTrigger.style.display = '';
 }
 
-// ── TILE AURA INIT ───────────────────────────────────────────────────────
 function initPulpAITile() {
     const tileCanvas = document.getElementById('pulpai-tile-canvas');
     if (tileCanvas) {
@@ -474,7 +624,6 @@ function initPulpAITile() {
     }
 }
 
-// ── ENTER KEY ────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     const input = document.getElementById('pulpai-input');
     if (input) {
@@ -485,5 +634,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+    // Photo file inputs
+    const camInput = document.getElementById('pulpai-camera-input');
+    const galInput = document.getElementById('pulpai-gallery-input');
+    if (camInput) camInput.addEventListener('change', e => handlePhotoSelected(e.target.files[0]));
+    if (galInput) galInput.addEventListener('change', e => handlePhotoSelected(e.target.files[0]));
     setTimeout(initPulpAITile, 300);
 });

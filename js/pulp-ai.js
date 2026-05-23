@@ -332,7 +332,7 @@ async function sendPulpAIMessage() {
         }
         saveChats();
         renderChatMessages(currentChatId);
-        scrollChatToBottom();
+        scrollToLastAIMessage();
 
     } catch(e) {
         if (typingEl) typingEl.style.display = 'none';
@@ -422,7 +422,7 @@ async function handlePhotoSelected(file) {
         if (data.usage) { pulpAIUsage = data.usage; updateUsageBar(); }
         saveChats();
         renderChatMessages(currentChatId);
-        scrollChatToBottom();
+        scrollToLastAIMessage();
     } catch(e) {
         if (typingEl) typingEl.style.display = 'none';
         chat.messages.push({ role: 'assistant', content: 'Could not analyse the image. Please try again.' });
@@ -533,6 +533,18 @@ function formatAIText(text) {
 function scrollChatToBottom() {
     const msgs = document.getElementById('pulpai-messages');
     if (msgs) setTimeout(() => { msgs.scrollTop = msgs.scrollHeight; }, 50);
+}
+
+function scrollToLastAIMessage() {
+    const msgs = document.getElementById('pulpai-messages');
+    if (!msgs) return;
+    setTimeout(() => {
+        const aiMessages = msgs.querySelectorAll('.pulpai-msg-a');
+        if (aiMessages.length > 0) {
+            const last = aiMessages[aiMessages.length - 1];
+            last.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, 80);
 }
 
 function showPulpAILimitScreen() {

@@ -170,36 +170,68 @@ function getChatById(id) {
 // ── USAGE BAR ────────────────────────────────────────────────────────────
 function updateUsageBar() {
     const isAdmin = localStorage.getItem('pulpProAdmin') === 'true';
+
+    // ── List screen bar ──
     const bar = document.getElementById('pulpai-usage-bar');
-    const label = document.getElementById('pulpai-usage-label');
     const count = document.getElementById('pulpai-usage-count');
-    if (!bar) return;
-    let used, limit;
-    if (isAdmin) {
-        used = pulpAIUsage.adminUsed;
-        limit = pulpAIUsage.adminLimit;
-    } else {
-        used = pulpAIUsage.personal;
-        limit = pulpAIUsage.personalLimit;
-    }
-    const pct = Math.min(100, Math.round((used / limit) * 100));
-    const color = pct >= 90 ? '#ff5050' : pct >= 75 ? '#ff8c00' : '#a6e22e';
-    bar.style.width = pct + '%';
-    bar.style.background = color;
-    if (count) count.innerText = used + ' / ' + limit;
-    if (count) count.style.color = color;
-    // Show warning at 75%+
     const warn = document.getElementById('pulpai-limit-warn');
-    if (warn) {
-        if (pct >= 75 && pct < 100) {
-            warn.style.display = 'flex';
-            warn.innerHTML = `<span style="font-size:10px;color:rgba(255,140,0,0.8);">⚡ ${limit - used} messages remaining this month · Resets 1st</span>`;
-        } else if (pct >= 100) {
-            warn.style.display = 'flex';
-            warn.innerHTML = `<span style="font-size:10px;color:rgba(255,80,80,0.9);">🔒 Monthly limit reached · Resets 1st of next month</span>`;
-        } else {
-            warn.style.display = 'none';
+
+    if (isAdmin) {
+        // Admin sees all 3 pools
+        const adminPct = Math.min(100, Math.round((pulpAIUsage.adminUsed / pulpAIUsage.adminLimit) * 100));
+        const poolPct = Math.min(100, Math.round((pulpAIUsage.pool / pulpAIUsage.poolLimit) * 100));
+        const totalUsed = pulpAIUsage.adminUsed + pulpAIUsage.pool;
+        const totalLimit = 5700;
+        const totalPct = Math.min(100, Math.round((totalUsed / totalLimit) * 100));
+
+        if (bar) {
+            bar.style.width = adminPct + '%';
+            bar.style.background = adminPct >= 90 ? '#ff5050' : adminPct >= 75 ? '#ff8c00' : '#a6e22e';
         }
+        if (count) {
+            count.innerHTML = `
+                <div style="display:flex;flex-direction:column;gap:3px;text-align:right;">
+                    <div style="font-size:9px;font-weight:800;color:#a6e22e;">Your pool: ${pulpAIUsage.adminUsed} / ${pulpAIUsage.adminLimit}</div>
+                    <div style="font-size:9px;font-weight:700;color:rgba(166,226,46,0.55);">User pool: ${pulpAIUsage.pool} / ${pulpAIUsage.poolLimit}</div>
+                    <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.3);">Total: ${totalUsed} / ${totalLimit}</div>
+                </div>`;
+        }
+        if (warn) warn.style.display = 'none';
+    } else {
+        // Regular user sees personal bar only
+        const used = pulpAIUsage.personal;
+        const limit = pulpAIUsage.personalLimit;
+        const pct = Math.min(100, Math.round((used / limit) * 100));
+        const color = pct >= 90 ? '#ff5050' : pct >= 75 ? '#ff8c00' : '#a6e22e';
+        if (bar) { bar.style.width = pct + '%'; bar.style.background = color; }
+        if (count) { count.innerText = used + ' / ' + limit; count.style.color = color; }
+        if (warn) {
+            if (pct >= 75 && pct < 100) {
+                warn.style.display = 'flex';
+                warn.innerHTML = `<span style="font-size:10px;color:rgba(255,140,0,0.8);">⚡ ${limit - used} messages remaining this month · Resets 1st</span>`;
+            } else if (pct >= 100) {
+                warn.style.display = 'flex';
+                warn.innerHTML = `<span style="font-size:10px;color:rgba(255,80,80,0.9);">🔒 Monthly limit reached · Resets 1st of next month</span>`;
+            } else {
+                warn.style.display = 'none';
+            }
+        }
+    }
+
+    // ── Chat screen bar ──
+    const barChat = document.getElementById('pulpai-usage-bar-chat');
+    const countChat = document.getElementById('pulpai-usage-count-chat');
+    if (isAdmin) {
+        const adminPct = Math.min(100, Math.round((pulpAIUsage.adminUsed / pulpAIUsage.adminLimit) * 100));
+        if (barChat) { barChat.style.width = adminPct + '%'; barChat.style.background = adminPct >= 90 ? '#ff5050' : adminPct >= 75 ? '#ff8c00' : '#a6e22e'; }
+        if (countChat) { countChat.innerText = `${pulpAIUsage.adminUsed}/${pulpAIUsage.adminLimit} your pool · ${pulpAIUsage.pool}/${pulpAIUsage.poolLimit} shared`; countChat.style.color = '#a6e22e'; countChat.style.fontSize = '9px'; }
+    } else {
+        const used = pulpAIUsage.personal;
+        const limit = pulpAIUsage.personalLimit;
+        const pct = Math.min(100, Math.round((used / limit) * 100));
+        const color = pct >= 90 ? '#ff5050' : pct >= 75 ? '#ff8c00' : '#a6e22e';
+        if (barChat) { barChat.style.width = pct + '%'; barChat.style.background = color; }
+        if (countChat) { countChat.innerText = used + ' / ' + limit; countChat.style.color = color; }
     }
 }
 
@@ -241,9 +273,6 @@ async function sendPulpAIMessage() {
     // Add user message
     const userName = localStorage.getItem('pulpProUserName') || 'there';
     chat.messages.push({ role: 'user', content: text });
-    if (chat.title === 'New conversation' && chat.messages.length === 1) {
-        chat.title = text.length > 40 ? text.slice(0, 40) + '...' : text;
-    }
     saveChats();
     renderChatMessages(currentChatId);
     scrollChatToBottom();
@@ -277,6 +306,12 @@ async function sendPulpAIMessage() {
 
         chat.messages.push({ role: 'assistant', content: data.reply });
         if (data.usage) { pulpAIUsage = data.usage; updateUsageBar(); }
+
+        // Generate smart title from AI response if still default
+        if (chat.title === 'New conversation' || chat.messages.filter(m => m.role === 'assistant').length === 1) {
+            const words = data.reply.replace(/[*#\n]/g, ' ').split(' ').filter(w => w.length > 3);
+            chat.title = words.slice(0, 5).join(' ').slice(0, 45) || chat.title;
+        }
         saveChats();
         renderChatMessages(currentChatId);
         scrollChatToBottom();

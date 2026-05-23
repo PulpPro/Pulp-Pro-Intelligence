@@ -547,6 +547,7 @@ input {
     display: flex !important;
     flex-direction: column !important;
     height: 100% !important;
+    height: 100dvh !important;
     overflow: hidden !important;
 }
 #pulpai-view.hidden { display: none !important; }
@@ -562,6 +563,7 @@ body.pulpai-open #menu-trigger { display: none !important; }
     flex: 1;
     overflow: hidden;
     min-height: 0;
+    height: 0;
 }
 
 /* Chat list scrollable area */

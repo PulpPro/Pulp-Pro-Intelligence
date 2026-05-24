@@ -158,7 +158,10 @@ function saveNewReminder() {
     if (!text) { alert('Please enter a reminder.'); return; }
     if (!date || !time) { alert('Please set a date and time.'); return; }
 
-    const datetime = `${date}T${time}`;
+    // Convert local datetime to UTC ISO string for consistent comparison
+    const localDatetime = new Date(`${date}T${time}`);
+    const datetime = localDatetime.toISOString();
+
     const reminders = loadReminders();
     reminders.push({
         id: 'rem_' + Date.now(),

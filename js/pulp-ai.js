@@ -463,25 +463,29 @@ function renderChatList() {
     const container = document.getElementById('pulpai-chat-list');
     if (!container) return;
     if (pulpAIChats.length === 0) {
-        container.innerHTML = `<div style="text-align:center;padding:32px 20px;font-size:14px;color:rgba(255,255,255,0.25);letter-spacing:normal;text-transform:none;">No chats yet. Start a conversation below.</div>`;
+        container.innerHTML = `<div style="text-align:center;padding:40px 20px;font-size:15px;color:rgba(255,255,255,0.25);letter-spacing:normal;text-transform:none;font-weight:400;">No chats yet.<br>Start a conversation below.</div>`;
         return;
     }
-    container.innerHTML = pulpAIChats.map(c => `
-        <div class="pulpai-chat-item">
-            <div class="pulpai-chat-icon" onclick="openChat('${c.id}')">
+    container.innerHTML = pulpAIChats.map(c => {
+        const preview = c.messages.length > 0
+            ? escapeHtml(c.messages[c.messages.length-1].content).slice(0, 60) + '...'
+            : 'No messages yet';
+        return `<div style="display:flex;align-items:center;gap:12px;padding:16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:16px;margin-bottom:10px;cursor:pointer;" onmouseenter="this.style.borderColor='rgba(166,226,46,0.25)'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.07)'">
+            <div onclick="openChat('${c.id}')" style="width:42px;height:42px;border-radius:13px;background:rgba(166,226,46,0.07);border:1px solid rgba(166,226,46,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:rgba(166,226,46,0.6);font-size:18px;">
                 <i class="bi bi-chat-text"></i>
             </div>
-            <div class="pulpai-chat-info" onclick="openChat('${c.id}')">
-                <div class="pulpai-chat-title">${escapeHtml(c.title)}</div>
-                <div class="pulpai-chat-preview">${c.messages.length > 0 ? escapeHtml(c.messages[c.messages.length-1].content).slice(0,55)+'...' : 'No messages yet'}</div>
+            <div onclick="openChat('${c.id}')" style="flex:1;min-width:0;">
+                <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:normal;text-transform:none;">${escapeHtml(c.title)}</div>
+                <div style="font-size:13px;color:rgba(255,255,255,0.35);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:normal;text-transform:none;">${preview}</div>
             </div>
-            <div class="pulpai-chat-delete" onclick="deleteChat('${c.id}')">
+            <div onclick="deleteChat('${c.id}')" style="width:32px;height:32px;border-radius:9px;background:rgba(255,77,77,0.08);border:1px solid rgba(255,77,77,0.2);display:flex;align-items:center;justify-content:center;font-size:14px;color:rgba(255,77,77,0.6);cursor:pointer;flex-shrink:0;">
                 <i class="bi bi-x"></i>
             </div>
-            <div class="pulpai-chat-arrow" onclick="openChat('${c.id}')">
+            <div onclick="openChat('${c.id}')" style="font-size:18px;color:rgba(255,255,255,0.2);flex-shrink:0;">
                 <i class="bi bi-chevron-right"></i>
             </div>
-        </div>`).join('');
+        </div>`;
+    }).join('');
 }
 
 function escapeHtml(str) {

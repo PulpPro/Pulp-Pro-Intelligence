@@ -530,6 +530,7 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
     text-align: left !important;
     color: #fff !important;
     -webkit-text-fill-color: #fff !important;
+    color-scheme: dark !important;
 }
 #pulpai-fruit-input {
     font-size: 15px !important;
@@ -598,19 +599,30 @@ if ('serviceWorker' in navigator) {
             </div>
         </div>
         <div style="display:flex;gap:10px;margin-bottom:10px;">
-            <div style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px 14px;">
+            <div style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px 14px;position:relative;">
                 <div style="font-size:10px;font-weight:700;color:rgba(136,153,255,0.6);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Date</div>
-                <input id="rem-date-input" type="date" style="width:100%;background:transparent;border:none;font-size:15px;color:#fff;font-family:-apple-system,sans-serif;outline:none;letter-spacing:normal;text-transform:none;font-weight:600;height:auto;line-height:normal;padding:0;-webkit-text-fill-color:#fff;">
+                <input id="rem-date-input" type="date" style="width:100%;background:transparent;border:none;font-size:15px;color:#fff;font-family:-apple-system,sans-serif;outline:none;letter-spacing:normal;text-transform:none;font-weight:600;height:auto;line-height:normal;padding:0;appearance:none;-webkit-appearance:none;color-scheme:dark;">
             </div>
-            <div style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px 14px;">
+            <div style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px 14px;position:relative;">
                 <div style="font-size:10px;font-weight:700;color:rgba(136,153,255,0.6);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Time</div>
-                <input id="rem-time-input" type="time" style="width:100%;background:transparent;border:none;font-size:15px;color:#fff;font-family:-apple-system,sans-serif;outline:none;letter-spacing:normal;text-transform:none;font-weight:600;height:auto;line-height:normal;padding:0;-webkit-text-fill-color:#fff;">
+                <input id="rem-time-input" type="time" style="width:100%;background:transparent;border:none;font-size:15px;color:#fff;font-family:-apple-system,sans-serif;outline:none;letter-spacing:normal;text-transform:none;font-weight:600;height:auto;line-height:normal;padding:0;appearance:none;-webkit-appearance:none;color-scheme:dark;">
             </div>
         </div>
         <button onclick="saveNewReminder()" style="width:100%;background:#8899ff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;color:#000;text-transform:uppercase;letter-spacing:1px;cursor:pointer;font-family:-apple-system,sans-serif;">Set Reminder</button>
     </div>
 </div>
 
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "e89261fc-09af-4baa-8aaa-435bb3054b63",
+      notifyButton: { enable: false },
+      allowLocalhostAsSecureOrigin: true,
+    });
+  });
+</script>
 <script src="js/app.js"></script>
 <script src="js/history.js"></script>
 <script src="js/navigation.js"></script>

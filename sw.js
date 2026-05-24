@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v1.5';
+const CACHE_VERSION = 'v1.6';
 const CACHE_NAME = 'pulp-pro-' + CACHE_VERSION;
 const ASSETS = [
     '/',
@@ -14,6 +14,8 @@ const ASSETS = [
     '/js/history.js',
     '/js/calculator.js',
     '/js/colour-scanner.js',
+    '/js/pulp-ai.js',
+    '/js/reminders.js',
     'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css'
 ];
 
@@ -46,7 +48,6 @@ self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
     const isAPI = url.hostname.includes('pulpprobrain.workers.dev') && url.pathname !== '/';
     if (isAPI && url.pathname.startsWith('/validate') || url.pathname.startsWith('/generate') || url.pathname.startsWith('/admin') || url.pathname.startsWith('/list') || url.pathname.startsWith('/revoke')) return;
-
     event.respondWith(
         caches.match(event.request).then((cached) => {
             if (cached) {
@@ -73,4 +74,55 @@ self.addEventListener('fetch', (event) => {
 
 self.addEventListener('message', (event) => {
     if (event.data === 'skipWaiting') self.skipWaiting();
+});
+
+// ── PUSH NOTIFICATIONS ────────────────────────────────────────────────────
+self.addEventListener('push', (event) => {
+    let data = {};
+    try {
+        data = event.data ? event.data.json() : {};
+    } catch(e) {
+        data = { title: 'Pulp Pro', body: event.data ? event.data.text() : 'You have a reminder.' };
+    }
+
+    const title = data.title || 'Pulp Pro';
+    const options = {
+        body: data.body || 'You have a reminder.',
+        icon: '/edited-image.png',
+        badge: '/edited-image.png',
+        tag: data.tag || 'pulpro-reminder',
+        data: { url: data.url || '/', reminderId: data.reminderId || null },
+        requireInteraction: false,
+        actions: [
+            { action: 'open', title: 'Open' },
+            { action: 'dismiss', title: 'Dismiss' }
+        ]
+    };
+
+    event.waitUntil(
+        self.registration.showNotification(title, options)
+    );
+});
+
+// ── NOTIFICATION CLICK ────────────────────────────────────────────────────
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+
+    if (event.action === 'dismiss') return;
+
+    // Open or focus the app
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+            // If app already open, focus it
+            for (const client of clientList) {
+                if (client.url.includes('pulppro.github.io') || client.url.includes('pulpprobrain.workers.dev')) {
+                    client.focus();
+                    client.postMessage({ type: 'OPEN_REMINDERS' });
+                    return;
+                }
+            }
+            // Otherwise open app
+            return clients.openWindow('/');
+        })
+    );
 });

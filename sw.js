@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2.4';
+const CACHE_VERSION = 'v2.5';
 const CACHE_NAME = 'pulp-pro-' + CACHE_VERSION;
 const ASSETS = [
     '/',
@@ -114,10 +114,9 @@ self.addEventListener('notificationclick', (event) => {
 
     if (event.action === 'dismiss') return;
 
-    // Open or focus the app
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-            // If app already open, focus it
+            // If app already open, focus it and postMessage to open reminders
             for (const client of clientList) {
                 if (client.url.includes('pulppro.github.io') || client.url.includes('pulpprobrain.workers.dev')) {
                     client.focus();
@@ -125,8 +124,8 @@ self.addEventListener('notificationclick', (event) => {
                     return;
                 }
             }
-            // Otherwise open app
-            return clients.openWindow('/');
+            // App not open — open with ?open=reminders param so app.js can handle it
+            return clients.openWindow('/?open=reminders');
         })
     );
 });

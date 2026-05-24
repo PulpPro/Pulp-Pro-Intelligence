@@ -6,6 +6,17 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+// Listen for OPEN_REMINDERS postMessage from SW (app already open when notification tapped)
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'OPEN_REMINDERS') {
+            if (typeof openReminders === 'function') {
+                openReminders();
+            }
+        }
+    });
+}
+
 // Global State
 let scanHistory = JSON.parse(localStorage.getItem('pulpProHistory')) || [];
 let activeFruit = '';
@@ -17,6 +28,20 @@ window.addEventListener('load', () => {
     setTimeout(() => {
         document.body.classList.add('loaded');
     }, 1200);
+
+    // Check for ?open=reminders param (app opened fresh from notification tap)
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('open') === 'reminders') {
+        // Wait for app to finish initialising before navigating
+        setTimeout(() => {
+            if (typeof openReminders === 'function') {
+                openReminders();
+            }
+        }, 1500);
+        // Clean the URL param without reloading
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, '', cleanUrl);
+    }
 });
 
 // Theme Toggle

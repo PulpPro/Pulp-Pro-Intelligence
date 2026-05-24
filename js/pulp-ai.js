@@ -417,7 +417,7 @@ async function handlePhotoSelected(file) {
         });
         const data = await res.json();
         if (typingEl) typingEl.style.display = 'none';
-        const reply = data.reply || 'Could not analyse the image.';
+        const reply = data.error ? `Could not analyse the image. ${data.detail || ''}`.trim() : (data.reply || 'Could not analyse the image.');
         chat.messages.push({ role: 'assistant', content: reply });
         if (data.usage) { pulpAIUsage = data.usage; updateUsageBar(); }
         saveChats();
@@ -434,8 +434,27 @@ async function handlePhotoSelected(file) {
 
 function fileToBase64(file) {
     return new Promise((resolve, reject) => {
+        const img = new Image();
         const reader = new FileReader();
-        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onload = (e) => {
+            img.onload = () => {
+                // Resize to max 1024px on longest side
+                const MAX = 1024;
+                let w = img.width, h = img.height;
+                if (w > MAX || h > MAX) {
+                    if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+                    else { w = Math.round(w * MAX / h); h = MAX; }
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = w; canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+                const base64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
+                resolve(base64);
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+        };
         reader.onerror = reject;
         reader.readAsDataURL(file);
     });

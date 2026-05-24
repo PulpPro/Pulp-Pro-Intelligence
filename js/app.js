@@ -10,7 +10,11 @@ if ('serviceWorker' in navigator) {
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('message', (event) => {
         if (event.data && event.data.type === 'OPEN_REMINDERS') {
-            if (typeof openReminders === 'function') {
+            const reminderId = event.data.reminderId || null;
+            if (reminderId && typeof openEditReminder === 'function') {
+                openReminders();
+                setTimeout(() => openEditReminder(reminderId), 150);
+            } else if (typeof openReminders === 'function') {
                 openReminders();
             }
         }
@@ -32,15 +36,17 @@ window.addEventListener('load', () => {
     // Check for ?open=reminders param (app opened fresh from notification tap)
     const params = new URLSearchParams(window.location.search);
     if (params.get('open') === 'reminders') {
-        // Wait for app to finish initialising before navigating
+        const reminderId = params.get('reminderId') || null;
         setTimeout(() => {
-            if (typeof openReminders === 'function') {
+            if (reminderId && typeof openEditReminder === 'function') {
+                openReminders();
+                setTimeout(() => openEditReminder(reminderId), 150);
+            } else if (typeof openReminders === 'function') {
                 openReminders();
             }
         }, 1500);
-        // Clean the URL param without reloading
-        const cleanUrl = window.location.pathname;
-        window.history.replaceState({}, '', cleanUrl);
+        // Clean the URL params without reloading
+        window.history.replaceState({}, '', window.location.pathname);
     }
 });
 

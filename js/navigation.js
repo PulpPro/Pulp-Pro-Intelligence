@@ -367,6 +367,10 @@ function showHub() {
     document.getElementById('colour-scanner-view').classList.add('hidden');
     const pulpaiView = document.getElementById('pulpai-view');
     if (pulpaiView) pulpaiView.classList.add('hidden');
+    const remView = document.getElementById('reminders-view');
+    if (remView) remView.classList.add('hidden');
+    const menuTrigger = document.getElementById('menu-trigger');
+    if (menuTrigger) menuTrigger.style.display = '';
 }
 
 function openAgeChecker() {

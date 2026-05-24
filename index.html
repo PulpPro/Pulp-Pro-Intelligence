@@ -612,17 +612,6 @@ if ('serviceWorker' in navigator) {
     </div>
 </div>
 
-<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "e89261fc-09af-4baa-8aaa-435bb3054b63",
-      notifyButton: { enable: false },
-      allowLocalhostAsSecureOrigin: true,
-    });
-  });
-</script>
 <script src="js/app.js"></script>
 <script src="js/history.js"></script>
 <script src="js/navigation.js"></script>

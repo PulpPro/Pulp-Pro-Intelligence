@@ -386,7 +386,7 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 <div id="pulpai-view" class="nav-view hidden" style="padding:0;display:flex;flex-direction:column;height:100%;position:relative;">
 
     <!-- LIST SCREEN -->
-    <div id="pulpai-list-screen" style="display:flex;flex-direction:column;height:100%;">
+    <div id="pulpai-list-screen" style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;">
         <!-- Header -->
         <div style="padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.05);background:#060606;display:flex;align-items:center;gap:10px;flex-shrink:0;">
             <div style="position:relative;width:42px;height:42px;flex-shrink:0;">
@@ -402,18 +402,18 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
         <!-- Usage bar -->
         <div style="padding:9px 16px;border-bottom:1px solid rgba(255,255,255,0.04);background:#060606;flex-shrink:0;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
-                <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px;">Monthly messages</div>
+                <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px;">Daily messages</div>
                 <div id="pulpai-usage-count" style="font-size:10px;font-weight:800;color:#a6e22e;">0 / 1,000</div>
             </div>
             <div style="height:3px;background:rgba(255,255,255,0.05);border-radius:100px;overflow:hidden;">
                 <div id="pulpai-usage-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#78c830,#a6e22e);border-radius:100px;transition:width 0.5s,background 0.3s;"></div>
             </div>
-            <div style="font-size:9px;color:rgba(255,255,255,0.18);margin-top:4px;text-align:right;">Resets 1st of each month · Shared across all users</div>
+            <div style="font-size:9px;color:rgba(255,255,255,0.18);margin-top:4px;text-align:right;">Resets midnight UTC · Shared across all users</div>
         </div>
         <!-- Warning bar -->
         <div id="pulpai-limit-warn" style="display:none;padding:8px 16px;background:rgba(255,140,0,0.06);border-bottom:1px solid rgba(255,140,0,0.12);justify-content:center;flex-shrink:0;"></div>
         <!-- Chat list — fills remaining space -->
-        <div id="pulpai-chat-list" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0;padding:14px 16px;"></div>
+        <div id="pulpai-chat-list" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0;padding:14px 16px;background:transparent;"></div>
         <!-- Quick input — sticks to bottom -->
         <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,0.05);background:#060606;flex-shrink:0;">
             <div onclick="newPulpAIChat()" style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:100px;padding:12px 18px;cursor:pointer;">
@@ -441,8 +441,8 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
         <!-- Usage bar -->
         <div style="padding:5px 14px;border-bottom:1px solid rgba(255,255,255,0.04);background:rgba(5,5,5,0.97);position:relative;z-index:10;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
-                <div style="font-size:7px;font-weight:700;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:1px;">Monthly</div>
-                <div id="pulpai-usage-count-chat" style="font-size:7px;font-weight:800;color:#a6e22e;">— / 500</div>
+                <div style="font-size:7px;font-weight:700;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:1px;">Daily</div>
+                <div id="pulpai-usage-count-chat" style="font-size:7px;font-weight:800;color:#a6e22e;">— / 1000</div>
             </div>
             <div style="height:2px;background:rgba(255,255,255,0.05);border-radius:100px;overflow:hidden;">
                 <div id="pulpai-usage-bar-chat" style="height:100%;width:0%;background:linear-gradient(90deg,#78c830,#a6e22e);border-radius:100px;transition:width 0.5s;"></div>

@@ -288,12 +288,17 @@ async function sendPulpAIMessage() {
 
         // Send current device datetime so AI can use it for reminders
         const now = new Date();
+        const offsetMinutes = now.getTimezoneOffset(); // negative for UTC+ zones
+        const offsetHours = -(offsetMinutes / 60);
+        const offsetStr = `UTC${offsetHours >= 0 ? '+' : ''}${offsetHours}`;
         const clientDatetime = now.toLocaleString('en-GB', {
             weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
             hour: '2-digit', minute: '2-digit', hour12: false,
             timeZoneName: 'short'
         });
-        const clientDatetimeISO = now.toISOString();
+        // Local ISO string (not UTC) so AI knows the actual local time
+        const pad = n => String(n).padStart(2, '0');
+        const clientDatetimeISO = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
         const res = await fetch(WORKER_URL + '/pulp-ai', {
             method: 'POST',
@@ -355,7 +360,17 @@ function saveReminderFromAI(data) {
         reminders.push({
             id: 'rem_' + Date.now(),
             text: data.text,
-            datetime: new Date(data.datetime).toISOString(),
+            datetime: (() => {
+                const dt = data.datetime || '';
+                // If AI returned datetime without timezone (e.g. "2026-05-28T09:00"), treat as local time
+                if (dt && !dt.includes('Z') && !dt.includes('+') && !dt.match(/[-+]\d{2}:\d{2}$/)) {
+                    const [datePart, timePart] = dt.split('T');
+                    const [y, mo, d] = datePart.split('-').map(Number);
+                    const [h, m] = (timePart || '00:00').split(':').map(Number);
+                    return new Date(y, mo - 1, d, h, m).toISOString();
+                }
+                return new Date(dt).toISOString();
+            })(),
             source: 'ai',
             done: false,
             createdAt: new Date().toISOString()

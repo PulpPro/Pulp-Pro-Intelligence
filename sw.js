@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2.2';
+const CACHE_VERSION = 'v2.3';
 const CACHE_NAME = 'pulp-pro-' + CACHE_VERSION;
 const ASSETS = [
     '/',
@@ -78,29 +78,33 @@ self.addEventListener('message', (event) => {
 
 // ── PUSH NOTIFICATIONS ────────────────────────────────────────────────────
 self.addEventListener('push', (event) => {
-    let data = {};
-    try {
-        data = event.data ? event.data.json() : {};
-    } catch(e) {
-        try {
-            const text = event.data ? event.data.text() : '';
-            data = { title: 'Pulp Pro', body: text || 'You have a reminder.' };
-        } catch(e2) {
-            data = { title: 'Pulp Pro', body: 'You have a reminder.' };
-        }
-    }
-
-    const title = data.title || 'Pulp Pro Reminder';
-    const options = {
-        body: data.body || 'You have a reminder due now.',
-        icon: '/edited-image.png',
-        badge: '/edited-image.png',
-        tag: 'pulpro-reminder',
-        requireInteraction: true,
-    };
-
     event.waitUntil(
-        self.registration.showNotification(title, options)
+        fetch('https://pulppro-access.pulpprobrain.workers.dev/latest-reminder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ secret: 'pulpro2024' })
+        })
+        .then(r => r.json())
+        .then(data => {
+            const title = 'Pulp Pro Reminder';
+            const body = data.text || 'You have a reminder due now.';
+            return self.registration.showNotification(title, {
+                body,
+                icon: '/edited-image.png',
+                badge: '/edited-image.png',
+                tag: 'pulpro-reminder',
+                requireInteraction: true,
+            });
+        })
+        .catch(() => {
+            return self.registration.showNotification('Pulp Pro Reminder', {
+                body: 'You have a reminder due now.',
+                icon: '/edited-image.png',
+                badge: '/edited-image.png',
+                tag: 'pulpro-reminder',
+                requireInteraction: true,
+            });
+        })
     );
 });
 

@@ -94,6 +94,7 @@ self.addEventListener('push', (event) => {
                 badge: '/edited-image.png',
                 tag: 'pulpro-reminder',
                 requireInteraction: true,
+                data: { reminderId: data.id || null }
             });
         })
         .catch(() => {
@@ -103,6 +104,7 @@ self.addEventListener('push', (event) => {
                 badge: '/edited-image.png',
                 tag: 'pulpro-reminder',
                 requireInteraction: true,
+                data: { reminderId: null }
             });
         })
     );
@@ -114,18 +116,21 @@ self.addEventListener('notificationclick', (event) => {
 
     if (event.action === 'dismiss') return;
 
+    const reminderId = event.notification.data?.reminderId || null;
+
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-            // If app already open, focus it and postMessage to open reminders
+            // If app already open, focus it and postMessage to open the specific reminder
             for (const client of clientList) {
                 if (client.url.includes('pulppro.github.io') || client.url.includes('pulpprobrain.workers.dev')) {
                     client.focus();
-                    client.postMessage({ type: 'OPEN_REMINDERS' });
+                    client.postMessage({ type: 'OPEN_REMINDERS', reminderId });
                     return;
                 }
             }
-            // App not open — open with ?open=reminders param so app.js can handle it
-            return clients.openWindow('/?open=reminders');
+            // App not open — open with params so app.js can handle it
+            const param = reminderId ? `?open=reminders&reminderId=${reminderId}` : '?open=reminders';
+            return clients.openWindow(param);
         })
     );
 });

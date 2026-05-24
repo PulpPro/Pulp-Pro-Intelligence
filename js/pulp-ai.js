@@ -63,7 +63,7 @@ function createAura(canvas, size) {
     draw();
 }
 
-// ── PERIMETER GLOW — Change 8: constant always-on ────────────────────────
+// ── PERIMETER GLOW ────────────────────────────────────────────────────────
 function startPerimeterGlow(canvas) {
     const parent = canvas.parentElement;
     function resize() {
@@ -77,7 +77,6 @@ function startPerimeterGlow(canvas) {
         const W = canvas.width, H = canvas.height;
         const t = (Date.now()-start)*0.001;
         ctx.clearRect(0,0,W,H);
-        // Always-on corner glow — constant breathing
         const isThinking = isAIThinking;
         const baseIntensity = isThinking ? 0.28 : 0.13;
         const speed = isThinking ? 2.5 : 0.5;
@@ -89,25 +88,21 @@ function startPerimeterGlow(canvas) {
             g.addColorStop(1,'rgba(166,226,46,0)');
             ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
         });
-        // Left edge
         const lp = (isThinking ? 0.18 : 0.07) + Math.sin(t*(isThinking?1.8:0.6))*0.04;
         const lg = ctx.createLinearGradient(0,0,55,0);
         lg.addColorStop(0,`rgba(166,226,46,${lp})`);
         lg.addColorStop(1,'rgba(166,226,46,0)');
         ctx.fillStyle=lg; ctx.fillRect(0,0,55,H);
-        // Right edge
         const rg = ctx.createLinearGradient(W-55,0,W,0);
         rg.addColorStop(0,'rgba(166,226,46,0)');
         rg.addColorStop(1,`rgba(166,226,46,${lp})`);
         ctx.fillStyle=rg; ctx.fillRect(W-55,0,55,H);
-        // Bottom bloom
         const bp = (isThinking ? 0.22 : 0.09) + Math.sin(t*(isThinking?3:0.4))*0.04;
         const bsweep = isThinking ? (Math.sin(t*2.2)+1)/2 : 0.5;
         const bg = ctx.createRadialGradient(W*(0.3+bsweep*0.4),H,0,W*(0.3+bsweep*0.4),H,170);
         bg.addColorStop(0,`rgba(166,226,46,${bp})`);
         bg.addColorStop(1,'rgba(166,226,46,0)');
         ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
-        // Thinking: top sweep
         if (isThinking) {
             const sweep = (Math.sin(t*1.8)+1)/2;
             const tg = ctx.createLinearGradient(0,0,W,0);
@@ -148,7 +143,7 @@ function newChat() {
 }
 function getChatById(id) { return pulpAIChats.find(c => c.id === id); }
 
-// ── USAGE BAR — Change 6: single shared pool ─────────────────────────────
+// ── USAGE BAR ─────────────────────────────────────────────────────────────
 function updateUsageBar() {
     const used = pulpAIUsage.used || 0;
     const limit = pulpAIUsage.limit || 1000;
@@ -191,7 +186,7 @@ async function fetchUsage() {
     } catch(e) {}
 }
 
-// ── MIC — Change 11: Android only ────────────────────────────────────────
+// ── MIC ───────────────────────────────────────────────────────────────────
 function initMic() {
     const isAndroid = /Android/i.test(navigator.userAgent);
     const micBtn = document.getElementById('pulpai-mic-btn');
@@ -241,13 +236,11 @@ function toggleMic() {
     }
 }
 
-// ── VOCAB CORRECTIONS — Change 19 ────────────────────────────────────────
+// ── VOCAB CORRECTIONS ─────────────────────────────────────────────────────
 function applyVocabCorrections(text) {
     const corrections = {
-        // Cel corrections — Dutch/English
         '\\bsell\\b': 'cel', '\\bcell\\b': 'cel', '\\bsale\\b': 'cel', '\\bsel\\b': 'cel',
         '\\bselle\\b': 'cel', '\\bcelle\\b': 'cel',
-        // Fruit terms
         '\\bfusearium\\b': 'Fusarium', '\\bfusareum\\b': 'Fusarium', '\\bfuzarium\\b': 'Fusarium',
         '\\betheline\\b': 'ethylene', '\\bethiline\\b': 'ethylene', '\\bethyleen\\b': 'ethyleen',
         '\\bcheckita\\b': 'Chiquita', '\\bchiquetta\\b': 'Chiquita', '\\bshikita\\b': 'Chiquita',
@@ -260,7 +253,6 @@ function applyVocabCorrections(text) {
     Object.entries(corrections).forEach(([pattern, replacement]) => {
         result = result.replace(new RegExp(pattern, 'gi'), replacement);
     });
-    // Fix cel + number pattern: "cel 8", "cell 8", "sell 8"
     result = result.replace(/\b(?:sell|cell|sale|sel|selle|celle)\s*(\d+)/gi, 'cel $1');
     return result;
 }
@@ -293,13 +285,25 @@ async function sendPulpAIMessage() {
     try {
         const code = localStorage.getItem('pulpProAccessCode') || '';
         const isAdmin = localStorage.getItem('pulpProAdmin') === 'true';
+
+        // Send current device datetime so AI can use it for reminders
+        const now = new Date();
+        const clientDatetime = now.toLocaleString('en-GB', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+            hour: '2-digit', minute: '2-digit', hour12: false,
+            timeZoneName: 'short'
+        });
+        const clientDatetimeISO = now.toISOString();
+
         const res = await fetch(WORKER_URL + '/pulp-ai', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 messages: chat.messages.map(m => ({ role: m.role, content: m.content })),
                 userCode: code,
-                isAdmin
+                isAdmin,
+                clientDatetime,
+                clientDatetimeISO
             })
         });
         const data = await res.json();
@@ -351,7 +355,7 @@ function saveReminderFromAI(data) {
         reminders.push({
             id: 'rem_' + Date.now(),
             text: data.text,
-            datetime: data.datetime,
+            datetime: new Date(data.datetime).toISOString(),
             source: 'ai',
             done: false,
             createdAt: new Date().toISOString()
@@ -360,7 +364,7 @@ function saveReminderFromAI(data) {
     } catch(e) {}
 }
 
-// ── PHOTO ANALYSIS — Change 10 ────────────────────────────────────────────
+// ── PHOTO ANALYSIS ────────────────────────────────────────────────────────
 function togglePhotoPopup() {
     const popup = document.getElementById('pulpai-photo-popup');
     if (!popup) return;
@@ -438,7 +442,6 @@ function fileToBase64(file) {
         const reader = new FileReader();
         reader.onload = (e) => {
             img.onload = () => {
-                // Resize to max 1024px on longest side
                 const MAX = 1024;
                 let w = img.width, h = img.height;
                 if (w > MAX || h > MAX) {
@@ -511,11 +514,8 @@ function escapeHtml(str) {
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ── Change 9: rich text formatting ────────────────────────────────────────
 function formatAIText(text) {
-    // Bold **text**
     text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    // Markdown table
     if (text.includes('|')) {
         const lines = text.split('\n');
         let inTable = false;
@@ -527,7 +527,6 @@ function formatAIText(text) {
                     inTable = true;
                     tableHtml = '<table class="pulpai-table">';
                 }
-                // Skip separator rows
                 if (line.replace(/[\s|:-]/g,'').length === 0) return;
                 const cells = line.split('|').filter(c => c.trim() !== '');
                 const tag = (idx === 0 || lines[idx-1]?.replace(/[\s|:-]/g,'').length === 0) ? 'th' : 'td';
@@ -545,10 +544,8 @@ function formatAIText(text) {
         if (inTable) { tableHtml += '</table>'; output.push(tableHtml); }
         text = output.join('\n');
     }
-    // Bullet points
     text = text.replace(/^[•\-\*]\s+(.+)$/gm, '<li>$1</li>');
     text = text.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
-    // Line breaks
     text = text.replace(/\n/g, '<br>');
     return text;
 }
@@ -618,7 +615,6 @@ function openChat(chatId) {
         initMic();
     }, 100);
     fetchUsage();
-    // Hide photo popup
     const popup = document.getElementById('pulpai-photo-popup');
     if (popup) popup.style.display = 'none';
 }
@@ -669,7 +665,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    // Photo file inputs
     const camInput = document.getElementById('pulpai-camera-input');
     const galInput = document.getElementById('pulpai-gallery-input');
     if (camInput) camInput.addEventListener('change', e => handlePhotoSelected(e.target.files[0]));

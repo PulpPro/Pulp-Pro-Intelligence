@@ -52,10 +52,12 @@ function openReminders() {
     const menuTrigger = document.getElementById('menu-trigger');
     if (menuTrigger) menuTrigger.style.display = 'none';
     renderRemindersList();
-    // Request push permission via OneSignal when user opens reminders
+    // Request push permission when user opens reminders
     setTimeout(() => {
-        if (window.OneSignal) {
-            OneSignal.Notifications.requestPermission();
+        if (typeof requestPushPermission === 'function') {
+            if (Notification.permission === 'default') {
+                requestPushPermission();
+            }
         }
     }, 500);
 }

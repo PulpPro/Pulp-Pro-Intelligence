@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2.1';
+const CACHE_VERSION = 'v2.2';
 const CACHE_NAME = 'pulp-pro-' + CACHE_VERSION;
 const ASSETS = [
     '/',
@@ -82,21 +82,21 @@ self.addEventListener('push', (event) => {
     try {
         data = event.data ? event.data.json() : {};
     } catch(e) {
-        data = { title: 'Pulp Pro', body: event.data ? event.data.text() : 'You have a reminder.' };
+        try {
+            const text = event.data ? event.data.text() : '';
+            data = { title: 'Pulp Pro', body: text || 'You have a reminder.' };
+        } catch(e2) {
+            data = { title: 'Pulp Pro', body: 'You have a reminder.' };
+        }
     }
 
-    const title = data.title || 'Pulp Pro';
+    const title = data.title || 'Pulp Pro Reminder';
     const options = {
-        body: data.body || 'You have a reminder.',
+        body: data.body || 'You have a reminder due now.',
         icon: '/edited-image.png',
         badge: '/edited-image.png',
-        tag: data.tag || 'pulpro-reminder',
-        data: { url: data.url || '/', reminderId: data.reminderId || null },
-        requireInteraction: false,
-        actions: [
-            { action: 'open', title: 'Open' },
-            { action: 'dismiss', title: 'Dismiss' }
-        ]
+        tag: 'pulpro-reminder',
+        requireInteraction: true,
     };
 
     event.waitUntil(

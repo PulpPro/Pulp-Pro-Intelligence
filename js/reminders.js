@@ -69,6 +69,11 @@ function closeReminders() {
     if (menuTrigger) menuTrigger.style.display = '';
 }
 
+function scrollToNewReminder() {
+    const input = document.getElementById('rem-text-input');
+    if (input) { input.scrollIntoView({ behavior: 'smooth' }); input.focus(); }
+}
+
 // ── RENDER LIST ───────────────────────────────────────────────────────────
 function renderRemindersList() {
     const reminders = loadReminders();
@@ -80,6 +85,10 @@ function renderRemindersList() {
     const container = document.getElementById('reminders-list');
     if (!container) return;
 
+    // Update header subtitle with upcoming count
+    const subEl = document.getElementById('reminders-header-sub');
+    if (subEl) subEl.textContent = upcoming.length === 1 ? '1 upcoming' : upcoming.length > 0 ? `${upcoming.length} upcoming` : 'No upcoming';
+
     let html = '';
 
     if (upcoming.length === 0 && overdue.length === 0) {
@@ -88,12 +97,12 @@ function renderRemindersList() {
 
     if (overdue.length > 0) {
         html += `<div style="font-size:9px;font-weight:700;color:rgba(255,80,80,0.6);text-transform:uppercase;letter-spacing:2px;padding:4px 2px;margin-bottom:6px;">Overdue</div>`;
-        overdue.forEach(r => { html += renderReminderCard(r, true); });
+        overdue.forEach(r => { html += renderReminderCard(r, true, false); });
     }
 
     if (upcoming.length > 0) {
         html += `<div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:2px;padding:4px 2px;margin-bottom:6px;${overdue.length > 0 ? 'margin-top:12px;' : ''}">Upcoming</div>`;
-        upcoming.forEach(r => { html += renderReminderCard(r, false); });
+        upcoming.forEach(r => { html += renderReminderCard(r, false, false); });
     }
 
     if (done.length > 0) {
@@ -108,24 +117,31 @@ function renderReminderCard(r, overdue, done) {
     const dt = new Date(r.datetime);
     const dateStr = dt.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' });
     const timeStr = dt.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
-    const dotColor = done ? '#555' : overdue ? '#ff5050' : r.source === 'ai' ? '#8899ff' : '#a6e22e';
-    const borderColor = done ? 'rgba(255,255,255,0.04)' : overdue ? 'rgba(255,80,80,0.15)' : 'rgba(255,255,255,0.06)';
-    const bgColor = done ? 'rgba(255,255,255,0.01)' : overdue ? 'rgba(255,80,80,0.03)' : 'rgba(255,255,255,0.03)';
+    const dotColor = done ? '#444' : overdue ? '#ff5050' : r.source === 'ai' ? '#8899ff' : '#a6e22e';
+    const borderColor = done ? 'rgba(255,255,255,0.06)' : overdue ? 'rgba(255,80,80,0.2)' : 'rgba(136,153,255,0.25)';
+    const bgColor = done ? 'rgba(255,255,255,0.02)' : overdue ? 'rgba(255,80,80,0.04)' : 'rgba(136,153,255,0.05)';
     const tagHtml = r.source === 'ai'
-        ? `<span style="font-size:8px;font-weight:700;padding:2px 7px;border-radius:100px;background:rgba(136,153,255,0.1);color:#8899ff;border:1px solid rgba(136,153,255,0.2);text-transform:uppercase;letter-spacing:0.5px;">Via Pulp AI</span>`
-        : `<span style="font-size:8px;font-weight:700;padding:2px 7px;border-radius:100px;background:rgba(166,226,46,0.08);color:#a6e22e;border:1px solid rgba(166,226,46,0.2);text-transform:uppercase;letter-spacing:0.5px;">Manual</span>`;
+        ? `<span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(136,153,255,0.12);color:#8899ff;border:1px solid rgba(136,153,255,0.2);text-transform:uppercase;letter-spacing:0.5px;">Via Pulp AI</span>`
+        : `<span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(166,226,46,0.08);color:#a6e22e;border:1px solid rgba(166,226,46,0.18);text-transform:uppercase;letter-spacing:0.5px;">Manual</span>`;
 
-    return `<div style="display:flex;align-items:center;gap:10px;padding:12px 13px;background:${bgColor};border:1px solid ${borderColor};border-radius:14px;margin-bottom:8px;${done ? 'opacity:0.45;' : ''}">
-        <div style="width:10px;height:10px;border-radius:50%;background:${dotColor};flex-shrink:0;"></div>
-        <div style="flex:1;min-width:0;">
-            <div style="font-size:13px;font-weight:700;color:${done ? 'rgba(255,255,255,0.4)' : '#fff'};margin-bottom:3px;letter-spacing:normal;text-transform:none;${done ? 'text-decoration:line-through;' : ''}">${escapeHtmlRem(r.text)}</div>
-            <div style="font-size:11px;color:rgba(255,255,255,0.3);display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-                <i class="bi bi-clock" style="font-size:10px;"></i> ${dateStr} · ${timeStr}
-                ${tagHtml}
-            </div>
+    const actionsHtml = !done ? `
+        <div style="display:flex;gap:6px;padding-left:21px;margin-top:10px;">
+            <div onclick="openEditReminder('${r.id}')" style="flex:1;padding:8px 10px;border-radius:9px;font-size:11px;font-weight:700;text-align:center;cursor:pointer;background:rgba(136,153,255,0.1);color:#8899ff;border:1px solid rgba(136,153,255,0.2);letter-spacing:0.3px;"><i class="bi bi-pencil" style="font-size:10px;margin-right:3px;"></i>Edit</div>
+            <div onclick="markReminderDone('${r.id}')" style="flex:1;padding:8px 10px;border-radius:9px;font-size:11px;font-weight:700;text-align:center;cursor:pointer;background:rgba(166,226,46,0.08);color:#a6e22e;border:1px solid rgba(166,226,46,0.18);letter-spacing:0.3px;"><i class="bi bi-check-lg" style="font-size:10px;margin-right:3px;"></i>Done</div>
+            <div onclick="deleteReminder('${r.id}')" style="padding:8px 12px;border-radius:9px;font-size:11px;cursor:pointer;background:rgba(255,77,77,0.07);color:rgba(255,77,77,0.6);border:1px solid rgba(255,77,77,0.15);"><i class="bi bi-trash" style="font-size:11px;"></i></div>
+        </div>` : '';
+
+    return `<div style="background:${bgColor};border:1px solid ${borderColor};border-radius:16px;padding:14px 15px;margin-bottom:8px;${done ? 'opacity:0.4;' : ''}">
+        <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;">
+            <div style="width:11px;height:11px;border-radius:50%;background:${dotColor};flex-shrink:0;margin-top:3px;"></div>
+            <div style="font-size:14px;font-weight:700;color:${done ? 'rgba(255,255,255,0.4)' : '#fff'};line-height:1.3;flex:1;letter-spacing:normal;text-transform:none;${done ? 'text-decoration:line-through;' : ''}">${escapeHtmlRem(r.text)}</div>
+            ${!done ? `<div style="font-size:14px;color:rgba(255,255,255,0.2);flex-shrink:0;margin-top:2px;"><i class="bi bi-chevron-right"></i></div>` : ''}
         </div>
-        ${!done ? `<div onclick="markReminderDone('${r.id}')" style="width:26px;height:26px;border-radius:8px;background:rgba(166,226,46,0.07);border:1px solid rgba(166,226,46,0.15);display:flex;align-items:center;justify-content:center;font-size:12px;color:rgba(166,226,46,0.5);cursor:pointer;flex-shrink:0;"><i class="bi bi-check-lg"></i></div>` : ''}
-        <div onclick="deleteReminder('${r.id}')" style="width:26px;height:26px;border-radius:8px;background:rgba(255,77,77,0.07);border:1px solid rgba(255,77,77,0.15);display:flex;align-items:center;justify-content:center;font-size:12px;color:rgba(255,77,77,0.5);cursor:pointer;flex-shrink:0;"><i class="bi bi-trash"></i></div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-left:21px;">
+            <div style="font-size:12px;color:rgba(255,255,255,0.35);display:flex;align-items:center;gap:4px;"><i class="bi bi-clock" style="font-size:11px;"></i> ${dateStr} · ${timeStr}</div>
+            ${tagHtml}
+        </div>
+        ${actionsHtml}
     </div>`;
 }
 
@@ -145,6 +161,106 @@ function markReminderDone(id) {
 function deleteReminder(id) {
     const reminders = loadReminders().filter(r => r.id !== id);
     saveRemindersLocal(reminders);
+    renderRemindersList();
+    renderReminderTilePreview();
+}
+
+// ── EDIT REMINDER ─────────────────────────────────────────────────────────
+function openEditReminder(id) {
+    const reminders = loadReminders();
+    const r = reminders.find(r => r.id === id);
+    if (!r) return;
+
+    const dt = new Date(r.datetime);
+    const dateVal = dt.toISOString().slice(0, 10);
+    const timeVal = dt.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+
+    const isOverdue = !r.done && dt < new Date();
+    const statusLabel = r.done ? 'Completed' : isOverdue ? 'Overdue' : 'Upcoming';
+    const statusColor = r.done ? 'rgba(255,255,255,0.4)' : isOverdue ? '#ff5050' : '#a6e22e';
+    const statusBg = r.done ? 'rgba(255,255,255,0.06)' : isOverdue ? 'rgba(255,80,80,0.1)' : 'rgba(166,226,46,0.08)';
+    const statusBorder = r.done ? 'rgba(255,255,255,0.1)' : isOverdue ? 'rgba(255,80,80,0.2)' : 'rgba(166,226,46,0.18)';
+
+    const sourceHtml = r.source === 'ai'
+        ? `<span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:100px;background:rgba(136,153,255,0.1);color:#8899ff;border:1px solid rgba(136,153,255,0.2);">Via Pulp AI</span>`
+        : `<span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:100px;background:rgba(166,226,46,0.08);color:#a6e22e;border:1px solid rgba(166,226,46,0.18);">Manual</span>`;
+
+    const panel = document.getElementById('reminders-edit-panel');
+    if (!panel) return;
+
+    panel.innerHTML = `
+        <div style="padding:13px 16px;display:flex;align-items:center;gap:10px;background:#07070f;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;">
+            <div onclick="closeEditReminder()" style="width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:14px;color:rgba(255,255,255,0.5);cursor:pointer;flex-shrink:0;"><i class="bi bi-arrow-left"></i></div>
+            <div style="flex:1;">
+                <div style="font-size:16px;font-weight:800;color:#fff;">Edit Reminder</div>
+                <div style="font-size:10px;color:rgba(136,153,255,0.6);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:1px;">Tap any field to change</div>
+            </div>
+        </div>
+        <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;display:flex;flex-direction:column;gap:12px;">
+            <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px;">
+                <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;">Reminder text</div>
+                <textarea id="edit-rem-text" rows="3" style="width:100%;background:transparent;border:none;font-size:15px;color:#fff;outline:none;font-weight:500;line-height:1.5;resize:none;font-family:-apple-system,sans-serif;letter-spacing:normal;text-transform:none;">${escapeHtmlRem(r.text)}</textarea>
+            </div>
+            <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px;">
+                <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;">Schedule</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+                    <div style="font-size:13px;color:rgba(255,255,255,0.5);"><i class="bi bi-calendar3" style="font-size:14px;margin-right:6px;vertical-align:-2px;"></i>Date</div>
+                    <input id="edit-rem-date" type="date" value="${dateVal}" style="background:transparent;border:none;font-size:13px;font-weight:600;color:#fff;outline:none;font-family:-apple-system,sans-serif;color-scheme:dark;">
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0 0;">
+                    <div style="font-size:13px;color:rgba(255,255,255,0.5);"><i class="bi bi-clock" style="font-size:14px;margin-right:6px;vertical-align:-2px;"></i>Time</div>
+                    <input id="edit-rem-time" type="time" value="${timeVal}" style="background:transparent;border:none;font-size:13px;font-weight:600;color:#fff;outline:none;font-family:-apple-system,sans-serif;color-scheme:dark;">
+                </div>
+            </div>
+            <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px;">
+                <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;">Details</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+                    <div style="font-size:13px;color:rgba(255,255,255,0.5);">Source</div>
+                    ${sourceHtml}
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0 0;">
+                    <div style="font-size:13px;color:rgba(255,255,255,0.5);">Status</div>
+                    <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:100px;background:${statusBg};color:${statusColor};border:1px solid ${statusBorder};">${statusLabel}</span>
+                </div>
+            </div>
+        </div>
+        <button onclick="saveEditReminder('${r.id}')" style="margin:0 16px 12px;background:#8899ff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;color:#000;text-transform:uppercase;letter-spacing:1px;cursor:pointer;font-family:-apple-system,sans-serif;flex-shrink:0;">Save Changes</button>
+        <button onclick="deleteReminderFromEdit('${r.id}')" style="margin:0 16px 20px;background:rgba(255,77,77,0.08);border:1px solid rgba(255,77,77,0.2);border-radius:12px;padding:13px;font-size:13px;font-weight:700;color:rgba(255,77,77,0.7);text-transform:uppercase;letter-spacing:1px;cursor:pointer;font-family:-apple-system,sans-serif;flex-shrink:0;"><i class="bi bi-trash" style="font-size:13px;margin-right:5px;"></i>Delete reminder</button>
+    `;
+
+    panel.style.display = 'flex';
+}
+
+function closeEditReminder() {
+    const panel = document.getElementById('reminders-edit-panel');
+    if (panel) panel.style.display = 'none';
+}
+
+function saveEditReminder(id) {
+    const text = document.getElementById('edit-rem-text').value.trim();
+    const date = document.getElementById('edit-rem-date').value;
+    const time = document.getElementById('edit-rem-time').value;
+
+    if (!text) { alert('Please enter a reminder.'); return; }
+    if (!date || !time) { alert('Please set a date and time.'); return; }
+
+    const reminders = loadReminders();
+    const r = reminders.find(r => r.id === id);
+    if (!r) return;
+
+    r.text = text;
+    r.datetime = new Date(`${date}T${time}`).toISOString();
+
+    saveRemindersLocal(reminders);
+    closeEditReminder();
+    renderRemindersList();
+    renderReminderTilePreview();
+}
+
+function deleteReminderFromEdit(id) {
+    const reminders = loadReminders().filter(r => r.id !== id);
+    saveRemindersLocal(reminders);
+    closeEditReminder();
     renderRemindersList();
     renderReminderTilePreview();
 }

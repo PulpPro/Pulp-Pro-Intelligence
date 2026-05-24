@@ -11,6 +11,19 @@ function saveRemindersLocal(reminders) {
     try {
         localStorage.setItem(REMINDERS_KEY, JSON.stringify(reminders));
     } catch(e) {}
+    // Sync to KV for push notification cron
+    syncRemindersToKV(reminders);
+}
+
+async function syncRemindersToKV(reminders) {
+    try {
+        const userCode = localStorage.getItem('pulpProAccessCode') || 'admin';
+        await fetch('https://pulppro-access.pulpprobrain.workers.dev/reminders-sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userCode, reminders })
+        });
+    } catch(e) {}
 }
 
 // Called from Pulp AI when AI sets a reminder

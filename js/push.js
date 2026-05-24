@@ -1,24 +1,44 @@
-// ── PUSH NOTIFICATIONS via OneSignal ─────────────────────────────────────
-const ONESIGNAL_APP_ID = 'e89261fc-09af-4baa-8aaa-435bb3054b63';
+// ── PUSH NOTIFICATIONS — Native Web Push ─────────────────────────────────
+const VAPID_PUBLIC_KEY = 'BFXr3Hu8BG9kcn2v_S-wO7QzlK1jn8rMsSxkKyJUWGRa4TpbBeNxFy_nJQDkiOBKVZLGQwVKN1od2xjUvT0RW4k';
 
-// Get OneSignal subscription ID and save to KV
-async function saveOneSignalSubscription() {
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = atob(base64);
+    return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+}
+
+async function requestPushPermission() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return false;
     try {
-        if (!window.OneSignal) return;
-        const playerId = await OneSignal.User.PushSubscription.id;
-        if (!playerId) return;
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') return false;
+        const reg = await navigator.serviceWorker.ready;
+        const existing = await reg.pushManager.getSubscription();
+        if (existing) { await savePushSubscription(existing); return true; }
+        const subscription = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+        });
+        await savePushSubscription(subscription);
+        return true;
+    } catch(e) {
+        console.error('Push error:', e);
+        return false;
+    }
+}
+
+async function savePushSubscription(subscription) {
+    try {
         const userCode = localStorage.getItem('pulpProAccessCode') || 'admin';
         await fetch('https://pulppro-access.pulpprobrain.workers.dev/push-subscribe', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ oneSignalPlayerId: playerId, userCode })
+            body: JSON.stringify({ subscription: subscription.toJSON(), userCode })
         });
-    } catch(e) {
-        console.error('Failed to save OneSignal subscription:', e);
-    }
+    } catch(e) {}
 }
 
-// Listen for messages from service worker
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('message', (event) => {
         if (event.data && event.data.type === 'OPEN_REMINDERS') {
@@ -29,13 +49,8 @@ if ('serviceWorker' in navigator) {
 
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
-        if (window.OneSignalDeferred) {
-            OneSignalDeferred.push(async function(OneSignal) {
-                // Save player ID when subscription changes
-                OneSignal.User.PushSubscription.addEventListener('change', saveOneSignalSubscription);
-                // Save on load if already subscribed
-                await saveOneSignalSubscription();
-            });
+        if (Notification.permission === 'granted') {
+            requestPushPermission();
         }
     }, 2000);
 });

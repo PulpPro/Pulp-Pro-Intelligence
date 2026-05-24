@@ -288,15 +288,13 @@ async function sendPulpAIMessage() {
 
         // Send current device datetime so AI can use it for reminders
         const now = new Date();
-        const offsetMinutes = now.getTimezoneOffset(); // negative for UTC+ zones
+        const offsetMinutes = now.getTimezoneOffset();
         const offsetHours = -(offsetMinutes / 60);
-        const offsetStr = `UTC${offsetHours >= 0 ? '+' : ''}${offsetHours}`;
         const clientDatetime = now.toLocaleString('en-GB', {
             weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
             hour: '2-digit', minute: '2-digit', hour12: false,
             timeZoneName: 'short'
         });
-        // Local ISO string (not UTC) so AI knows the actual local time
         const pad = n => String(n).padStart(2, '0');
         const clientDatetimeISO = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
@@ -334,7 +332,6 @@ async function sendPulpAIMessage() {
         chat.messages.push({ role: 'assistant', content: reply });
         if (data.usage) { pulpAIUsage = data.usage; updateUsageBar(); }
 
-        // Smart title from first AI response
         if (chat.title === 'New conversation' && chat.messages.filter(m => m.role === 'assistant').length === 1) {
             const words = reply.replace(/[*#\n<>]/g, ' ').split(' ').filter(w => w.length > 3);
             chat.title = words.slice(0, 5).join(' ').slice(0, 45) || 'New conversation';
@@ -360,17 +357,7 @@ function saveReminderFromAI(data) {
         reminders.push({
             id: 'rem_' + Date.now(),
             text: data.text,
-            datetime: (() => {
-                const dt = data.datetime || '';
-                // If AI returned datetime without timezone (e.g. "2026-05-28T09:00"), treat as local time
-                if (dt && !dt.includes('Z') && !dt.includes('+') && !dt.match(/[-+]\d{2}:\d{2}$/)) {
-                    const [datePart, timePart] = dt.split('T');
-                    const [y, mo, d] = datePart.split('-').map(Number);
-                    const [h, m] = (timePart || '00:00').split(':').map(Number);
-                    return new Date(y, mo - 1, d, h, m).toISOString();
-                }
-                return new Date(dt).toISOString();
-            })(),
+            datetime: new Date(data.datetime).toISOString(),
             source: 'ai',
             done: false,
             createdAt: new Date().toISOString()

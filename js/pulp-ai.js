@@ -171,7 +171,7 @@ function updateUsageBar() {
             warn.innerHTML = `<span style="font-size:10px;color:rgba(255,80,80,0.9);">Monthly limit almost reached · ${limit - used} messages left</span>`;
         } else if (pct >= 75) {
             warn.style.display = 'flex';
-            warn.innerHTML = `<span style="font-size:10px;color:rgba(255,140,0,0.8);">${limit - used} messages remaining this month · Resets 1st</span>`;
+            warn.innerHTML = `<span style="font-size:10px;color:rgba(255,140,0,0.8);">${limit - used} messages remaining today · Resets midnight UTC</span>`;
         } else {
             warn.style.display = 'none';
         }
@@ -553,7 +553,7 @@ function showPulpAILimitScreen() {
     messages.innerHTML += `<div style="text-align:center;padding:24px 16px;display:flex;flex-direction:column;align-items:center;gap:12px;">
         <i class="bi bi-lock-fill" style="font-size:28px;color:rgba(255,80,80,0.7)"></i>
         <div style="font-size:15px;font-weight:700;color:#fff;letter-spacing:normal;text-transform:none;">Monthly limit reached</div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.4);line-height:1.6;max-width:240px;letter-spacing:normal;text-transform:none;">All 1,000 messages used this month. Resets on the 1st.</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.4);line-height:1.6;max-width:240px;letter-spacing:normal;text-transform:none;">All 1,000 messages used today. Resets at midnight UTC.</div>
     </div>`;
     const input = document.getElementById('pulpai-input');
     const sendBtn = document.getElementById('pulpai-send-btn');

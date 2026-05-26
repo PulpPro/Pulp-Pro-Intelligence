@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v9';
+const CACHE_VERSION = 'v10';
 const CACHE_NAME = 'pulp-pro-' + CACHE_VERSION;
 const ASSETS = [
     '/',
@@ -78,32 +78,39 @@ self.addEventListener('message', (event) => {
 
 // ── PUSH NOTIFICATIONS ────────────────────────────────────────────────────
 self.addEventListener('push', (event) => {
+    // Show notification immediately — required on iOS where delayed showNotification fails
     event.waitUntil(
-        fetch('https://pulppro-access.pulpprobrain.workers.dev/latest-reminder', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ secret: 'pulpro2024' })
-        })
-        .then(r => r.json())
-        .then(data => {
-            return self.registration.showNotification('Pulp Pro Reminder', {
-                body: data.text || 'You have a reminder due now.',
-                icon: '/edited-image.png',
-                badge: '/edited-image.png',
-                tag: 'pulpro-reminder',
-                requireInteraction: true,
-                data: { reminderId: data.id || null, usercode: data.usercode || null }
-            });
-        })
-        .catch(() => {
-            return self.registration.showNotification('Pulp Pro Reminder', {
-                body: 'You have a reminder due now.',
-                icon: '/edited-image.png',
-                badge: '/edited-image.png',
-                tag: 'pulpro-reminder',
-                requireInteraction: true,
-                data: { reminderId: null, usercode: null }
-            });
+        self.registration.showNotification('Pulp Pro Reminder', {
+            body: 'You have a reminder due now.',
+            icon: '/edited-image.png',
+            badge: '/edited-image.png',
+            tag: 'pulpro-reminder',
+            requireInteraction: true,
+            data: { reminderId: null, usercode: null }
+        }).then(() => {
+            // After showing, fetch actual text and replace
+            return fetch('https://pulppro-access.pulpprobrain.workers.dev/latest-reminder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ secret: 'pulpro2024' })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (!data.text || data.text === 'You have a reminder due now.') return;
+                return self.registration.getNotifications({ tag: 'pulpro-reminder' })
+                    .then(notifications => {
+                        notifications.forEach(n => n.close());
+                        return self.registration.showNotification('Pulp Pro Reminder', {
+                            body: data.text,
+                            icon: '/edited-image.png',
+                            badge: '/edited-image.png',
+                            tag: 'pulpro-reminder',
+                            requireInteraction: true,
+                            data: { reminderId: data.id || null, usercode: data.usercode || null }
+                        });
+                    });
+            })
+            .catch(() => {});
         })
     );
 });

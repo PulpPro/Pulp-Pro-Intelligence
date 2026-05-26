@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v6';
 const CACHE_NAME = 'pulp-pro-' + CACHE_VERSION;
 const ASSETS = [
     '/',
@@ -127,7 +127,7 @@ self.addEventListener('notificationclick', (event) => {
                 }
             }
             // App not open — open index.html directly, not base URL
-            const base = 'https://pulppro.github.io/Pulp-Pro-Intelligence/index.html';
+            const base = 'https://pulppro.github.io/Pulp-Pro-Intelligence/';
             const param = reminderId ? `?open=reminders&reminderId=${reminderId}` : '?open=reminders';
             return clients.openWindow(base + param);
         })

@@ -28,10 +28,15 @@ async function syncRemindersToKV(reminders) {
 // Called from Pulp AI when AI sets a reminder
 function saveReminderFromAI(data) {
     const reminders = loadReminders();
+    const dt = data.datetime || '';
+    const [datePart, timePart] = dt.split('T');
+    const [y, mo, d] = datePart.split('-').map(Number);
+    const [h, m] = (timePart || '00:00').split(':').map(Number);
+    const datetime = new Date(y, mo - 1, d, h, m).toISOString();
     reminders.push({
         id: 'rem_' + Date.now(),
         text: data.text,
-        datetime: data.datetime,
+        datetime,
         source: 'ai',
         done: false,
         createdAt: new Date().toISOString()

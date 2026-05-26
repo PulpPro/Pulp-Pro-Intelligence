@@ -28,14 +28,10 @@ async function syncRemindersToKV(reminders) {
 // Called from Pulp AI when AI sets a reminder
 function saveReminderFromAI(data) {
     const reminders = loadReminders();
-    const dt = data.datetime || '';
-    const d = new Date(dt.length === 16 ? dt + ':00Z' : dt);
-    const offsetMs = new Date().getTimezoneOffset() * 60000;
-    const datetime = new Date(d.getTime() - offsetMs).toISOString();
     reminders.push({
         id: 'rem_' + Date.now(),
         text: data.text,
-        datetime,
+        datetime: data.datetime,
         source: 'ai',
         done: false,
         createdAt: new Date().toISOString()
@@ -394,7 +390,7 @@ function renderReminderTilePreview() {
     }).join('');
 }
 
-// ── TILE MIC (Android quick mic on tile) ──────────────────────────────────
+// ── TILE MIC ──────────────────────────────────────────────────────────────
 function initTileMic() {
     const isAndroid = /Android/i.test(navigator.userAgent);
     const tileMicBtn = document.getElementById('rem-tile-mic-btn');

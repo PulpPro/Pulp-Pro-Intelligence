@@ -33,8 +33,19 @@ window.addEventListener('load', () => {
         document.body.classList.add('loaded');
     }, 1200);
 
-    // Check for ?open=reminders param (app opened fresh from notification tap)
     const params = new URLSearchParams(window.location.search);
+
+    // If ?code= param present, restore session before checkAccess runs
+    const codeParam = params.get('code');
+    if (codeParam) {
+        const existingCode = localStorage.getItem('pulpProAccessCode');
+        const existingAdmin = localStorage.getItem('pulpProAdmin');
+        if (!existingCode && !existingAdmin) {
+            localStorage.setItem('pulpProAccessCode', codeParam.toUpperCase());
+        }
+    }
+
+    // Check for ?open=reminders param (app opened fresh from notification tap)
     if (params.get('open') === 'reminders') {
         const reminderId = params.get('reminderId') || null;
         setTimeout(() => {

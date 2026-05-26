@@ -11,10 +11,8 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('message', (event) => {
         if (event.data && event.data.type === 'OPEN_REMINDERS') {
             const reminderId = event.data.reminderId || null;
-            if (reminderId && typeof showReminderSheet === 'function') {
+            if (typeof showReminderSheet === 'function') {
                 showReminderSheet(reminderId);
-            } else if (typeof showReminderSheet === 'function') {
-                showReminderSheet(null);
             }
         }
     });
@@ -34,25 +32,26 @@ window.addEventListener('load', () => {
 
     const params = new URLSearchParams(window.location.search);
 
-    // If ?code= param present, restore session before checkAccess runs
+    // Restore session from notification tap URL params
     const codeParam = params.get('code');
-    if (codeParam) {
-        const existingCode = localStorage.getItem('pulpProAccessCode');
-        const existingAdmin = localStorage.getItem('pulpProAdmin');
-        if (!existingCode && !existingAdmin) {
-            localStorage.setItem('pulpProAccessCode', codeParam.toUpperCase());
-        }
+    const adminParam = params.get('admin');
+    if (adminParam === 'true' && !localStorage.getItem('pulpProAdmin') && !localStorage.getItem('pulpProAccessCode')) {
+        localStorage.setItem('pulpProAdmin', 'true');
+    } else if (codeParam && !localStorage.getItem('pulpProAccessCode') && !localStorage.getItem('pulpProAdmin')) {
+        localStorage.setItem('pulpProAccessCode', codeParam.toUpperCase());
     }
 
-    // Check for ?open=reminders param (app opened fresh from notification tap)
+    // Check for ?open=reminders param — show sheet as soon as app is ready
     if (params.get('open') === 'reminders') {
         const reminderId = params.get('reminderId') || null;
+        // Clean URL immediately
+        window.history.replaceState({}, '', window.location.pathname);
+        // Show sheet after app initialises — 800ms is enough for checkAccess + render
         setTimeout(() => {
             if (typeof showReminderSheet === 'function') {
                 showReminderSheet(reminderId);
             }
-        }, 1500);
-        window.history.replaceState({}, '', window.location.pathname);
+        }, 800);
     }
 });
 

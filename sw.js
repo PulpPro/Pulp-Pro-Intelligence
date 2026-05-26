@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v10';
+const CACHE_VERSION = 'v11';
 const CACHE_NAME = 'pulp-pro-' + CACHE_VERSION;
 const ASSETS = [
     '/',
@@ -78,39 +78,32 @@ self.addEventListener('message', (event) => {
 
 // ── PUSH NOTIFICATIONS ────────────────────────────────────────────────────
 self.addEventListener('push', (event) => {
-    // Show notification immediately — required on iOS where delayed showNotification fails
     event.waitUntil(
-        self.registration.showNotification('Pulp Pro Reminder', {
-            body: 'You have a reminder due now.',
-            icon: '/edited-image.png',
-            badge: '/edited-image.png',
-            tag: 'pulpro-reminder',
-            requireInteraction: true,
-            data: { reminderId: null, usercode: null }
-        }).then(() => {
-            // After showing, fetch actual text and replace
-            return fetch('https://pulppro-access.pulpprobrain.workers.dev/latest-reminder', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ secret: 'pulpro2024' })
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (!data.text || data.text === 'You have a reminder due now.') return;
-                return self.registration.getNotifications({ tag: 'pulpro-reminder' })
-                    .then(notifications => {
-                        notifications.forEach(n => n.close());
-                        return self.registration.showNotification('Pulp Pro Reminder', {
-                            body: data.text,
-                            icon: '/edited-image.png',
-                            badge: '/edited-image.png',
-                            tag: 'pulpro-reminder',
-                            requireInteraction: true,
-                            data: { reminderId: data.id || null, usercode: data.usercode || null }
-                        });
-                    });
-            })
-            .catch(() => {});
+        fetch('https://pulppro-access.pulpprobrain.workers.dev/latest-reminder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ secret: 'pulpro2024' })
+        })
+        .then(r => r.json())
+        .then(data => {
+            return self.registration.showNotification('Pulp Pro Reminder', {
+                body: data.text || 'You have a reminder due now.',
+                icon: '/edited-image.png',
+                badge: '/edited-image.png',
+                tag: 'pulpro-reminder',
+                requireInteraction: true,
+                data: { reminderId: data.id || null, usercode: data.usercode || null }
+            });
+        })
+        .catch(() => {
+            return self.registration.showNotification('Pulp Pro Reminder', {
+                body: 'You have a reminder due now.',
+                icon: '/edited-image.png',
+                badge: '/edited-image.png',
+                tag: 'pulpro-reminder',
+                requireInteraction: true,
+                data: { reminderId: null, usercode: null }
+            });
         })
     );
 });
@@ -125,15 +118,14 @@ self.addEventListener('notificationclick', (event) => {
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-            // Focus any existing window and postMessage — don't filter by URL
-            // iOS PWA URL may vary, filtering causes it to fall through to openWindow
+            // Focus existing PWA window and show reminder sheet
             if (clientList.length > 0) {
                 const client = clientList[0];
                 client.focus();
                 client.postMessage({ type: 'OPEN_REMINDERS', reminderId });
                 return;
             }
-            // No app open — open with params so app.js can handle it
+            // App fully closed — open it with params (iOS will open Safari but that's unavoidable)
             const base = 'https://pulppro.github.io/Pulp-Pro-Intelligence/';
             const uc = event.notification.data?.usercode || null;
             let param = '?open=reminders';

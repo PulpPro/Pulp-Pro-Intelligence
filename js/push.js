@@ -30,13 +30,22 @@ async function requestPushPermission() {
 
 async function savePushSubscription(subscription) {
     try {
-        const userCode = localStorage.getItem('pulpProAccessCode') || 'admin';
+        // FIX: Remove the hardcoded 'admin' fallback so normal users don't override the admin's routing.
+        const userCode = localStorage.getItem('pulpProAccessCode');
+        
+        if (!userCode) {
+            console.warn('Push subscription paused: No active user access code found in localStorage.');
+            return;
+        }
+
         await fetch('https://pulppro-access.pulpprobrain.workers.dev/push-subscribe', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ subscription: subscription.toJSON(), userCode })
         });
-    } catch(e) {}
+    } catch(e) {
+        console.error('Failed to sync subscription with backend:', e);
+    }
 }
 
 if ('serviceWorker' in navigator) {

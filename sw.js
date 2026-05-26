@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v6';
+const CACHE_VERSION = 'v7';
 const CACHE_NAME = 'pulp-pro-' + CACHE_VERSION;
 const ASSETS = [
     '/',
@@ -92,7 +92,7 @@ self.addEventListener('push', (event) => {
                 badge: '/edited-image.png',
                 tag: 'pulpro-reminder',
                 requireInteraction: true,
-                data: { reminderId: data.id || null }
+                data: { reminderId: data.id || null, usercode: data.usercode || null }
             });
         })
         .catch(() => {
@@ -102,7 +102,7 @@ self.addEventListener('push', (event) => {
                 badge: '/edited-image.png',
                 tag: 'pulpro-reminder',
                 requireInteraction: true,
-                data: { reminderId: null }
+                data: { reminderId: null, usercode: null }
             });
         })
     );
@@ -128,7 +128,10 @@ self.addEventListener('notificationclick', (event) => {
             }
             // App not open — open index.html directly, not base URL
             const base = 'https://pulppro.github.io/Pulp-Pro-Intelligence/';
-            const param = reminderId ? `?open=reminders&reminderId=${reminderId}` : '?open=reminders';
+            const uc = event.notification.data?.usercode || null;
+            let param = '?open=reminders';
+            if (reminderId) param += `&reminderId=${reminderId}`;
+            if (uc) param += `&code=${uc}`;
             return clients.openWindow(base + param);
         })
     );

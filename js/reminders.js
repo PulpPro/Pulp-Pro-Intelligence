@@ -417,6 +417,79 @@ function triggerTileMic() {
     }, 400);
 }
 
+
+// ── REMINDER NOTIFICATION SHEET ───────────────────────────────────────────
+let _sheetReminderId = null;
+
+function showReminderSheet(reminderId) {
+    const reminders = loadReminders();
+    let r = reminderId ? reminders.find(r => r.id === reminderId) : null;
+    if (!r) {
+        // Fall back to most recent overdue or upcoming
+        const now = new Date();
+        const overdue = reminders.filter(x => !x.done && new Date(x.datetime) < now);
+        const upcoming = reminders.filter(x => !x.done && new Date(x.datetime) >= now);
+        r = overdue.sort((a,b) => new Date(b.datetime)-new Date(a.datetime))[0]
+            || upcoming.sort((a,b) => new Date(a.datetime)-new Date(b.datetime))[0];
+    }
+    if (!r) return;
+    _sheetReminderId = r.id;
+
+    const dt = new Date(r.datetime);
+    const dateStr = dt.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' });
+    const timeStr = dt.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+    const sourceStr = r.source === 'ai' ? ' · Via Pulp AI' : ' · Manual';
+
+    document.getElementById('reminder-sheet-text').textContent = r.text;
+    document.getElementById('reminder-sheet-meta').innerHTML = '<i class="bi bi-clock" style="font-size:10px;margin-right:3px;"></i>' + dateStr + ' · ' + timeStr + sourceStr;
+
+    const overlay = document.getElementById('reminder-sheet-overlay');
+    const sheet = document.getElementById('reminder-sheet');
+    overlay.style.display = 'flex';
+    setTimeout(() => { sheet.style.transform = 'translateY(0)'; }, 10);
+}
+
+function hideReminderSheet() {
+    const sheet = document.getElementById('reminder-sheet');
+    const overlay = document.getElementById('reminder-sheet-overlay');
+    sheet.style.transform = 'translateY(100%)';
+    setTimeout(() => { overlay.style.display = 'none'; }, 300);
+    _sheetReminderId = null;
+}
+
+function reminderSheetDone() {
+    if (!_sheetReminderId) return;
+    markReminderDone(_sheetReminderId);
+    hideReminderSheet();
+}
+
+function reminderSheetDismiss() {
+    hideReminderSheet();
+}
+
+function reminderSheetEdit() {
+    if (!_sheetReminderId) return;
+    const id = _sheetReminderId;
+    hideReminderSheet();
+    setTimeout(() => {
+        openReminders();
+        setTimeout(() => openEditReminder(id), 150);
+    }, 320);
+}
+
+function reminderSheetSnooze(minutes) {
+    if (!_sheetReminderId) return;
+    const reminders = loadReminders();
+    const r = reminders.find(r => r.id === _sheetReminderId);
+    if (!r) return;
+    const newTime = new Date(new Date().getTime() + minutes * 60000);
+    r.datetime = newTime.toISOString();
+    r.notified = false;
+    saveRemindersLocal(reminders);
+    renderReminderTilePreview();
+    hideReminderSheet();
+}
+
 // ── INIT ──────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     renderReminderTilePreview();

@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v9';
 const CACHE_NAME = 'pulp-pro-' + CACHE_VERSION;
 const ASSETS = [
     '/',
@@ -118,15 +118,15 @@ self.addEventListener('notificationclick', (event) => {
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-            // If app already open, focus it and postMessage
-            for (const client of clientList) {
-                if (client.url.includes('pulppro.github.io') || client.url.includes('pulpprobrain.workers.dev')) {
-                    client.focus();
-                    client.postMessage({ type: 'OPEN_REMINDERS', reminderId });
-                    return;
-                }
+            // Focus any existing window and postMessage — don't filter by URL
+            // iOS PWA URL may vary, filtering causes it to fall through to openWindow
+            if (clientList.length > 0) {
+                const client = clientList[0];
+                client.focus();
+                client.postMessage({ type: 'OPEN_REMINDERS', reminderId });
+                return;
             }
-            // App not open — open index.html directly, not base URL
+            // No app open — open with params so app.js can handle it
             const base = 'https://pulppro.github.io/Pulp-Pro-Intelligence/';
             const uc = event.notification.data?.usercode || null;
             let param = '?open=reminders';

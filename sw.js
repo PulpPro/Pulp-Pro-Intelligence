@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v7';
+const CACHE_VERSION = 'v8';
 const CACHE_NAME = 'pulp-pro-' + CACHE_VERSION;
 const ASSETS = [
     '/',
@@ -131,7 +131,8 @@ self.addEventListener('notificationclick', (event) => {
             const uc = event.notification.data?.usercode || null;
             let param = '?open=reminders';
             if (reminderId) param += `&reminderId=${reminderId}`;
-            if (uc) param += `&code=${uc}`;
+            if (uc === '__admin__') param += '&admin=true';
+            else if (uc) param += `&code=${uc}`;
             return clients.openWindow(base + param);
         })
     );

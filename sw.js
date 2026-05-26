@@ -78,31 +78,26 @@ self.addEventListener('message', (event) => {
 
 // ── PUSH NOTIFICATIONS ────────────────────────────────────────────────────
 self.addEventListener('push', (event) => {
-    let payload = null;
+    let textMessage = 'You have a reminder due now.';
+    let reminderId = null;
+    let usercode = null;
     
-    // FIX: Try to parse data sent directly inside the VAPID push payload from your Cloudflare worker.
-    // This removes the blind HTTP fetch entirely if data is provided.
-    try {
-        if (event.data) {
-            payload = event.data.json();
+    // Parse incoming server-driven VAPID payload data safely
+    if (event.data) {
+        try {
+            const payload = event.data.json();
+            textMessage = payload.text || payload.body || textMessage;
+            reminderId = payload.id || payload.reminderId || null;
+            usercode = payload.usercode || null;
+        } catch (e) {
+            // Fallback for raw text payloads
+            const rawText = event.data.text();
+            if (rawText) textMessage = rawText;
         }
-    } catch (e) {
-        console.warn('Failed to parse push event data directly:', e);
     }
 
-    if (payload) {
-        event.waitUntil(
-            self.registration.showNotification('Pulp Pro Reminder', {
-                body: payload.text || 'You have a reminder due now.',
-                icon: '/edited-image.png',
-                badge: '/edited-image.png',
-                tag: 'pulpro-reminder',
-                requireInteraction: true,
-                data: { reminderId: payload.id || null, usercode: payload.usercode || null }
-            })
-        );
-    } else {
-        // Fallback to the original method if no direct payload was passed via VAPID
+    // If no direct data was supplied, request the fallback endpoint
+    if (!event.data) {
         event.waitUntil(
             fetch('https://pulppro-access.pulpprobrain.workers.dev/latest-reminder', {
                 method: 'POST',
@@ -129,6 +124,18 @@ self.addEventListener('push', (event) => {
                     requireInteraction: true,
                     data: { reminderId: null, usercode: null }
                 });
+            })
+        );
+    } else {
+        // Execute instant presentation using native device OS notification threads
+        event.waitUntil(
+            self.registration.showNotification('Pulp Pro Reminder', {
+                body: textMessage,
+                icon: '/edited-image.png',
+                badge: '/edited-image.png',
+                tag: 'pulpro-reminder',
+                requireInteraction: true,
+                data: { reminderId, usercode }
             })
         );
     }

@@ -1,6 +1,3 @@
-Here is the full file with all of your code preserved exactly as it is, maintaining all functionality, styling, logic, and formatting.
-
-```javascript
 // ── REMINDERS ────────────────────────────────────────────────────────────
 const REMINDERS_KEY = 'pulpai_reminders';
 
@@ -507,5 +504,3 @@ document.addEventListener('DOMContentLoaded', () => {
         observer.observe(view, { attributes: true, attributeFilter: ['class'] });
     }
 });
-
-```

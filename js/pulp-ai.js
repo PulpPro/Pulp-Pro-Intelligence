@@ -357,7 +357,12 @@ function saveReminderFromAI(data) {
         reminders.push({
             id: 'rem_' + Date.now(),
             text: data.text,
-            datetime: (() => { const dt = data.datetime || ''; if (dt.length === 16) { const [d, t] = dt.split('T'); const [y,mo,da] = d.split('-').map(Number); const [h,m] = t.split(':').map(Number); return new Date(y, mo-1, da, h, m).toISOString(); } return new Date(dt).toISOString(); })(),
+            datetime: (() => {
+                const dt = data.datetime || '';
+                const d = new Date(dt.length === 16 ? dt + ':00Z' : dt);
+                const offsetMs = new Date().getTimezoneOffset() * 60000;
+                return new Date(d.getTime() - offsetMs).toISOString();
+            })(),
             source: 'ai',
             done: false,
             createdAt: new Date().toISOString()

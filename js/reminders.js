@@ -32,7 +32,10 @@ function saveReminderFromAI(data) {
     const [datePart, timePart] = dt.split('T');
     const [y, mo, d] = datePart.split('-').map(Number);
     const [h, m] = (timePart || '00:00').split(':').map(Number);
+    
+    // FIX: Construct the Date using local variables, then output to clean ISO string
     const datetime = new Date(y, mo - 1, d, h, m).toISOString();
+    
     reminders.push({
         id: 'rem_' + Date.now(),
         text: data.text,
@@ -251,8 +254,20 @@ function saveEditReminder(id) {
     if (!r) return;
 
     r.text = text;
-    r.datetime = new Date(`${date}T${time}`).toISOString();
+    
+    // FIX: Parse as local time components, then convert to unified ISO string
+    const parts = date.split('-');
+    const timeParts = time.split(':');
+    r.datetime = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), Number(timeParts[0]), Number(timeParts[1])).toISOString();
 
+    saveRemindersLocal(reminders);
+    closeEditReminder();
+    renderRemindersList();
+    renderReminderTilePreview();
+}
+
+function deleteReminderFromEdit(id) {
+    const reminders = loadReminders().filter(r => r.id !== id);
     saveRemindersLocal(reminders);
     closeEditReminder();
     renderRemindersList();
@@ -268,7 +283,10 @@ function saveNewReminder() {
     if (!text) { alert('Please enter a reminder.'); return; }
     if (!date || !time) { alert('Please set a date and time.'); return; }
 
-    const localDatetime = new Date(`${date}T${time}`);
+    // FIX: Explicitly parse input strings to avoid browser timezone assumption drops
+    const parts = date.split('-');
+    const timeParts = time.split(':');
+    const localDatetime = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), Number(timeParts[0]), Number(timeParts[1]));
     const datetime = localDatetime.toISOString();
 
     const reminders = loadReminders();

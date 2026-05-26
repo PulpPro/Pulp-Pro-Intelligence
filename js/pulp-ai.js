@@ -357,7 +357,7 @@ function saveReminderFromAI(data) {
         reminders.push({
             id: 'rem_' + Date.now(),
             text: data.text,
-            datetime: new Date(data.datetime).toISOString(),
+            datetime: (() => { const dt = data.datetime || ''; if (dt.length === 16) { const [d, t] = dt.split('T'); const [y,mo,da] = d.split('-').map(Number); const [h,m] = t.split(':').map(Number); return new Date(y, mo-1, da, h, m).toISOString(); } return new Date(dt).toISOString(); })(),
             source: 'ai',
             done: false,
             createdAt: new Date().toISOString()

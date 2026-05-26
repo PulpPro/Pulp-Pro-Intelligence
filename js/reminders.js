@@ -11,7 +11,6 @@ function saveRemindersLocal(reminders) {
     try {
         localStorage.setItem(REMINDERS_KEY, JSON.stringify(reminders));
     } catch(e) {}
-    // Sync to KV for push notification cron
     syncRemindersToKV(reminders);
 }
 
@@ -29,10 +28,14 @@ async function syncRemindersToKV(reminders) {
 // Called from Pulp AI when AI sets a reminder
 function saveReminderFromAI(data) {
     const reminders = loadReminders();
+    const dt = data.datetime || '';
+    const d = new Date(dt.length === 16 ? dt + ':00Z' : dt);
+    const offsetMs = new Date().getTimezoneOffset() * 60000;
+    const datetime = new Date(d.getTime() - offsetMs).toISOString();
     reminders.push({
         id: 'rem_' + Date.now(),
         text: data.text,
-        datetime: data.datetime,
+        datetime,
         source: 'ai',
         done: false,
         createdAt: new Date().toISOString()
@@ -52,7 +55,6 @@ function openReminders() {
     const menuTrigger = document.getElementById('menu-trigger');
     if (menuTrigger) menuTrigger.style.display = 'none';
     renderRemindersList();
-    // Request push permission when user opens reminders
     setTimeout(() => {
         if (typeof requestPushPermission === 'function') {
             if (Notification.permission === 'default') {
@@ -85,7 +87,6 @@ function renderRemindersList() {
     const container = document.getElementById('reminders-list');
     if (!container) return;
 
-    // Update header subtitle with upcoming count
     const subEl = document.getElementById('reminders-header-sub');
     if (subEl) subEl.textContent = upcoming.length === 1 ? '1 upcoming' : upcoming.length > 0 ? `${upcoming.length} upcoming` : 'No upcoming';
 
@@ -274,7 +275,6 @@ function saveNewReminder() {
     if (!text) { alert('Please enter a reminder.'); return; }
     if (!date || !time) { alert('Please set a date and time.'); return; }
 
-    // Convert local datetime to UTC ISO string for consistent comparison
     const localDatetime = new Date(`${date}T${time}`);
     const datetime = localDatetime.toISOString();
 
@@ -289,7 +289,6 @@ function saveNewReminder() {
     });
     saveRemindersLocal(reminders);
 
-    // Reset form
     document.getElementById('rem-text-input').value = '';
     document.getElementById('rem-date-input').value = '';
     document.getElementById('rem-time-input').value = '';
@@ -328,11 +327,9 @@ function initRemMic() {
         const confidence = e.results[0][0].confidence;
         const input = document.getElementById('rem-text-input');
         if (input) {
-            // Apply vocab corrections
             input.value = typeof applyVocabCorrections === 'function'
                 ? applyVocabCorrections(transcript)
                 : transcript;
-            // Highlight orange if low confidence
             if (confidence < 0.7) {
                 input.style.borderColor = 'rgba(255,140,0,0.5)';
                 input.style.color = '#ffaa44';
@@ -410,7 +407,6 @@ function initTileMic() {
 }
 
 function triggerTileMic() {
-    // Open reminders screen and auto-trigger mic
     openReminders();
     setTimeout(() => {
         initRemMic();
@@ -425,7 +421,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderReminderTilePreview();
     initTileMic();
 
-    // Enter key on reminder text input
     const input = document.getElementById('rem-text-input');
     if (input) {
         input.addEventListener('keypress', e => {
@@ -433,7 +428,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Init mic when reminders view is opened
     const view = document.getElementById('reminders-view');
     if (view) {
         const observer = new MutationObserver(() => {

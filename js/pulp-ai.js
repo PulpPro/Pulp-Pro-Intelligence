@@ -288,15 +288,13 @@ async function sendPulpAIMessage() {
 
         // Send current device datetime so AI can use it for reminders
         const now = new Date();
-        const offsetMinutes = now.getTimezoneOffset();
-        const offsetHours = -(offsetMinutes / 60);
         const clientDatetime = now.toLocaleString('en-GB', {
             weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
             hour: '2-digit', minute: '2-digit', hour12: false,
             timeZoneName: 'short'
         });
         const pad = n => String(n).padStart(2, '0');
-        const clientDatetimeISO = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+        const clientDatetimeISO = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 
         const res = await fetch(WORKER_URL + '/pulp-ai', {
             method: 'POST',
@@ -350,25 +348,70 @@ async function sendPulpAIMessage() {
     isAIThinking = false;
 }
 
-// ── REMINDER FROM AI ──────────────────────────────────────────────────────
+// ── REMINDERS ENGINE ──────────────────────────────────────────────────────
+function requestNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+}
+
 function saveReminderFromAI(data) {
     try {
+        if (!data.text || !data.datetime) return;
+        requestNotificationPermission();
+
         const reminders = JSON.parse(localStorage.getItem('pulpai_reminders') || '[]');
+        
+        // Clean target date string generation directly to avoid double shifting bugs
+        let cleanTargetString = data.datetime;
+        if (cleanTargetString.length === 16) cleanTargetString += ':00'; 
+        const parsedTargetDate = new Date(cleanTargetString);
+
+        if (isNaN(parsedTargetDate.getTime())) return;
+
         reminders.push({
             id: 'rem_' + Date.now(),
             text: data.text,
-            datetime: (() => {
-                const dt = data.datetime || '';
-                const d = new Date(dt.length === 16 ? dt + ':00Z' : dt);
-                const offsetMs = new Date().getTimezoneOffset() * 60000;
-                return new Date(d.getTime() - offsetMs).toISOString();
-            })(),
+            datetime: parsedTargetDate.toISOString(),
             source: 'ai',
             done: false,
             createdAt: new Date().toISOString()
         });
         localStorage.setItem('pulpai_reminders', JSON.stringify(reminders));
     } catch(e) {}
+}
+
+function checkReminders() {
+    try {
+        const reminders = JSON.parse(localStorage.getItem('pulpai_reminders') || '[]');
+        if (reminders.length === 0) return;
+
+        const now = new Date();
+        let changed = false;
+
+        reminders.forEach(rem => {
+            if (!rem.done && new Date(rem.datetime) <= now) {
+                rem.done = true;
+                changed = true;
+                triggerNotification(rem.text);
+            }
+        });
+
+        if (changed) {
+            localStorage.setItem('pulpai_reminders', JSON.stringify(reminders));
+        }
+    } catch (e) {}
+}
+
+function triggerNotification(text) {
+    if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Pulp AI Reminder', {
+            body: text,
+            icon: '/favicon.ico' // adjust if your icon path differs
+        });
+    } else {
+        alert(`⏰ Pulp AI Reminder: ${text}`);
+    }
 }
 
 // ── PHOTO ANALYSIS ────────────────────────────────────────────────────────
@@ -562,32 +605,6 @@ function scrollChatToBottom() {
     if (msgs) setTimeout(() => { msgs.scrollTop = msgs.scrollHeight; }, 50);
 }
 
-function scrollToLastAIMessage() {
-    const msgs = document.getElementById('pulpai-messages');
-    if (!msgs) return;
-    setTimeout(() => {
-        const aiMessages = msgs.querySelectorAll('.pulpai-msg-a');
-        if (aiMessages.length > 0) {
-            const last = aiMessages[aiMessages.length - 1];
-            last.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    }, 80);
-}
-
-function showPulpAILimitScreen() {
-    const messages = document.getElementById('pulpai-messages');
-    if (!messages) return;
-    messages.innerHTML += `<div style="text-align:center;padding:24px 16px;display:flex;flex-direction:column;align-items:center;gap:12px;">
-        <i class="bi bi-lock-fill" style="font-size:28px;color:rgba(255,80,80,0.7)"></i>
-        <div style="font-size:15px;font-weight:700;color:#fff;letter-spacing:normal;text-transform:none;">Monthly limit reached</div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.4);line-height:1.6;max-width:240px;letter-spacing:normal;text-transform:none;">All 1,000 messages used today. Resets at midnight UTC.</div>
-    </div>`;
-    const input = document.getElementById('pulpai-input');
-    const sendBtn = document.getElementById('pulpai-send-btn');
-    if (input) input.disabled = true;
-    if (sendBtn) sendBtn.style.opacity = '0.3';
-}
-
 // ── NAVIGATION ────────────────────────────────────────────────────────────
 function openPulpAI() {
     loadChats();
@@ -662,6 +679,33 @@ function initPulpAITile() {
     }
 }
 
+function scrollToLastAIMessage() {
+    const msgs = document.getElementById('pulpai-messages');
+    if (!msgs) return;
+    setTimeout(() => {
+        const aiMessages = msgs.querySelectorAll('.pulpai-msg-a');
+        if (aiMessages.length > 0) {
+            const last = aiMessages[aiMessages.length - 1];
+            last.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, 80);
+}
+
+function showPulpAILimitScreen() {
+    const messages = document.getElementById('pulpai-messages');
+    if (!messages) return;
+    messages.innerHTML += `<div style="text-align:center;padding:24px 16px;display:flex;flex-direction:column;align-items:center;gap:12px;">
+        <i class="bi bi-lock-fill" style="font-size:28px;color:rgba(255,80,80,0.7)"></i>
+        <div style="font-size:15px;font-weight:700;color:#fff;letter-spacing:normal;text-transform:none;">Monthly limit reached</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.4);line-height:1.6;max-width:240px;letter-spacing:normal;text-transform:none;">All 1,000 messages used today. Resets at midnight UTC.</div>
+    </div>`;
+    const input = document.getElementById('pulpai-input');
+    const sendBtn = document.getElementById('pulpai-send-btn');
+    if (input) input.disabled = true;
+    if (sendBtn) sendBtn.style.opacity = '0.3';
+}
+
+// ── INITIALIZATION ────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     const input = document.getElementById('pulpai-input');
     if (input) {
@@ -677,4 +721,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (camInput) camInput.addEventListener('change', e => handlePhotoSelected(e.target.files[0]));
     if (galInput) galInput.addEventListener('change', e => handlePhotoSelected(e.target.files[0]));
     setTimeout(initPulpAITile, 300);
+
+    // Prompt user permission upon first interactions smoothly and poll for ticks
+    requestNotificationPermission();
+    setInterval(checkReminders, 10000); // Check every 10 seconds
 });

@@ -11,11 +11,10 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('message', (event) => {
         if (event.data && event.data.type === 'OPEN_REMINDERS') {
             const reminderId = event.data.reminderId || null;
-            if (reminderId && typeof openEditReminder === 'function') {
-                openReminders();
-                setTimeout(() => openEditReminder(reminderId), 150);
-            } else if (typeof openReminders === 'function') {
-                openReminders();
+            if (reminderId && typeof showReminderSheet === 'function') {
+                showReminderSheet(reminderId);
+            } else if (typeof showReminderSheet === 'function') {
+                showReminderSheet(null);
             }
         }
     });
@@ -49,14 +48,10 @@ window.addEventListener('load', () => {
     if (params.get('open') === 'reminders') {
         const reminderId = params.get('reminderId') || null;
         setTimeout(() => {
-            if (reminderId && typeof openEditReminder === 'function') {
-                openReminders();
-                setTimeout(() => openEditReminder(reminderId), 150);
-            } else if (typeof openReminders === 'function') {
-                openReminders();
+            if (typeof showReminderSheet === 'function') {
+                showReminderSheet(reminderId);
             }
         }, 1500);
-        // Clean the URL params without reloading
         window.history.replaceState({}, '', window.location.pathname);
     }
 });

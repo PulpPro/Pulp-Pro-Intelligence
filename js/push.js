@@ -30,7 +30,6 @@ async function requestPushPermission() {
 
 async function savePushSubscription(subscription) {
     try {
-        // FIX: Remove the hardcoded 'admin' fallback so normal users don't override the admin's routing.
         const userCode = localStorage.getItem('pulpProAccessCode');
         
         if (!userCode) {

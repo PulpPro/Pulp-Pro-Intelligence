@@ -6,6 +6,18 @@ let isAdminLoggedIn = false;
 
 // ── ACCESS GATE ───────────────────────────────────────────────
 async function checkAccess() {
+    // Restore session from notification tap URL params
+    const params = new URLSearchParams(window.location.search);
+    const codeParam = params.get('code');
+    const adminParam = params.get('admin');
+    if (adminParam === 'true' && !localStorage.getItem('pulpProAdmin') && !localStorage.getItem('pulpProAccessCode')) {
+        localStorage.setItem('pulpProAdmin', 'true');
+        window.history.replaceState({}, '', window.location.pathname);
+    } else if (codeParam && !localStorage.getItem('pulpProAccessCode') && !localStorage.getItem('pulpProAdmin')) {
+        localStorage.setItem('pulpProAccessCode', codeParam.toUpperCase());
+        window.history.replaceState({}, '', window.location.pathname);
+    }
+
     const code = localStorage.getItem('pulpProAccessCode');
     const isAdmin = localStorage.getItem('pulpProAdmin') === 'true';
 
@@ -277,7 +289,6 @@ function copyGeneratedCode() {
 </div>
 </body></html>`;
 
-    // Copy both HTML and plain text to clipboard
     try {
         const htmlBlob = new Blob([html], { type: 'text/html' });
         const textBlob = new Blob([`Hi ${name},\n\nYou've been given access to Pulp Pro Intelligence.\n\nYour access code: ${code}\n\nInstall the app: ${appUrl}\n\niPhone: Open in Safari → Share → Add to Home Screen → Enter code\nAndroid: Open in Chrome → ⋮ Menu → Add to Home Screen → Enter code\n\nAlways open from your home screen icon to keep your code saved.\n\nQuestions? Reply to this email.\nPulp Pro Intelligence`], { type: 'text/plain' });
@@ -289,7 +300,6 @@ function copyGeneratedCode() {
             setTimeout(() => { btn.innerHTML = original; }, 2500);
         });
     } catch (e) {
-        // Fallback to plain text if ClipboardItem not supported
         const plain = `Hi ${name},\n\nYou've been given access to Pulp Pro Intelligence.\n\nYour access code: ${code}\n\nInstall: ${appUrl}\n\niPhone: Open in Safari → Share → Add to Home Screen → Enter code\nAndroid: Open in Chrome → ⋮ Menu → Add to Home Screen → Enter code\n\nAlways open from your home screen icon.\n\nPulp Pro Intelligence`;
         navigator.clipboard.writeText(plain).then(() => {
             const btn = document.getElementById('copyCodeBtn');

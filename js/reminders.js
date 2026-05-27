@@ -442,8 +442,9 @@ function showReminderSheet(reminderId) {
 
     const overlay = document.getElementById('reminder-sheet-overlay');
     const sheet = document.getElementById('reminder-sheet');
-    overlay.style.background = 'rgba(0,0,0,0.92)';
-    overlay.style.display = 'flex';
+    overlay.style.cssText = 'display:flex;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;background:rgba(0,0,0,0.92);z-index:99000;align-items:flex-end;';
+    sheet.style.width = '100%';
+    sheet.style.boxSizing = 'border-box';
     setTimeout(() => { sheet.style.transform = 'translateY(0)'; }, 10);
 }
 

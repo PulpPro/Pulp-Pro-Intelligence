@@ -8,7 +8,6 @@ let pulpAIUsage = { used: 0, limit: 1000 };
 let isAIThinking = false;
 let pulpAIMicActive = false;
 let pulpAIRecognition = null;
-let swRegistration = null;
 
 // ── AURA ENGINE ──────────────────────────────────────────────────────────
 function createAura(canvas, size) {
@@ -297,6 +296,10 @@ async function sendPulpAIMessage() {
         const pad = n => String(n).padStart(2, '0');
         const clientDatetimeISO = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 
+        // Pass current reminders so AI can answer questions about them
+        let currentReminders = [];
+        try { currentReminders = JSON.parse(localStorage.getItem('pulpai_reminders') || '[]'); } catch(e) {}
+
         const res = await fetch(WORKER_URL + '/pulp-ai', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -305,7 +308,8 @@ async function sendPulpAIMessage() {
                 userCode: code,
                 isAdmin,
                 clientDatetime,
-                clientDatetimeISO
+                clientDatetimeISO,
+                reminders: currentReminders
             })
         });
         const data = await res.json();
@@ -318,14 +322,6 @@ async function sendPulpAIMessage() {
         }
 
         let reply = data.reply;
-
-        if (data.reminder) {
-            try {
-                await saveAndScheduleReminder(data.reminder);
-            } catch(e) {
-                console.error('Reminder save failed:', e);
-            }
-        }
 
         chat.messages.push({ role: 'assistant', content: reply });
         if (data.usage) { pulpAIUsage = data.usage; updateUsageBar(); }
@@ -346,111 +342,6 @@ async function sendPulpAIMessage() {
     }
 
     isAIThinking = false;
-}
-
-// ── PWA REMINDERS ENGINE ──────────────────────────────────────────────────
-async function initPWAReminders() {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
-    try {
-        swRegistration = await navigator.serviceWorker.register('/sw.js');
-        if (Notification.permission === 'granted') {
-            await syncPushSubscription();
-        }
-    } catch(e) {
-        console.error('Service Worker setup error:', e);
-    }
-}
-
-function urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-    for (let i = 0; i < rawData.length; ++i) {
-        outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-}
-
-async function syncPushSubscription() {
-    if (!swRegistration) return null;
-    try {
-        let subscription = await swRegistration.pushManager.getSubscription();
-        if (!subscription) {
-            const convertedKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
-            subscription = await swRegistration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: convertedKey
-            });
-        }
-        const isAdmin = localStorage.getItem('pulpProAdmin') === 'true';
-        const code = localStorage.getItem('pulpProAccessCode') || (isAdmin ? 'admin' : 'admin');
-        await fetch(WORKER_URL + '/push-subscribe', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ subscription, userCode: code })
-        });
-        return subscription;
-    } catch(e) {
-        console.error('Push subscription error:', e);
-        return null;
-    }
-}
-
-// ── SAVE AND SCHEDULE REMINDER ────────────────────────────────────────────
-async function saveAndScheduleReminder(data) {
-    try {
-        if (!data.text || !data.datetime) return;
-
-        // FIX: Convert AI local datetime to UTC
-        // AI outputs local time (e.g. 17:38 local Rotterdam = 15:38 UTC)
-        // Use Date constructor with local components — same as reminders.js saveReminderFromAI
-        const dtRaw = data.datetime || '';
-        const [dtDatePart, dtTimePart] = dtRaw.split('T');
-        const [dtY, dtMo, dtD] = dtDatePart.split('-').map(Number);
-        const [dtH, dtM] = (dtTimePart || '00:00').split(':').map(Number);
-        const datetimeUTC = new Date(dtY, dtMo - 1, dtD, dtH, dtM).toISOString();
-
-        // Save to localStorage FIRST — before any async push ops that could fail
-        const reminders = JSON.parse(localStorage.getItem('pulpai_reminders') || '[]');
-        reminders.push({
-            id: 'rem_' + Date.now(),
-            text: data.text,
-            datetime: datetimeUTC,
-            source: 'ai',
-            done: false,
-            notified: false,
-            createdAt: new Date().toISOString()
-        });
-        localStorage.setItem('pulpai_reminders', JSON.stringify(reminders));
-
-        // Update tile preview immediately
-        if (typeof renderReminderTilePreview === 'function') renderReminderTilePreview();
-
-        // Sync to KV
-        const isAdmin = localStorage.getItem('pulpProAdmin') === 'true';
-        const code = localStorage.getItem('pulpProAccessCode') || (isAdmin ? 'admin' : 'admin');
-        await fetch(WORKER_URL + '/reminders-sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userCode: code, reminders })
-        });
-
-        // Request push permission if not granted
-        if (Notification.permission === 'default') {
-            await Notification.requestPermission();
-        }
-
-        // Sync push subscription in background — don't block reminder save
-        syncPushSubscription().catch(() => {});
-
-    } catch(e) {
-        console.error('Reminder save error:', e);
-    }
-}
-
-function setManualReminder(text, datetimeString) {
-    saveAndScheduleReminder({ text, datetime: datetimeString, source: 'manual' });
 }
 
 // ── PHOTO ANALYSIS ────────────────────────────────────────────────────────

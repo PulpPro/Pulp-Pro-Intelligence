@@ -120,14 +120,7 @@ function showGate() {
 function showApp() {
     document.getElementById('access-gate').classList.add('hidden');
     document.getElementById('app-wrapper').classList.remove('hidden');
-    // TEMP DEBUG — shows notification permission state on screen
-    const _perm = (typeof Notification !== 'undefined') ? Notification.permission : 'unsupported';
-    const _dbg = document.createElement('div');
-    _dbg.id = 'debug-notif';
-    _dbg.style.cssText = 'position:fixed;top:60px;left:0;right:0;z-index:999999;background:#ff5050;color:#fff;font-size:13px;font-weight:700;padding:10px 16px;text-align:center;';
-    _dbg.innerText = 'Notification.permission = ' + _perm;
-    document.body.appendChild(_dbg);
-    setTimeout(() => { const el = document.getElementById('debug-notif'); if(el) el.remove(); }, 8000);
+
 
     // Check Cache API for pending reminder from notification tap
     // iOS opens PWA natively — SW stores reminderId here before app loads

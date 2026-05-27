@@ -30,30 +30,24 @@ async function requestPushPermission() {
 
 async function savePushSubscription(subscription) {
     try {
-        const userCode = localStorage.getItem('pulpProAccessCode');
-        
+        // FIX: use 'admin' for admin users who have no pulpProAccessCode
+        const isAdmin = localStorage.getItem('pulpProAdmin') === 'true';
+        const userCode = localStorage.getItem('pulpProAccessCode') || (isAdmin ? 'admin' : null);
         if (!userCode) {
-            console.warn('Push subscription paused: No active user access code found in localStorage.');
+            console.warn('Push subscription skipped: no user code found.');
             return;
         }
-
         await fetch('https://pulppro-access.pulpprobrain.workers.dev/push-subscribe', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ subscription: subscription.toJSON(), userCode })
         });
     } catch(e) {
-        console.error('Failed to sync subscription with backend:', e);
+        console.error('Failed to save push subscription:', e);
     }
 }
 
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.addEventListener('message', (event) => {
-        if (event.data && event.data.type === 'OPEN_REMINDERS') {
-            if (typeof openReminders === 'function') openReminders();
-        }
-    });
-}
+// NOTE: message listener for OPEN_REMINDERS is handled in app.js — do not duplicate here
 
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {

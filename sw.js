@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v13.1';
+const CACHE_VERSION = 'v14';
 const CACHE_NAME = 'pulp-pro-' + CACHE_VERSION;
 const ASSETS = [
     '/',

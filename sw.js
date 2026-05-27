@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v17';
+const CACHE_VERSION = 'v18';
 const CACHE_NAME = 'pulp-pro-' + CACHE_VERSION;
 const ASSETS = [
     '/',
@@ -142,21 +142,19 @@ self.addEventListener('notificationclick', (event) => {
 
     if (event.action === 'dismiss') return;
 
-    // plain tap — open/focus app with reminder sheet
+    // plain tap — store reminderId in Cache API then iOS opens PWA natively
+    // if app already open, postMessage directly
     event.waitUntil(
-        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+        caches.open('pulpro-pending').then(cache => {
+            return cache.put('/pending-reminder', new Response(JSON.stringify({ reminderId, usercode })));
+        }).then(() => {
+            return clients.matchAll({ type: 'window', includeUncontrolled: true });
+        }).then(clientList => {
             if (clientList.length > 0) {
-                const client = clientList[0];
-                client.focus();
-                client.postMessage({ type: 'OPEN_REMINDERS', reminderId });
-                return;
+                clientList[0].focus();
+                clientList[0].postMessage({ type: 'OPEN_REMINDERS', reminderId });
             }
-            const base = 'https://pulppro.github.io/Pulp-Pro-Intelligence/';
-            let param = '?open=reminders';
-            if (reminderId) param += `&reminderId=${reminderId}`;
-            if (usercode === '__admin__') param += '&admin=true';
-            else if (usercode) param += `&code=${usercode}`;
-            return clients.openWindow(base + param);
+            // No openWindow — iOS opens PWA natively on notification tap
         })
     );
 });

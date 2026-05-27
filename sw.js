@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v17';
+const CACHE_VERSION = 'v15';
 const CACHE_NAME = 'pulp-pro-' + CACHE_VERSION;
 const ASSETS = [
     '/',
@@ -78,9 +78,20 @@ self.addEventListener('message', (event) => {
 
 // ── PUSH NOTIFICATIONS ────────────────────────────────────────────────────
 self.addEventListener('push', (event) => {
-    // Race the fetch against a 4s timeout — whichever wins shows the notification
-    // This guarantees a single notification with real text if fetch is fast,
-    // or default text if it times out — never double, never silent
+    const notifOptions = (text, id, uc) => ({
+        body: text || 'You have a reminder due now.',
+        icon: '/edited-image.png',
+        badge: '/edited-image.png',
+        tag: 'pulpro-reminder',
+        requireInteraction: true,
+        actions: [
+            { action: 'done', title: '✓ Done' },
+            { action: 'snooze', title: '⏰ +1 hr' },
+            { action: 'dismiss', title: '✕ Dismiss' }
+        ],
+        data: { reminderId: id || null, usercode: uc || null }
+    });
+
     event.waitUntil(
         Promise.race([
             fetch('https://pulppro-access.pulpprobrain.workers.dev/latest-reminder', {
@@ -90,26 +101,8 @@ self.addEventListener('push', (event) => {
             }).then(r => r.json()),
             new Promise(resolve => setTimeout(() => resolve(null), 4000))
         ])
-        .then(data => {
-            return self.registration.showNotification('Pulp Pro Reminder', {
-                body: data?.text || 'You have a reminder due now.',
-                icon: '/edited-image.png',
-                badge: '/edited-image.png',
-                tag: 'pulpro-reminder',
-                requireInteraction: true,
-                data: { reminderId: data?.id || null, usercode: data?.usercode || null }
-            });
-        })
-        .catch(() => {
-            return self.registration.showNotification('Pulp Pro Reminder', {
-                body: 'You have a reminder due now.',
-                icon: '/edited-image.png',
-                badge: '/edited-image.png',
-                tag: 'pulpro-reminder',
-                requireInteraction: true,
-                data: { reminderId: null, usercode: null }
-            });
-        })
+        .then(data => self.registration.showNotification('Pulp Pro Reminder', notifOptions(data?.text, data?.id, data?.usercode)))
+        .catch(() => self.registration.showNotification('Pulp Pro Reminder', notifOptions(null, null, null)))
     );
 });
 
@@ -117,25 +110,35 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
 
-    if (event.action === 'dismiss') return;
-
     const reminderId = event.notification.data?.reminderId || null;
+    const usercode = event.notification.data?.usercode || null;
+    const WORKER = 'https://pulppro-access.pulpprobrain.workers.dev';
 
-    event.waitUntil(
-        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-            if (clientList.length > 0) {
-                const client = clientList[0];
-                client.focus();
-                client.postMessage({ type: 'OPEN_REMINDERS', reminderId });
-                return;
-            }
-            const base = 'https://pulppro.github.io/Pulp-Pro-Intelligence/';
-            const uc = event.notification.data?.usercode || null;
-            let param = '?open=reminders';
-            if (reminderId) param += `&reminderId=${reminderId}`;
-            if (uc === '__admin__') param += '&admin=true';
-            else if (uc) param += `&code=${uc}`;
-            return clients.openWindow(base + param);
-        })
-    );
+    // Notify open app clients to refresh reminders
+    const notifyClients = () => clients.matchAll({ type: 'window', includeUncontrolled: true })
+        .then(list => list.forEach(c => c.postMessage({ type: 'REMINDER_UPDATED' })));
+
+    if (event.action === 'done') {
+        event.waitUntil(
+            fetch(WORKER + '/reminder-mark-done', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ secret: 'pulpro2024', reminderId, usercode })
+            }).then(notifyClients).catch(() => {})
+        );
+        return;
+    }
+
+    if (event.action === 'snooze') {
+        event.waitUntil(
+            fetch(WORKER + '/reminder-snooze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ secret: 'pulpro2024', reminderId, usercode, minutes: 60 })
+            }).then(notifyClients).catch(() => {})
+        );
+        return;
+    }
+
+    // dismiss or plain tap — nothing opens
 });

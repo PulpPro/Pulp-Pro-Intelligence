@@ -1,3 +1,10 @@
+function openRemindersWithPermission() {
+    if (typeof requestPushPermission === 'function' && Notification.permission === 'default') {
+        requestPushPermission();
+    }
+    openReminders();
+}
+
 // ── REMINDERS ────────────────────────────────────────────────────────────
 const REMINDERS_KEY = 'pulpai_reminders';
 

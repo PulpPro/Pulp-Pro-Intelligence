@@ -41,18 +41,7 @@ window.addEventListener('load', () => {
         localStorage.setItem('pulpProAccessCode', codeParam.toUpperCase());
     }
 
-    // Check for ?open=reminders param — show sheet as soon as app is ready
-    if (params.get('open') === 'reminders') {
-        const reminderId = params.get('reminderId') || null;
-        // Clean URL immediately
-        window.history.replaceState({}, '', window.location.pathname);
-        // Show sheet after app initialises — 800ms is enough for checkAccess + render
-        setTimeout(() => {
-            if (typeof showReminderSheet === 'function') {
-                showReminderSheet(reminderId);
-            }
-        }, 800);
-    }
+    // ?open=reminders is handled by navigation.js checkAccess() which runs first
 });
 
 // Theme Toggle

@@ -437,10 +437,11 @@ async function saveAndScheduleReminder(data) {
             datetime: datetimeUTC,
             source: data.source || 'ai',
             done: false,
-            notified: false, // Essential token field matching verification structures
+            notified: false, 
             createdAt: new Date().toISOString()
         });
         localStorage.setItem('pulpai_reminders', JSON.stringify(reminders));
+        if (typeof renderReminderTilePreview === 'function') renderReminderTilePreview();
 
         // CRITICAL SYNC BACKUP PAIRING: Sync local state to Cloudflare KV Database store directly!
         const code = localStorage.getItem('pulpProAccessCode') || 'admin';

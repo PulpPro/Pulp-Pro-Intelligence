@@ -29,13 +29,35 @@ async function checkAccess() {
     const isAdmin = localStorage.getItem('pulpProAdmin') === 'true';
 
     function maybeShowSheet() {
-        if (openParam === 'reminders') {
+        if (openParam !== 'reminders') return;
+        // Determine usercode — needed to verify the reminder belongs to this user
+        const isAdminUser = localStorage.getItem('pulpProAdmin') === 'true';
+        const userCode = localStorage.getItem('pulpProAccessCode') || (isAdminUser ? '__admin__' : null);
+
+        // Fetch reminder data from KV — Safari/Chrome has separate localStorage from PWA
+        // so we can't rely on loadReminders(). KV stores latest reminder for 5 mins.
+        fetch('https://pulppro-access.pulpprobrain.workers.dev/latest-reminder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ secret: 'pulpro2024', usercode: userCode })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.text) return; // No reminder or wrong user
+            setTimeout(() => {
+                if (typeof showReminderSheetWithData === 'function') {
+                    showReminderSheetWithData(data.text, null, null, data.id);
+                }
+            }, 600);
+        })
+        .catch(() => {
+            // Fallback to localStorage (works when app is already open as PWA)
             setTimeout(() => {
                 if (typeof showReminderSheet === 'function') {
                     showReminderSheet(reminderIdParam);
                 }
             }, 600);
-        }
+        });
     }
 
     if (isAdmin) {

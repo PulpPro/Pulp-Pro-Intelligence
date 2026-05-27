@@ -1,10 +1,3 @@
-function openRemindersWithPermission() {
-    if (typeof requestPushPermission === 'function' && Notification.permission === 'default') {
-        requestPushPermission();
-    }
-    openReminders();
-}
-
 // ── REMINDERS ────────────────────────────────────────────────────────────
 const REMINDERS_KEY = 'pulpai_reminders';
 
@@ -67,6 +60,9 @@ function openReminders() {
     const menuTrigger = document.getElementById('menu-trigger');
     if (menuTrigger) menuTrigger.style.display = 'none';
     renderRemindersList();
+    // Show permission banner if not yet granted — user taps it directly
+    const banner = document.getElementById('push-permission-banner');
+    if (banner) banner.style.display = Notification.permission === 'default' ? 'block' : 'none';
 }
 
 function closeReminders() {

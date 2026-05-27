@@ -422,12 +422,19 @@ async function saveAndScheduleReminder(data) {
 
         if (isNaN(parsedTargetDate.getTime())) return;
 
+        // FIX: Convert AI local datetime to UTC
+        const dtRaw = data.datetime || '';
+        const [dtDatePart, dtTimePart] = dtRaw.split('T');
+        const [dtY, dtMo, dtD] = dtDatePart.split('-').map(Number);
+        const [dtH, dtM] = (dtTimePart || '00:00').split(':').map(Number);
+        const datetimeUTC = new Date(dtY, dtMo - 1, dtD, dtH, dtM).toISOString();
+
         // Keep local storage history for visual logging
         const reminders = JSON.parse(localStorage.getItem('pulpai_reminders') || '[]');
         reminders.push({
             id: 'rem_' + Date.now(),
             text: data.text,
-            datetime: cleanTargetString, // Keeps native string consistency pattern intact
+            datetime: datetimeUTC,
             source: data.source || 'ai',
             done: false,
             notified: false, // Essential token field matching verification structures

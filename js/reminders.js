@@ -47,6 +47,10 @@ function saveReminderFromAI(data) {
 
 // ── OPEN / CLOSE ──────────────────────────────────────────────────────────
 function openReminders() {
+    // Request permission immediately on user tap — iOS requires direct user gesture
+    if (typeof requestPushPermission === 'function' && Notification.permission === 'default') {
+        requestPushPermission();
+    }
     document.getElementById('fruit-hub').classList.add('hidden');
     document.getElementById('appInterface').classList.add('hidden');
     document.getElementById('colour-scanner-view').classList.add('hidden');
@@ -56,13 +60,6 @@ function openReminders() {
     const menuTrigger = document.getElementById('menu-trigger');
     if (menuTrigger) menuTrigger.style.display = 'none';
     renderRemindersList();
-    setTimeout(() => {
-        if (typeof requestPushPermission === 'function') {
-            if (Notification.permission === 'default') {
-                requestPushPermission();
-            }
-        }
-    }, 500);
 }
 
 function closeReminders() {

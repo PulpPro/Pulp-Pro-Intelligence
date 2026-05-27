@@ -117,6 +117,24 @@ function showGate() {
 function showApp() {
     document.getElementById('access-gate').classList.add('hidden');
     document.getElementById('app-wrapper').classList.remove('hidden');
+
+    // Check Cache API for pending reminder from notification tap
+    // iOS opens PWA natively — SW stores reminderId here before app loads
+    if ('caches' in window) {
+        caches.open('pulpro-pending').then(cache => {
+            cache.match('/pending-reminder').then(response => {
+                if (!response) return;
+                response.json().then(data => {
+                    cache.delete('/pending-reminder');
+                    setTimeout(() => {
+                        if (typeof showReminderSheet === 'function') {
+                            showReminderSheet(data.reminderId || null);
+                        }
+                    }, 500);
+                }).catch(() => {});
+            }).catch(() => {});
+        }).catch(() => {});
+    }
 }
 
 async function submitCode() {

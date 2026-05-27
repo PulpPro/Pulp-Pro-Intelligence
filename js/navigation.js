@@ -30,28 +30,32 @@ async function checkAccess() {
 
     function maybeShowSheet() {
         if (openParam !== 'reminders') return;
-        // Determine usercode — needed to verify the reminder belongs to this user
         const isAdminUser = localStorage.getItem('pulpProAdmin') === 'true';
-        const userCode = localStorage.getItem('pulpProAccessCode') || (isAdminUser ? '__admin__' : null);
+        const userCode = localStorage.getItem('pulpProAccessCode') || (isAdminUser ? 'admin' : null);
+        if (!userCode) return;
 
-        // Fetch reminder data from KV — Safari/Chrome has separate localStorage from PWA
-        // so we can't rely on loadReminders(). KV stores latest reminder for 5 mins.
-        fetch('https://pulppro-access.pulpprobrain.workers.dev/latest-reminder', {
+        // Sync reminders from KV to localStorage first
+        // Safari/Chrome has separate localStorage from PWA so we need to populate it
+        // before showing the sheet so all buttons (done, snooze, edit) work correctly
+        fetch(ACCESS_WORKER + '/reminders-get', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ secret: 'pulpro2024', usercode: userCode })
+            body: JSON.stringify({ userCode, secret: 'pulpro2024' })
         })
         .then(r => r.json())
         .then(data => {
-            if (!data.text) return; // No reminder or wrong user
+            if (data.reminders && data.reminders.length > 0) {
+                localStorage.setItem('pulpai_reminders', JSON.stringify(data.reminders));
+                if (typeof renderReminderTilePreview === 'function') renderReminderTilePreview();
+            }
             setTimeout(() => {
-                if (typeof showReminderSheetWithData === 'function') {
-                    showReminderSheetWithData(data.text, null, null, data.id);
+                if (typeof showReminderSheet === 'function') {
+                    showReminderSheet(reminderIdParam);
                 }
-            }, 600);
+            }, 200);
         })
         .catch(() => {
-            // Fallback to localStorage (works when app is already open as PWA)
+            // Fallback — show sheet with whatever is in localStorage
             setTimeout(() => {
                 if (typeof showReminderSheet === 'function') {
                     showReminderSheet(reminderIdParam);

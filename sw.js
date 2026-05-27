@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v13';
 const CACHE_NAME = 'pulp-pro-' + CACHE_VERSION;
 const ASSETS = [
     '/',
@@ -78,67 +78,39 @@ self.addEventListener('message', (event) => {
 
 // ── PUSH NOTIFICATIONS ────────────────────────────────────────────────────
 self.addEventListener('push', (event) => {
-    let textMessage = 'You have a reminder due now.';
-    let reminderId = null;
-    let usercode = null;
-    
-    // Parse incoming server-driven VAPID payload data safely
-    if (event.data) {
-        try {
-            const payload = event.data.json();
-            textMessage = payload.text || payload.body || textMessage;
-            reminderId = payload.id || payload.reminderId || null;
-            usercode = payload.usercode || null;
-        } catch (e) {
-            // Fallback for raw text payloads
-            const rawText = event.data.text();
-            if (rawText) textMessage = rawText;
-        }
-    }
-
-    // If no direct data was supplied, request the fallback endpoint
-    if (!event.data) {
-        event.waitUntil(
+    // Race the fetch against a 4s timeout — whichever wins shows the notification
+    // This guarantees a single notification with real text if fetch is fast,
+    // or default text if it times out — never double, never silent
+    event.waitUntil(
+        Promise.race([
             fetch('https://pulppro-access.pulpprobrain.workers.dev/latest-reminder', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ secret: 'pulpro2024' })
-            })
-            .then(r => r.json())
-            .then(data => {
-                return self.registration.showNotification('Pulp Pro Reminder', {
-                    body: data.text || 'You have a reminder due now.',
-                    icon: '/edited-image.png',
-                    badge: '/edited-image.png',
-                    tag: 'pulpro-reminder',
-                    requireInteraction: true,
-                    data: { reminderId: data.id || null, usercode: data.usercode || null }
-                });
-            })
-            .catch(() => {
-                return self.registration.showNotification('Pulp Pro Reminder', {
-                    body: 'You have a reminder due now.',
-                    icon: '/edited-image.png',
-                    badge: '/edited-image.png',
-                    tag: 'pulpro-reminder',
-                    requireInteraction: true,
-                    data: { reminderId: null, usercode: null }
-                });
-            })
-        );
-    } else {
-        // Execute instant presentation using native device OS notification threads
-        event.waitUntil(
-            self.registration.showNotification('Pulp Pro Reminder', {
-                body: textMessage,
+            }).then(r => r.json()),
+            new Promise(resolve => setTimeout(() => resolve(null), 4000))
+        ])
+        .then(data => {
+            return self.registration.showNotification('Pulp Pro Reminder', {
+                body: data?.text || 'You have a reminder due now.',
                 icon: '/edited-image.png',
                 badge: '/edited-image.png',
                 tag: 'pulpro-reminder',
                 requireInteraction: true,
-                data: { reminderId, usercode }
-            })
-        );
-    }
+                data: { reminderId: data?.id || null, usercode: data?.usercode || null }
+            });
+        })
+        .catch(() => {
+            return self.registration.showNotification('Pulp Pro Reminder', {
+                body: 'You have a reminder due now.',
+                icon: '/edited-image.png',
+                badge: '/edited-image.png',
+                tag: 'pulpro-reminder',
+                requireInteraction: true,
+                data: { reminderId: null, usercode: null }
+            });
+        })
+    );
 });
 
 // ── NOTIFICATION CLICK ────────────────────────────────────────────────────

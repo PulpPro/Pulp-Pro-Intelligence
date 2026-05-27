@@ -77,6 +77,7 @@ async function checkAccess() {
         renderAdminMenu();
         showApp();
         maybeShowSheet();
+        setTimeout(() => { if (typeof showNotificationPrompt === 'function') showNotificationPrompt(); }, 1000);
         return;
     }
 
@@ -92,6 +93,7 @@ async function checkAccess() {
             if (data.valid) {
                 showApp();
                 maybeShowSheet();
+                setTimeout(() => { if (typeof showNotificationPrompt === 'function') showNotificationPrompt(); }, 1000);
             } else {
                 // Access revoked — clear localStorage and show gate
                 localStorage.removeItem('pulpProAccessCode');
@@ -102,6 +104,7 @@ async function checkAccess() {
             // Network error — allow offline access if code exists in localStorage
             showApp();
             maybeShowSheet();
+            setTimeout(() => { if (typeof showNotificationPrompt === 'function') showNotificationPrompt(); }, 1000);
         }
         return;
     }

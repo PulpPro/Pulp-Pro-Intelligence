@@ -32,10 +32,7 @@ function saveReminderFromAI(data) {
     const [datePart, timePart] = dt.split('T');
     const [y, mo, d] = datePart.split('-').map(Number);
     const [h, m] = (timePart || '00:00').split(':').map(Number);
-    
-    // FIX: Construct the Date using local variables, then output to clean ISO string
     const datetime = new Date(y, mo - 1, d, h, m).toISOString();
-    
     reminders.push({
         id: 'rem_' + Date.now(),
         text: data.text,
@@ -254,11 +251,7 @@ function saveEditReminder(id) {
     if (!r) return;
 
     r.text = text;
-    
-    // FIX: Parse as local time components, then convert to unified ISO string
-    const parts = date.split('-');
-    const timeParts = time.split(':');
-    r.datetime = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), Number(timeParts[0]), Number(timeParts[1])).toISOString();
+    r.datetime = new Date(`${date}T${time}`).toISOString();
 
     saveRemindersLocal(reminders);
     closeEditReminder();
@@ -283,10 +276,7 @@ function saveNewReminder() {
     if (!text) { alert('Please enter a reminder.'); return; }
     if (!date || !time) { alert('Please set a date and time.'); return; }
 
-    // FIX: Explicitly parse input strings to avoid browser timezone assumption drops
-    const parts = date.split('-');
-    const timeParts = time.split(':');
-    const localDatetime = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), Number(timeParts[0]), Number(timeParts[1]));
+    const localDatetime = new Date(`${date}T${time}`);
     const datetime = localDatetime.toISOString();
 
     const reminders = loadReminders();
@@ -455,6 +445,33 @@ function showReminderSheet(reminderId) {
 
     const overlay = document.getElementById('reminder-sheet-overlay');
     const sheet = document.getElementById('reminder-sheet');
+    overlay.style.display = 'flex';
+    setTimeout(() => { sheet.style.transform = 'translateY(0)'; }, 10);
+}
+
+
+function showReminderSheetWithData(text, datetime, source, id) {
+    // Shows the sheet with data passed directly — no localStorage needed
+    // Used when Safari opens from notification tap (separate localStorage context)
+    _sheetReminderId = id || null;
+
+    const dt = datetime ? new Date(datetime) : null;
+    const dateStr = dt ? dt.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' }) : '';
+    const timeStr = dt ? dt.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) : '';
+    const sourceStr = source === 'ai' ? ' · Via Pulp AI' : ' · Manual';
+
+    const textEl = document.getElementById('reminder-sheet-text');
+    const metaEl = document.getElementById('reminder-sheet-meta');
+    if (!textEl || !metaEl) return;
+
+    textEl.textContent = text || 'You have a reminder due now.';
+    metaEl.innerHTML = dt
+        ? '<i class="bi bi-clock" style="font-size:10px;margin-right:3px;"></i>' + dateStr + ' · ' + timeStr + sourceStr
+        : '<i class="bi bi-bell" style="font-size:10px;margin-right:3px;"></i>Due now';
+
+    const overlay = document.getElementById('reminder-sheet-overlay');
+    const sheet = document.getElementById('reminder-sheet');
+    if (!overlay || !sheet) return;
     overlay.style.display = 'flex';
     setTimeout(() => { sheet.style.transform = 'translateY(0)'; }, 10);
 }

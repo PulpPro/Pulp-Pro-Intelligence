@@ -6,25 +6,43 @@ let isAdminLoggedIn = false;
 
 // ── ACCESS GATE ───────────────────────────────────────────────
 async function checkAccess() {
-    // Restore session from notification tap URL params
+    // Read ALL params before anything cleans them
     const params = new URLSearchParams(window.location.search);
     const codeParam = params.get('code');
     const adminParam = params.get('admin');
+    const openParam = params.get('open');
+    const reminderIdParam = params.get('reminderId') || null;
+
+    // Restore session from notification tap URL params
     if (adminParam === 'true' && !localStorage.getItem('pulpProAdmin') && !localStorage.getItem('pulpProAccessCode')) {
         localStorage.setItem('pulpProAdmin', 'true');
-        window.history.replaceState({}, '', window.location.pathname);
     } else if (codeParam && !localStorage.getItem('pulpProAccessCode') && !localStorage.getItem('pulpProAdmin')) {
         localStorage.setItem('pulpProAccessCode', codeParam.toUpperCase());
+    }
+
+    // Clean URL params now
+    if (adminParam || codeParam || openParam) {
         window.history.replaceState({}, '', window.location.pathname);
     }
 
     const code = localStorage.getItem('pulpProAccessCode');
     const isAdmin = localStorage.getItem('pulpProAdmin') === 'true';
 
+    function maybeShowSheet() {
+        if (openParam === 'reminders') {
+            setTimeout(() => {
+                if (typeof showReminderSheet === 'function') {
+                    showReminderSheet(reminderIdParam);
+                }
+            }, 600);
+        }
+    }
+
     if (isAdmin) {
         isAdminLoggedIn = true;
         renderAdminMenu();
         showApp();
+        maybeShowSheet();
         return;
     }
 
@@ -39,6 +57,7 @@ async function checkAccess() {
             const data = await res.json();
             if (data.valid) {
                 showApp();
+                maybeShowSheet();
             } else {
                 // Access revoked — clear localStorage and show gate
                 localStorage.removeItem('pulpProAccessCode');
@@ -48,6 +67,7 @@ async function checkAccess() {
         } catch (e) {
             // Network error — allow offline access if code exists in localStorage
             showApp();
+            maybeShowSheet();
         }
         return;
     }

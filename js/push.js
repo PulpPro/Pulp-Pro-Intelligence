@@ -51,9 +51,8 @@ function showNotificationPrompt() {
     const isAdmin = localStorage.getItem('pulpProAdmin') === 'true';
     const userCode = localStorage.getItem('pulpProAccessCode');
     if (!isAdmin && !userCode) return;
-    // Only show once per session
-    if (sessionStorage.getItem('notif_prompt_shown')) return;
-    sessionStorage.setItem('notif_prompt_shown', '1');
+    // Only show if overlay not already on screen
+    if (document.getElementById('notif-prompt-overlay')) return;
 
     const overlay = document.createElement('div');
     overlay.id = 'notif-prompt-overlay';

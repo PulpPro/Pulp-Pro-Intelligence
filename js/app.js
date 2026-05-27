@@ -6,14 +6,40 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// Listen for OPEN_REMINDERS postMessage from SW (app already open when notification tapped)
+// Listen for messages from SW
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('message', (event) => {
-        if (event.data && event.data.type === 'OPEN_REMINDERS') {
+        if (!event.data) return;
+
+        if (event.data.type === 'OPEN_REMINDERS') {
             const reminderId = event.data.reminderId || null;
             if (typeof showReminderSheet === 'function') {
                 showReminderSheet(reminderId);
             }
+        }
+
+        if (event.data.type === 'REMINDER_UPDATED') {
+            // Notification action (Done/Snooze) was taken — sync from KV to localStorage
+            const isAdmin = localStorage.getItem('pulpProAdmin') === 'true';
+            const userCode = localStorage.getItem('pulpProAccessCode') || (isAdmin ? 'admin' : null);
+            if (!userCode) return;
+            fetch('https://pulppro-access.pulpprobrain.workers.dev/reminders-get', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userCode, secret: 'pulpro2024' })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.reminders) {
+                    localStorage.setItem('pulpai_reminders', JSON.stringify(data.reminders));
+                    if (typeof renderReminderTilePreview === 'function') renderReminderTilePreview();
+                    if (typeof renderRemindersList === 'function') {
+                        const view = document.getElementById('reminders-view');
+                        if (view && !view.classList.contains('hidden')) renderRemindersList();
+                    }
+                }
+            })
+            .catch(() => {});
         }
     });
 }

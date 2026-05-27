@@ -8,24 +8,23 @@ function urlBase64ToUint8Array(base64String) {
     return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
 }
 
-async function requestPushPermission() {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return false;
-    try {
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') return false;
-        const reg = await navigator.serviceWorker.ready;
-        const existing = await reg.pushManager.getSubscription();
-        if (existing) { await savePushSubscription(existing); return true; }
-        const subscription = await reg.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+function requestPushPermission() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    // Call requestPermission synchronously — iOS breaks gesture chain with await
+    Notification.requestPermission().then(permission => {
+        if (permission !== 'granted') return;
+        navigator.serviceWorker.ready.then(reg => {
+            reg.pushManager.getSubscription().then(existing => {
+                if (existing) { savePushSubscription(existing); return; }
+                reg.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                }).then(subscription => {
+                    savePushSubscription(subscription);
+                }).catch(e => console.error('Subscribe error:', e));
+            });
         });
-        await savePushSubscription(subscription);
-        return true;
-    } catch(e) {
-        console.error('Push error:', e);
-        return false;
-    }
+    }).catch(e => console.error('Permission error:', e));
 }
 
 async function savePushSubscription(subscription) {

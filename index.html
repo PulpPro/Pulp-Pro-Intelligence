@@ -1,572 +1,541 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>Pulp Pro</title>
-<script>
-window.addEventListener('load', function() {
-    setTimeout(function() {
-        if (!document.body || document.body.innerHTML.trim() === '') {
-            window.location.reload(true);
-        }
-    }, 2000);
-});
-if (document.readyState === 'complete' && document.body && document.body.innerHTML.trim() === '') {
-    window.location.reload(true);
+// ── REMINDERS ────────────────────────────────────────────────────────────
+const REMINDERS_KEY = 'pulpai_reminders';
+
+function loadReminders() {
+    try {
+        return JSON.parse(localStorage.getItem(REMINDERS_KEY) || '[]');
+    } catch(e) { return []; }
 }
-</script>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#000000">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="apple-touch-icon" href="edited-image.png">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-<link rel="stylesheet" href="css/theme.css">
-<link rel="stylesheet" href="css/layout.css">
-<link rel="stylesheet" href="css/components.css">
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/knn-classifier"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
-</head>
-<body>
 
-<!-- ACCESS GATE -->
-<div id="access-gate" class="hidden" style="position:fixed;inset:0;background:#050505;z-index:99998;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;">
-<div style="width:64px;height:64px;background:#a6e22e;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:20px;">🍌</div>
-<div style="font-size:11px;font-weight:900;color:#a6e22e;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;">Pulp Pro</div>
-<div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:-0.5px;margin-bottom:8px;text-align:center;">Access Required</div>
-<div style="font-size:12px;color:rgba(255,255,255,0.35);line-height:1.6;text-align:center;margin-bottom:28px;max-width:280px;">Authorised team members only. Enter your access code to continue.</div>
-<input id="gateCodeInput" type="text" placeholder="Enter access code" maxlength="20" style="width:100%;max-width:320px;background:rgba(255,255,255,0.04);border:1.5px solid rgba(166,226,46,0.3);border-radius:14px;padding:14px 16px;font-size:14px;font-weight:700;color:#fff;text-align:center;letter-spacing:2px;margin-bottom:12px;outline:none;text-transform:uppercase;" onkeypress="if(event.key==='Enter') submitCode()">
-<div id="gateError" style="display:none;font-size:11px;color:#ff4d4d;font-weight:700;margin-bottom:10px;text-align:center;"></div>
-<button id="gateUnlockBtn" onclick="submitCode()" style="width:100%;max-width:320px;background:#a6e22e;color:#000;border:none;border-radius:100px;padding:14px;font-weight:900;font-size:13px;text-transform:uppercase;letter-spacing:1px;cursor:pointer;margin-bottom:20px;">Unlock App</button>
-<div style="display:flex;align-items:center;gap:10px;width:100%;max-width:320px;margin-bottom:16px;">
-<div style="flex:1;height:1px;background:rgba(255,255,255,0.07);"></div>
-<div style="font-size:9px;color:rgba(255,255,255,0.2);font-weight:700;text-transform:uppercase;letter-spacing:1px;white-space:nowrap;">Don't have a code?</div>
-<div style="flex:1;height:1px;background:rgba(255,255,255,0.07);"></div>
-</div>
-<button onclick="requestCode()" style="width:100%;max-width:320px;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:100px;padding:13px;font-weight:700;font-size:12px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;cursor:pointer;margin-bottom:10px;"><i class="bi bi-envelope"></i> Request Access Code</button>
-<button onclick="showDevLogin()" style="width:100%;max-width:320px;background:transparent;border:1px solid rgba(166,226,46,0.15);border-radius:100px;padding:13px;font-weight:700;font-size:12px;color:rgba(166,226,46,0.5);text-transform:uppercase;letter-spacing:1px;cursor:pointer;"><i class="bi bi-lock"></i> Developer Login</button>
-<div style="font-size:8px;color:rgba(255,255,255,0.1);text-align:center;margin-top:24px;text-transform:uppercase;letter-spacing:0.5px;">Pulp Pro · Authorised use only</div>
-</div>
+function saveRemindersLocal(reminders) {
+    try {
+        localStorage.setItem(REMINDERS_KEY, JSON.stringify(reminders));
+    } catch(e) {}
+    syncRemindersToKV(reminders);
+}
 
-<!-- DEV LOGIN MODAL -->
-<div id="dev-login-modal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:32px;">
-<div style="background:#111;border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:32px 24px;width:100%;max-width:320px;">
-<div style="font-size:14px;font-weight:900;color:#fff;margin-bottom:4px;">Developer Login</div>
-<div style="font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:24px;">Admin access only</div>
-<input id="devUsername" type="email" placeholder="Username" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px 14px;font-size:13px;color:#fff;margin-bottom:10px;outline:none;text-transform:none;letter-spacing:normal;">
-<input id="devPassword" type="password" placeholder="Password" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px 14px;font-size:13px;color:#fff;margin-bottom:10px;outline:none;text-transform:none;letter-spacing:normal;" onkeypress="if(event.key==='Enter') submitDevLogin()">
-<div id="devLoginError" style="display:none;font-size:11px;color:#ff4d4d;font-weight:700;margin-bottom:10px;"></div>
-<button id="devLoginBtn" onclick="submitDevLogin()" style="width:100%;background:#a6e22e;color:#000;border:none;border-radius:100px;padding:13px;font-weight:900;font-size:13px;text-transform:uppercase;letter-spacing:1px;cursor:pointer;margin-bottom:10px;">Login</button>
-<button onclick="hideDevLogin()" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,0.08);border-radius:100px;padding:12px;font-weight:700;font-size:12px;color:rgba(255,255,255,0.35);text-transform:uppercase;cursor:pointer;">Cancel</button>
-</div>
-</div>
+async function syncRemindersToKV(reminders) {
+    try {
+        const userCode = localStorage.getItem('pulpProAccessCode') || 'admin';
+        await fetch('https://pulppro-access.pulpprobrain.workers.dev/reminders-sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userCode, reminders })
+        });
+    } catch(e) {}
+}
 
-<!-- APP WRAPPER -->
-<div id="app-wrapper" class="hidden">
-
-<!-- Splash Screen -->
-<div id="splash-screen">
-<img src="edited-image.png" class="splash-logo">
-<div class="splash-text">PULP PRO</div>
-</div>
-
-<!-- Update Banner -->
-<div id="updateBanner" class="hidden" style="
-    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-    background: var(--pulp-lime); color: #000; z-index: 99999;
-    padding: 14px 24px; border-radius: 100px;
-    font-weight: 900; font-size: 0.8rem; text-transform: uppercase;
-    letter-spacing: 1px; cursor: pointer; text-align: center;
-    box-shadow: 0 10px 40px rgba(166,226,46,0.4);
-    white-space: nowrap;" onclick="applyUpdate()">
-    &#x2B06; New Update Available &mdash; Tap to Refresh
-</div>
-
-<!-- Menu Trigger -->
-<div id="menu-trigger" onclick="toggleMenu()"><span></span></div>
-
-<!-- Side Drawer -->
-<div id="menu-drawer">
-<div style="text-align:center; margin-bottom:28px;">
-<img src="edited-image.png" style="width:50px; margin-bottom:10px;">
-<div style="font-weight:900; color:var(--pulp-lime);">PULP PRO</div>
-</div>
-
-<div id="admin-badge" class="hidden" style="display:flex;align-items:center;gap:8px;background:rgba(166,226,46,0.08);border:1px solid rgba(166,226,46,0.2);border-radius:10px;padding:10px 12px;margin-bottom:16px;">
-<div style="width:7px;height:7px;border-radius:50%;background:#a6e22e;flex-shrink:0;"></div>
-<div>
-<div style="font-size:9px;font-weight:900;color:#a6e22e;text-transform:uppercase;letter-spacing:1.5px;">Developer Mode</div>
-<div style="font-size:8px;color:rgba(166,226,46,0.5);font-weight:700;margin-top:1px;">Logged in as Admin</div>
-</div>
-</div>
-
-<div class="menu-item" onclick="showHub(); toggleMenu();"><span>&#x1F3E0; Home</span></div>
-<div class="settings-label">App Settings</div>
-
-<div class="menu-item" onclick="clearHistory()" style="color:var(--pulp-red);"><span>&#x26A0;&#xFE0F; Clear Logs</span></div>
-<div class="menu-item" onclick="sendFeedback()"><span>&#x1F4AC; Send Feedback</span></div>
-
-<div id="admin-menu-section" class="hidden">
-<div class="settings-label" style="color:rgba(166,226,46,0.5);">Admin</div>
-<div class="menu-item" onclick="toggleCodeGenerator()" style="color:#a6e22e;background:rgba(166,226,46,0.05);border:1px solid rgba(166,226,46,0.12);border-radius:10px;margin-bottom:4px;"><span><i class="bi bi-key"></i> Generate Access Code</span></div>
-<div id="code-gen-panel" class="hidden" style="margin-bottom:8px;">
-<div style="background:#0a1a06;border:1px solid rgba(166,226,46,0.2);border-radius:12px;padding:12px;margin-bottom:6px;">
-<div style="font-size:8px;font-weight:900;color:rgba(166,226,46,0.6);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Name</div>
-<input id="codePersonName" type="text" placeholder="e.g. Jan" style="width:100%;background:#0a0a0a;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px 10px;font-size:12px;color:#fff;outline:none;text-transform:none;letter-spacing:normal;font-family:-apple-system,sans-serif;box-shadow:none;">
-</div>
-<div id="generated-code-display" class="hidden" style="background:#0a1a06;border:1px solid rgba(166,226,46,0.25);border-radius:12px;padding:12px;margin-bottom:6px;text-align:center;">
-<div id="generatedCodeFor" style="font-size:8px;color:rgba(166,226,46,0.5);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;"></div>
-<div id="generatedCode" style="font-size:16px;font-weight:900;color:#fff;letter-spacing:3px;font-family:monospace;"></div>
-</div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-<button id="generateCodeBtn" onclick="generateCode()" style="background:#a6e22e;color:#000;border:none;border-radius:8px;padding:10px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1px;cursor:pointer;font-family:-apple-system,sans-serif;"><i class="bi bi-arrow-repeat"></i> Generate</button>
-<button id="copyCodeBtn" onclick="copyGeneratedCode()" style="background:rgba(166,226,46,0.1);color:#a6e22e;border:1px solid rgba(166,226,46,0.2);border-radius:8px;padding:10px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1px;cursor:pointer;font-family:-apple-system,sans-serif;"><i class="bi bi-clipboard"></i> Copy</button>
-</div>
-</div>
-<div class="menu-item" onclick="toggleRevokePanel()" style="color:#a6e22e;background:rgba(166,226,46,0.05);border:1px solid rgba(166,226,46,0.12);border-radius:10px;margin-bottom:4px;"><span><i class="bi bi-people"></i> Active Users</span></div>
-<div id="revoke-panel" class="hidden" style="background:#0a0808;border:1px solid rgba(255,77,77,0.2);border-radius:12px;padding:12px;margin-bottom:8px;">
-<div style="font-size:8px;font-weight:900;color:rgba(255,77,77,0.6);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Active Users</div>
-<div id="revoke-list" style="font-size:11px;color:rgba(255,255,255,0.4);">Tap to load...</div>
-<button onclick="loadActiveUsers()" style="width:100%;margin-top:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px;font-size:9px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;cursor:pointer;font-family:-apple-system,sans-serif;">↻ Load Users</button>
-</div>
-<div class="menu-item" onclick="adminLogout()" style="color:rgba(255,77,77,0.6);"><span><i class="bi bi-box-arrow-right"></i> Logout</span></div>
-</div>
-
-<div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06);">
-<div class="menu-item" onclick="toggleMenu(); openAbout();" style="color:rgba(255,255,255,0.5);"><span><i class="bi bi-info-circle"></i> About Pulp Pro</span></div>
-</div>
-<div id="dev-login-btn" style="padding-top:4px;">
-<div class="menu-item" onclick="toggleMenu(); showDevLogin();" style="color:rgba(166,226,46,0.4);"><span><i class="bi bi-lock"></i> Developer Login</span></div>
-</div>
-</div>
-<div id="menu-overlay" onclick="toggleMenu()"></div>
-
-<!-- HOME -->
-<div id="fruit-hub" class="nav-view">
-<style>
-.home-hero-tag{display:inline-flex;align-items:center;gap:7px;background:rgba(166,226,46,0.07);border:1px solid rgba(166,226,46,0.16);border-radius:100px;padding:6px 14px;margin-bottom:20px}
-.home-hero-dot{width:6px;height:6px;border-radius:50%;background:#a6e22e;animation:livePulse 2s infinite}
-@keyframes livePulse{0%,100%{opacity:1}50%{opacity:0.25}}
-.home-hero-tag span{font-size:0.5rem;font-weight:800;color:#a6e22e;letter-spacing:1.5px;text-transform:uppercase}
-.home-h1{font-size:clamp(2rem,8vw,2.8rem);font-weight:900;letter-spacing:-1.5px;line-height:1.05;color:var(--text-main);margin-bottom:12px}
-.home-h1 em{color:#a6e22e;font-style:normal}
-.home-sub{font-size:0.82rem;color:rgba(255,255,255,0.32);line-height:1.7;margin-bottom:32px;font-weight:400;max-width:480px}
-.tool-cards{display:flex;flex-direction:column;gap:12px;max-width:600px}
-.tc{border-radius:22px;overflow:hidden;cursor:pointer;transition:transform 0.2s,border-color 0.2s;position:relative}
-.tc:hover{transform:translateY(-3px)}
-.tc:active{transform:scale(0.98)}
-.tc-age{background:linear-gradient(135deg,#0a1a06 0%,#0d1209 100%);border:1px solid rgba(166,226,46,0.18);padding:24px 26px}
-.tc-colour{background:#0f0f0f;border:1px solid rgba(255,255,255,0.07);padding:24px 26px}
-.tc-tag{font-size:0.48rem;font-weight:900;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
-.tc-age .tc-tag{color:rgba(166,226,46,0.55)}
-.tc-colour .tc-tag{color:rgba(255,255,255,0.28)}
-.tc-title{font-size:1.3rem;font-weight:900;color:#fff;letter-spacing:-0.3px;margin-bottom:3px}
-.tc-sub{font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:18px}
-.tc-age .tc-sub{color:rgba(166,226,46,0.4)}
-.tc-colour .tc-sub{color:rgba(255,255,255,0.22)}
-.tc-preview{display:flex;align-items:center;gap:10px}
-.code-pill{background:rgba(0,0,0,0.4);border:1px solid rgba(166,226,46,0.2);border-radius:10px;padding:9px 14px;font-size:1.1rem;font-weight:900;color:#fff;letter-spacing:5px;font-family:monospace}
-.result-pill{background:rgba(166,226,46,0.1);border:1px solid rgba(166,226,46,0.25);border-radius:10px;padding:9px 14px;text-align:center}
-.result-pill .days{font-size:1.1rem;font-weight:900;color:#a6e22e;line-height:1}
-.result-pill .rlbl{font-size:0.45rem;font-weight:800;color:rgba(166,226,46,0.6);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
-.tc-arrow{margin-left:auto;width:34px;height:34px;background:rgba(166,226,46,0.1);border:1px solid rgba(166,226,46,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#a6e22e;font-size:1rem;flex-shrink:0}
-.colour-scale{display:flex;gap:4px;margin-bottom:10px}
-.cs-step{flex:1;height:26px;border-radius:6px}
-.cs-step.sel{outline:2px solid #fff;outline-offset:2px}
-.colour-readout{display:flex;justify-content:space-between;align-items:center}
-.cr-stage{font-size:1rem;font-weight:900;color:#fff}
-.cr-name{font-size:0.48rem;color:rgba(255,255,255,0.3);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:2px}
-.cr-shelf{font-size:0.82rem;font-weight:900;color:#a6e22e;text-align:right}
-.cr-status{font-size:0.48rem;color:rgba(255,255,255,0.3);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:2px;text-align:right}
-.home-bottom{display:flex;gap:32px;margin-top:28px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.05);max-width:600px}
-.hbstat-num{font-size:1.1rem;font-weight:900;color:#a6e22e;letter-spacing:-0.5px}
-.hbstat-lbl{font-size:0.45rem;font-weight:700;color:rgba(255,255,255,0.22);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
-</style>
-
-<div class="home-hero-tag"><div class="home-hero-dot"></div><span>Live fruit intelligence</span></div>
-<div class="home-h1">Scan it. Know it.<br><em>Ship it.</em></div>
-<div class="home-sub">Professional tools for the fruit floor. Built fast, works offline.</div>
-
-<div class="tool-cards">
-    <div class="tc tc-age" onclick="openAgeChecker()">
-        <div class="tc-tag">Chiquita · Age Checker</div>
-        <div class="tc-title">Banana Age</div>
-        <div class="tc-sub">Enter 3-letter code → instant result</div>
-        <div class="tc-preview">
-            <div class="code-pill">CF1</div>
-            <div style="color:rgba(255,255,255,0.2);font-size:0.9rem;">→</div>
-            <div class="result-pill">
-                <div class="days">14d</div>
-                <div class="rlbl">Perfect</div>
-            </div>
-            <div class="tc-arrow">›</div>
-        </div>
-    </div>
-
-    <div class="tc tc-colour" onclick="openColourScanner()">
-        <div class="tc-tag">AI · Classic · Camera</div>
-        <div class="tc-title">Colour Scanner</div>
-        <div class="tc-sub">Point camera · get colour stage</div>
-        <div class="colour-scale">
-            <div class="cs-step" style="background:#2d5a1b"></div>
-            <div class="cs-step" style="background:#4a8a25"></div>
-            <div class="cs-step" style="background:#78c830"></div>
-            <div class="cs-step sel" style="background:#a6e22e"></div>
-            <div class="cs-step" style="background:#d4c426"></div>
-            <div class="cs-step" style="background:#f5a623"></div>
-            <div class="cs-step" style="background:#e8650a"></div>
-        </div>
-        <div class="colour-readout">
-            <div><div class="cr-stage">Stage 3.5</div><div class="cr-name">Yellow-Green</div></div>
-            <div><div class="cr-shelf">5–7 days</div><div class="cr-status">Perfect</div></div>
-        </div>
-    </div>
-
-    <!-- PULP AI TILE -->
-    <div class="tc" onclick="openPulpAI()" style="position:relative;overflow:hidden;min-height:150px;border:1px solid rgba(166,226,46,0.2);">
-        <canvas id="pulpai-tile-canvas" style="position:absolute;inset:0;width:100%;height:100%;border-radius:22px;"></canvas>
-        <div style="position:relative;z-index:2;padding:24px 26px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                <div class="tc-tag" style="color:rgba(166,226,46,0.5);">Powered by Pulp Pro Intelligence</div>
-                <div style="display:flex;align-items:center;gap:4px;background:rgba(166,226,46,0.1);border:1px solid rgba(166,226,46,0.2);border-radius:100px;padding:3px 9px;">
-                    <div style="width:4px;height:4px;border-radius:50%;background:#a6e22e;animation:livePulse 2s infinite;"></div>
-                    <div style="font-size:7px;font-weight:800;color:rgba(166,226,46,0.8);text-transform:uppercase;letter-spacing:1px;">Live AI</div>
-                </div>
-            </div>
-            <div class="tc-title">Pulp <span style="color:#a6e22e;">AI</span></div>
-            <div class="tc-sub" style="color:rgba(255,255,255,0.3);margin-bottom:14px;">Ask anything · Expert answers</div>
-            <div style="display:flex;flex-direction:column;gap:6px;">
-                <div style="display:flex;justify-content:flex-end;"><div style="background:rgba(166,226,46,0.1);border:1px solid rgba(166,226,46,0.18);border-radius:10px;border-bottom-right-radius:2px;padding:6px 10px;font-size:10px;color:rgba(255,255,255,0.7);max-width:80%;">What causes crown rot?</div></div>
-                <div style="display:flex;gap:6px;align-items:flex-start;"><div style="background:rgba(14,14,14,0.9);border:1px solid rgba(255,255,255,0.07);border-radius:10px;border-bottom-left-radius:2px;padding:6px 10px;font-size:10px;color:rgba(255,255,255,0.65);max-width:82%;"><strong style="color:#a6e22e;">High humidity</strong> above 85% triggers Fusarium fungi...</div></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- REMINDERS TILE -->
-    <div class="tc" onclick="openReminders()" style="background:#06060e;border:1px solid rgba(136,153,255,0.2);border-radius:22px;padding:24px 26px;position:relative;overflow:hidden;cursor:pointer;">
-        <div style="position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(136,153,255,0.1) 0%,transparent 70%);top:-60px;right:-40px;pointer-events:none;"></div>
-        <div style="position:relative;z-index:1;">
-            <div class="tc-tag" style="color:rgba(136,153,255,0.55);">Notifications · Scheduler</div>
-            <div class="tc-title">Reminders <span style="color:#8899ff;">+</span></div>
-            <div class="tc-sub" style="color:rgba(255,255,255,0.2);margin-bottom:14px;">Set alerts · Never miss a check</div>
-            <div id="rem-tile-preview">
-                <div style="font-size:11px;color:rgba(255,255,255,0.25);letter-spacing:normal;text-transform:none;font-weight:400;">No upcoming reminders</div>
-            </div>
-            <div style="display:flex;justify-content:flex-end;margin-top:10px;">
-                <div id="rem-tile-mic-btn" onclick="event.stopPropagation(); triggerTileMic();" style="display:none;width:32px;height:32px;border-radius:50%;background:rgba(136,153,255,0.1);border:1px solid rgba(136,153,255,0.2);align-items:center;justify-content:center;font-size:15px;color:rgba(136,153,255,0.7);cursor:pointer;">
-                    <i class="bi bi-mic"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="home-bottom">
-    <div><div class="hbstat-num">Free</div><div class="hbstat-lbl">Always</div></div>
-    <div><div class="hbstat-num">Offline</div><div class="hbstat-lbl">Works</div></div>
-    <div><div class="hbstat-num">iOS · Android · Web</div><div class="hbstat-lbl">Platform</div></div>
-</div>
-</div>
-
-<!-- AGE CHECKER -->
-<div class="app-container hidden" id="appInterface">
-<div class="app-card" id="appCard">
-<img src="edited-image.png" style="width:50px; margin-bottom:10px;">
-<div id="brandName" style="font-size: 1.4rem; font-weight: 900; color: var(--pulp-lime); text-transform: uppercase;">Chiquita</div>
-<div id="commodityLabel" style="font-weight: 900; letter-spacing: 4px; opacity: 0.5; font-size: 0.7rem; margin-bottom: 20px; color:var(--text-main);">BANANA AGE CHECKER</div>
-<div style="font-size:0.52rem; font-weight:900; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">Select Article</div>
-<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px; margin-bottom:18px;">
-    <button type="button" class="article-btn active" data-article="Chiquita 18kg" onclick="setArticle('Chiquita 18kg')" style="background:var(--input-bg); border:1.5px solid var(--border-glass); border-radius:12px; padding:12px 4px; font-size:0.55rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; cursor:pointer; line-height:1.4;">Chiquita<br>18kg</button>
-    <button type="button" class="article-btn" data-article="Chiquita Geel" onclick="setArticle('Chiquita Geel')" style="background:var(--input-bg); border:1.5px solid var(--border-glass); border-radius:12px; padding:12px 4px; font-size:0.55rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; cursor:pointer; line-height:1.4;">Chiquita<br>Geel</button>
-    <button type="button" class="article-btn" data-article="Chiquita Groene" onclick="setArticle('Chiquita Groene')" style="background:var(--input-bg); border:1.5px solid var(--border-glass); border-radius:12px; padding:12px 4px; font-size:0.55rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; cursor:pointer; line-height:1.4;">Chiquita<br>Groene</button>
-</div>
-<div style="font-size:0.52rem; font-weight:900; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">Scan Mode</div>
-<div style="display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:18px;">
-    <button type="button" id="singleModeBtn" class="scan-mode-btn active" onclick="setScanMode('single')" style="background:var(--input-bg); border:1.5px solid var(--border-glass); border-radius:12px; padding:11px; font-size:0.62rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; cursor:pointer;">Single Scan</button>
-    <button type="button" id="multiModeBtn" class="scan-mode-btn" onclick="setScanMode('multi')" style="background:var(--input-bg); border:1.5px solid var(--border-glass); border-radius:12px; padding:11px; font-size:0.62rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; cursor:pointer;">Multi Scan</button>
-</div>
-<div class="input-wrapper"><input type="text" id="codeIn" placeholder="---" maxlength="3" autofocus></div>
-<div id="batchList" class="hidden" style="background:var(--input-bg); border:1px solid var(--border-glass); border-radius:16px; margin-bottom:14px; overflow:hidden;"></div>
-<button onclick="checkFruit()" class="btn-main" id="calcBtn">Calculate</button>
-<div id="resBox" class="result-display hidden">
-<div id="statusLabel" style="font-weight:900;">READY</div>
-<div id="daysValue">--</div>
-<div id="dateText" style="font-size: 1.3rem; font-weight: 900; margin-top: 10px;">-- -- ----</div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
-    <button class="btn btn-copy" onclick="copyResult()" id="copyBtn"><i class="bi bi-clipboard"></i> COPY</button>
-    <button class="btn btn-copy" onclick="emailResult()" id="emailBtn"><i class="bi bi-envelope"></i> EMAIL</button>
-</div>
-</div>
-<div id="batchActionBtns" class="hidden" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
-    <button id="batchCopyBtn" class="btn btn-copy" onclick="copyBatch()" style="justify-content:center;"><i class="bi bi-clipboard"></i> COPY</button>
-    <button id="batchEmailBtn" class="btn btn-copy" onclick="emailBatch()" style="justify-content:center;"><i class="bi bi-envelope"></i> EMAIL</button>
-</div>
-<button class="btn-main btn-back" style="margin-top:25px;" onclick="showHub()">&#x2190; Back</button>
-</div>
-<div id="historySection" class="history-section"><div id="historyList"></div></div>
-</div>
-
-<!-- COLOUR SCANNER -->
-<div id="colour-scanner-view" class="nav-view hidden">
-<div style="max-width:400px; margin:0 auto; position:relative;">
-<div style="text-align:center; margin-bottom:14px;">
-<img src="edited-image.png" style="width:46px; border-radius:14px; margin-bottom:6px;">
-<div style="font-size:0.6rem; font-weight:900; color:var(--pulp-lime); letter-spacing:3px; text-transform:uppercase;">Pulp Pro</div>
-</div>
-<div class="hub-title" id="csScannerTitle">Banana Colour Scanner</div>
-<div id="csAIStatus" style="text-align:center; font-size:0.5rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:rgba(255,255,255,0.3); margin-bottom:10px;">&#x1F4CA; Classic Mode</div>
-<div style="display:flex; gap:8px; margin-bottom:14px;">
-<div class="cs-toggle-btn active" id="csSingleBtn" onclick="ColourScanner.setScanMode('single')">Single Scan</div>
-<div class="cs-toggle-btn" id="csMultiBtn" onclick="ColourScanner.setScanMode('multi')">Multi Scan</div>
-</div>
-<div id="cs-scanner">
-<div class="camera-wrapper">
-<video id="csVideo" autoplay playsinline muted style="display:none;"></video>
-<canvas id="csCanvas" style="display:none;"></canvas>
-<div id="csPlaceholder" style="display:flex; flex-direction:column; align-items:center; gap:8px; padding:30px; min-height:200px;">
-<i class="bi bi-camera" style="font-size:2rem; opacity:0.25; color:var(--text-main);"></i>
-<span id="csPointCamera" style="font-size:0.55rem; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:var(--text-dim);">Point camera at banana</span>
-</div>
-<div class="cs-crosshair"></div>
-<button class="capture-btn" id="csScanBtn" onclick="ColourScanner.doScan()">Scan</button>
-</div>
-<div id="csOfflineLabel" style="font-size:0.55rem; color:var(--text-dim); text-align:center; text-transform:uppercase; letter-spacing:2px; margin:10px 0; opacity:0.4;">Works offline &mdash; no internet needed</div>
-<div id="csMultiList" style="margin-bottom:10px;"></div>
-<button id="csBatchBtn" class="btn-main" style="display:none; margin-bottom:8px;" onclick="ColourScanner.getBatchResult()">Get Batch Result &rarr;</button>
-</div>
-<div id="cs-single-result" class="hidden">
-<div class="camera-wrapper" style="margin-bottom:14px; height:180px;">
-<img id="csSinglePhoto" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:25px;">
-<div id="csSinglePhotoPlaceholder" style="display:flex; flex-direction:column; align-items:center; gap:8px; padding:30px;">
-<i class="bi bi-image" style="font-size:2rem; opacity:0.2; color:var(--text-main);"></i>
-<span style="font-size:0.55rem; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:var(--text-dim);">No photo</span>
-</div>
-</div>
-<div class="report-card" style="margin-bottom:12px;">
-<div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
-<div id="csSingleSwatch" style="width:54px; height:54px; border-radius:14px; flex-shrink:0; background:#78c830;"></div>
-<div style="flex:1;">
-<div id="csSingleLabel" style="font-size:1.4rem; font-weight:900; color:var(--text-main); line-height:1;">Color 1</div>
-<div id="csSingleName" style="font-size:0.65rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-top:3px;">Full Green</div>
-<div class="color-bar-wrap" style="margin-top:8px;"><div id="csSingleBar" class="color-bar" style="width:16%; background:#78c830;"></div></div>
-</div>
-</div>
-<div id="csAIConfidence" style="display:none; font-size:0.5rem; font-weight:700; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; opacity:0.8;"></div>
-<div class="report-row"><span class="report-key" id="shelfLifeLabel">Shelf Life</span><span class="report-val" id="csSingleShelf">&mdash;</span></div>
-<div class="report-row"><span class="report-key" id="statusLabel2">Status</span><span class="report-val" id="csSingleStatus">&mdash;</span></div>
-</div>
-<button class="btn-main" style="margin-bottom:8px;" onclick="ColourScanner.shareReport()"><i class="bi bi-share-fill"></i> Share Report Card</button>
-<button id="csCopySingle" class="btn-copy" style="width:100%; justify-content:center; margin-bottom:10px;" onclick="ColourScanner.copySingleResult()"><i class="bi bi-clipboard"></i> Copy Text Report</button>
-<button class="btn-main btn-back" onclick="ColourScanner.resetScanner()" id="csNewScanBtn">&larr; New Scan</button>
-</div>
-<div id="cs-batch-result" class="hidden">
-<div id="csBatchPhotoGrid" style="display:flex; gap:8px; margin-bottom:12px;"></div>
-<div style="background:rgba(166,226,46,0.06); border:1px solid rgba(166,226,46,0.2); border-radius:16px; padding:14px; margin-bottom:12px; display:flex; align-items:center; gap:12px;">
-<div id="csBatchSwatch" style="width:48px; height:48px; border-radius:12px; flex-shrink:0; background:#98c428;"></div>
-<div>
-<div id="batchAvgLabel" style="font-size:0.55rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:2px; margin-bottom:3px;">Batch Average</div>
-<div id="csBatchLabel" style="font-size:0.95rem; font-weight:900; color:var(--text-main);">Color 1.5</div>
-</div>
-</div>
-<div class="report-card" style="margin-bottom:12px;">
-<div id="csBatchBreakdown" style="margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--border-glass);"></div>
-<div class="report-row"><span class="report-key" id="boxesScannedLabel">Boxes Scanned</span><span class="report-val" id="csBatchCount">&mdash;</span></div>
-<div class="report-row"><span class="report-key" id="shelfLifeEstLabel">Shelf Life Est.</span><span class="report-val" id="csBatchShelf">&mdash;</span></div>
-<div class="report-row"><span class="report-key" id="batchStatusLabel">Batch Status</span><span class="report-val" id="csBatchStatus">&mdash;</span></div>
-</div>
-<button class="btn-main" style="margin-bottom:8px;" onclick="ColourScanner.shareBatchReport()"><i class="bi bi-share-fill"></i> Share Batch Report</button>
-<button id="csCopyBatch" class="btn-copy" style="width:100%; justify-content:center; margin-bottom:10px;" onclick="ColourScanner.copyBatchResult()"><i class="bi bi-clipboard"></i> Copy Text Report</button>
-<button class="btn-main btn-back" onclick="ColourScanner.resetScanner()" id="csNewBatchScanBtn">&larr; New Scan</button>
-</div>
-<button class="btn-main btn-back" style="margin-top:10px;" onclick="showHub()" id="csBackBtn">&larr; Back</button>
-</div>
-</div>
-
-<!-- PULP AI VIEW -->
-<div id="pulpai-view" class="hidden" style="padding:0;display:flex;flex-direction:column;height:100%;position:relative;">
-    <div id="pulpai-list-screen" style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;">
-        <div style="padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.05);background:#060606;display:flex;align-items:center;gap:10px;flex-shrink:0;">
-            <div style="position:relative;width:42px;height:42px;flex-shrink:0;">
-                <canvas id="pulpai-menu-orb" width="42" height="42" style="border-radius:50%;position:absolute;inset:0;"></canvas>
-            </div>
-            <div style="flex:1;">
-                <div style="font-size:17px;font-weight:900;color:#fff;letter-spacing:-0.3px;">Pulp AI</div>
-                <div style="font-size:10px;color:rgba(166,226,46,0.6);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:2px;">Fruit &amp; Veg Intelligence</div>
-            </div>
-            <button onclick="newPulpAIChat()" style="width:36px;height:36px;border-radius:11px;background:rgba(166,226,46,0.08);border:1px solid rgba(166,226,46,0.2);display:flex;align-items:center;justify-content:center;font-size:20px;color:#a6e22e;cursor:pointer;font-family:-apple-system,sans-serif;flex-shrink:0;">+</button>
-            <button onclick="closePulpAI()" style="width:36px;height:36px;border-radius:11px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;font-size:15px;color:rgba(255,255,255,0.4);cursor:pointer;font-family:-apple-system,sans-serif;flex-shrink:0;">✕</button>
-        </div>
-        <div style="padding:9px 16px;border-bottom:1px solid rgba(255,255,255,0.04);background:#060606;flex-shrink:0;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
-                <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px;">Daily messages</div>
-                <div id="pulpai-usage-count" style="font-size:10px;font-weight:800;color:#a6e22e;">0 / 1,000</div>
-            </div>
-            <div style="height:3px;background:rgba(255,255,255,0.05);border-radius:100px;overflow:hidden;">
-                <div id="pulpai-usage-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#78c830,#a6e22e);border-radius:100px;transition:width 0.5s,background 0.3s;"></div>
-            </div>
-            <div style="font-size:9px;color:rgba(255,255,255,0.18);margin-top:4px;text-align:right;">Resets midnight UTC · Shared across all users</div>
-        </div>
-        <div id="pulpai-limit-warn" style="display:none;padding:8px 16px;background:rgba(255,140,0,0.06);border-bottom:1px solid rgba(255,140,0,0.12);justify-content:center;flex-shrink:0;"></div>
-        <div id="pulpai-chat-list" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0;padding:14px 16px;background:transparent;"></div>
-        <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,0.05);background:#060606;flex-shrink:0;">
-            <div onclick="newPulpAIChat()" style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:100px;padding:12px 18px;cursor:pointer;">
-                <div style="font-size:14px;color:rgba(255,255,255,0.22);flex:1;letter-spacing:normal;text-transform:none;">Ask Pulp AI anything...</div>
-                <div style="width:30px;height:30px;border-radius:50%;background:#a6e22e;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#000;flex-shrink:0;">↑</div>
-            </div>
-        </div>
-    </div>
-    <div id="pulpai-chat-screen" class="hidden" style="display:flex;flex-direction:column;height:100%;position:relative;">
-        <canvas id="pulpai-glow-canvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:20;border-radius:0;"></canvas>
-        <div style="padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.05);background:rgba(5,5,5,0.97);display:flex;align-items:center;gap:8px;flex-shrink:0;position:relative;z-index:10;">
-            <button onclick="backToChatList()" style="width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;font-size:13px;color:rgba(255,255,255,0.4);cursor:pointer;font-family:-apple-system,sans-serif;flex-shrink:0;">←</button>
-            <div style="position:relative;width:28px;height:28px;flex-shrink:0;">
-                <canvas id="pulpai-chat-orb" width="28" height="28" style="border-radius:50%;position:absolute;inset:0;"></canvas>
-            </div>
-            <div style="flex:1;min-width:0;">
-                <div id="pulpai-chat-title" style="font-size:12px;font-weight:800;color:#fff;letter-spacing:-0.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Conversation</div>
-                <div style="font-size:9px;color:rgba(166,226,46,0.55);font-weight:600;margin-top:1px;">Pulp AI · Fruit &amp; Veg Expert</div>
-            </div>
-        </div>
-        <div style="padding:5px 14px;border-bottom:1px solid rgba(255,255,255,0.04);background:rgba(5,5,5,0.97);position:relative;z-index:10;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
-                <div style="font-size:7px;font-weight:700;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:1px;">Daily</div>
-                <div id="pulpai-usage-count-chat" style="font-size:7px;font-weight:800;color:#a6e22e;">— / 1000</div>
-            </div>
-            <div style="height:2px;background:rgba(255,255,255,0.05);border-radius:100px;overflow:hidden;">
-                <div id="pulpai-usage-bar-chat" style="height:100%;width:0%;background:linear-gradient(90deg,#78c830,#a6e22e);border-radius:100px;transition:width 0.5s;"></div>
-            </div>
-        </div>
-        <div id="pulpai-messages" style="flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:10px;position:relative;z-index:1;"></div>
-        <div id="pulpai-typing" style="display:none;padding:0 14px 8px;position:relative;z-index:1;">
-            <div style="display:flex;align-items:flex-start;gap:6px;">
-                <div style="width:20px;height:20px;border-radius:50%;background:#a6e22e;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;color:#000;flex-shrink:0;">P</div>
-                <div style="display:flex;align-items:center;gap:4px;padding:8px 12px;background:rgba(14,14,14,0.95);border:1px solid rgba(255,255,255,0.07);border-radius:12px;border-bottom-left-radius:3px;">
-                    <div class="pulpai-td"></div><div class="pulpai-td"></div><div class="pulpai-td"></div>
-                </div>
-            </div>
-        </div>
-        <div class="pulpai-photo-popup" id="pulpai-photo-popup">
-            <div class="pulpai-photo-popup-title">Analyse a fruit or vegetable</div>
-            <input class="pulpai-fruit-input" id="pulpai-fruit-input" placeholder="Type fruit or vegetable e.g. banana">
-            <div class="pulpai-photo-btn-row">
-                <div class="pulpai-photo-btn pulpai-photo-btn-cam" onclick="triggerCamera()"><i class="bi bi-camera"></i> Camera</div>
-                <div class="pulpai-photo-btn pulpai-photo-btn-gal" onclick="triggerGallery()"><i class="bi bi-image"></i> Gallery</div>
-            </div>
-        </div>
-        <input type="file" id="pulpai-camera-input" accept="image/*" capture="environment" style="display:none;">
-        <input type="file" id="pulpai-gallery-input" accept="image/*" style="display:none;">
-        <div style="background:rgba(5,5,5,0.97);border-top:1px solid rgba(255,255,255,0.05);padding:10px 12px;display:flex;align-items:center;gap:8px;flex-shrink:0;position:relative;z-index:10;">
-            <div style="flex:1;display:flex;align-items:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:100px;padding:0 14px;gap:8px;">
-                <input id="pulpai-input" type="text" placeholder="Ask about fruit &amp; vegetables..." style="flex:1;background:transparent;border:none;padding:10px 0;font-size:15px;color:#fff;outline:none;font-family:-apple-system,sans-serif;letter-spacing:normal;text-transform:none;font-weight:400;text-align:left;">
-                <div class="pulpai-cam-btn" onclick="togglePhotoPopup()" title="Analyse photo"><i class="bi bi-camera"></i></div>
-                <div class="pulpai-mic-btn" id="pulpai-mic-btn" onclick="toggleMic()" title="Voice input" style="display:none;"><i class="bi bi-mic"></i></div>
-            </div>
-            <button id="pulpai-send-btn" onclick="sendPulpAIMessage()" style="width:36px;height:36px;border-radius:50%;background:#a6e22e;border:none;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:#000;cursor:pointer;flex-shrink:0;font-family:-apple-system,sans-serif;"><i class="bi bi-arrow-up"></i></button>
-        </div>
-    </div>
-</div>
-
-<style>
-.article-btn.active{background:rgba(166,226,46,0.08)!important;border-color:var(--pulp-lime)!important;color:var(--pulp-lime)!important}
-.scan-mode-btn.active{background:rgba(166,226,46,0.08)!important;border-color:var(--pulp-lime)!important;color:var(--pulp-lime)!important}
-#codePersonName,#gateCodeInput,#devUsername,#devPassword{font-size:12px!important;font-weight:400!important;letter-spacing:normal!important;text-transform:none!important;height:auto!important;line-height:normal!important;text-align:left!important}
-#pulpai-fruit-input,#rem-text-input,#rem-date-input,#rem-time-input{font-size:15px!important;font-weight:400!important;letter-spacing:normal!important;text-transform:none!important;height:auto!important;line-height:normal!important;text-align:left!important;color:#fff!important;-webkit-text-fill-color:#fff!important;color-scheme:dark!important}
-#pulpai-fruit-input{padding:10px 14px!important;background:rgba(255,255,255,0.05)!important;border:1px solid rgba(255,255,255,0.1)!important;border-radius:10px!important;width:100%!important;outline:none!important;display:block!important;box-sizing:border-box!important}
-#pulpai-photo-popup{display:none}
-</style>
-
-<script>
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-            .then(reg => {
-                reg.addEventListener('updatefound', () => {
-                    const newWorker = reg.installing;
-                    newWorker.addEventListener('statechange', () => {
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            document.getElementById('updateBanner').classList.remove('hidden');
-                        }
-                    });
-                });
-            })
-            .catch(err => console.log('SW failed', err));
+// Called from Pulp AI when AI sets a reminder
+function saveReminderFromAI(data) {
+    const reminders = loadReminders();
+    const dt = data.datetime || '';
+    const [datePart, timePart] = dt.split('T');
+    const [y, mo, d] = datePart.split('-').map(Number);
+    const [h, m] = (timePart || '00:00').split(':').map(Number);
+    const datetime = new Date(y, mo - 1, d, h, m).toISOString();
+    reminders.push({
+        id: 'rem_' + Date.now(),
+        text: data.text,
+        datetime,
+        source: 'ai',
+        done: false,
+        createdAt: new Date().toISOString()
     });
+    saveRemindersLocal(reminders);
+    renderReminderTilePreview();
 }
-</script>
 
-</div><!-- end app-wrapper -->
+// ── OPEN / CLOSE ──────────────────────────────────────────────────────────
+function openReminders() {
+    document.getElementById('fruit-hub').classList.add('hidden');
+    document.getElementById('appInterface').classList.add('hidden');
+    document.getElementById('colour-scanner-view').classList.add('hidden');
+    const pulpaiView = document.getElementById('pulpai-view');
+    if (pulpaiView) pulpaiView.classList.add('hidden');
+    document.getElementById('reminders-view').classList.remove('hidden');
+    const menuTrigger = document.getElementById('menu-trigger');
+    if (menuTrigger) menuTrigger.style.display = 'none';
+    renderRemindersList();
+    // Request push permission — called directly from user tap context
+    if (typeof requestPushPermission === 'function' && Notification.permission === 'default') {
+        requestPushPermission();
+    }
+}
 
-<!-- REMINDERS VIEW -->
-<div id="reminders-view" class="hidden" style="position:fixed;inset:0;background:#060608;z-index:9800;display:flex;flex-direction:column;overflow:hidden;">
+function closeReminders() {
+    document.getElementById('reminders-view').classList.add('hidden');
+    document.getElementById('fruit-hub').classList.remove('hidden');
+    const menuTrigger = document.getElementById('menu-trigger');
+    if (menuTrigger) menuTrigger.style.display = '';
+}
 
-    <div style="padding:16px;display:flex;align-items:center;gap:12px;background:#07070f;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;">
-        <div style="width:44px;height:44px;border-radius:14px;background:rgba(136,153,255,0.1);border:1px solid rgba(136,153,255,0.2);display:flex;align-items:center;justify-content:center;font-size:20px;color:#8899ff;flex-shrink:0;"><i class="bi bi-bell"></i></div>
-        <div style="flex:1;">
-            <div style="font-size:18px;font-weight:800;color:#fff;">Reminders</div>
-            <div id="reminders-header-sub" style="font-size:10px;color:rgba(136,153,255,0.6);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:2px;">All alerts in one place</div>
+function scrollToNewReminder() {
+    const input = document.getElementById('rem-text-input');
+    if (input) { input.scrollIntoView({ behavior: 'smooth' }); input.focus(); }
+}
+
+// ── RENDER LIST ───────────────────────────────────────────────────────────
+function renderRemindersList() {
+    const reminders = loadReminders();
+    const now = new Date();
+    const upcoming = reminders.filter(r => !r.done && new Date(r.datetime) >= now);
+    const overdue = reminders.filter(r => !r.done && new Date(r.datetime) < now);
+    const done = reminders.filter(r => r.done);
+
+    const container = document.getElementById('reminders-list');
+    if (!container) return;
+
+    const subEl = document.getElementById('reminders-header-sub');
+    if (subEl) subEl.textContent = upcoming.length === 1 ? '1 upcoming' : upcoming.length > 0 ? `${upcoming.length} upcoming` : 'No upcoming';
+
+    let html = '';
+
+    if (upcoming.length === 0 && overdue.length === 0) {
+        html += `<div style="text-align:center;padding:40px 20px;font-size:14px;color:rgba(255,255,255,0.25);font-weight:400;letter-spacing:normal;text-transform:none;">No reminders yet.<br>Add one below.</div>`;
+    }
+
+    if (overdue.length > 0) {
+        html += `<div style="font-size:9px;font-weight:700;color:rgba(255,80,80,0.6);text-transform:uppercase;letter-spacing:2px;padding:4px 2px;margin-bottom:6px;">Overdue</div>`;
+        overdue.forEach(r => { html += renderReminderCard(r, true, false); });
+    }
+
+    if (upcoming.length > 0) {
+        html += `<div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:2px;padding:4px 2px;margin-bottom:6px;${overdue.length > 0 ? 'margin-top:12px;' : ''}">Upcoming</div>`;
+        upcoming.forEach(r => { html += renderReminderCard(r, false, false); });
+    }
+
+    if (done.length > 0) {
+        html += `<div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.2);text-transform:uppercase;letter-spacing:2px;padding:4px 2px;margin-top:12px;margin-bottom:6px;">Completed</div>`;
+        done.slice(0, 5).forEach(r => { html += renderReminderCard(r, false, true); });
+    }
+
+    container.innerHTML = html;
+}
+
+function renderReminderCard(r, overdue, done) {
+    const dt = new Date(r.datetime);
+    const dateStr = dt.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' });
+    const timeStr = dt.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+    const dotColor = done ? '#444' : overdue ? '#ff5050' : r.source === 'ai' ? '#8899ff' : '#a6e22e';
+    const borderColor = done ? 'rgba(255,255,255,0.06)' : overdue ? 'rgba(255,80,80,0.2)' : 'rgba(136,153,255,0.25)';
+    const bgColor = done ? 'rgba(255,255,255,0.02)' : overdue ? 'rgba(255,80,80,0.04)' : 'rgba(136,153,255,0.05)';
+    const tagHtml = r.source === 'ai'
+        ? `<span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(136,153,255,0.12);color:#8899ff;border:1px solid rgba(136,153,255,0.2);text-transform:uppercase;letter-spacing:0.5px;">Via Pulp AI</span>`
+        : `<span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(166,226,46,0.08);color:#a6e22e;border:1px solid rgba(166,226,46,0.18);text-transform:uppercase;letter-spacing:0.5px;">Manual</span>`;
+
+    const actionsHtml = !done ? `
+        <div style="display:flex;gap:6px;padding-left:21px;margin-top:10px;">
+            <div onclick="openEditReminder('${r.id}')" style="flex:1;padding:8px 10px;border-radius:9px;font-size:11px;font-weight:700;text-align:center;cursor:pointer;background:rgba(136,153,255,0.1);color:#8899ff;border:1px solid rgba(136,153,255,0.2);letter-spacing:0.3px;"><i class="bi bi-pencil" style="font-size:10px;margin-right:3px;"></i>Edit</div>
+            <div onclick="markReminderDone('${r.id}')" style="flex:1;padding:8px 10px;border-radius:9px;font-size:11px;font-weight:700;text-align:center;cursor:pointer;background:rgba(166,226,46,0.08);color:#a6e22e;border:1px solid rgba(166,226,46,0.18);letter-spacing:0.3px;"><i class="bi bi-check-lg" style="font-size:10px;margin-right:3px;"></i>Done</div>
+            <div onclick="deleteReminder('${r.id}')" style="padding:8px 12px;border-radius:9px;font-size:11px;cursor:pointer;background:rgba(255,77,77,0.07);color:rgba(255,77,77,0.6);border:1px solid rgba(255,77,77,0.15);"><i class="bi bi-trash" style="font-size:11px;"></i></div>
+        </div>` : '';
+
+    return `<div style="background:${bgColor};border:1px solid ${borderColor};border-radius:16px;padding:14px 15px;margin-bottom:8px;${done ? 'opacity:0.4;' : ''}">
+        <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;">
+            <div style="width:11px;height:11px;border-radius:50%;background:${dotColor};flex-shrink:0;margin-top:3px;"></div>
+            <div style="font-size:14px;font-weight:700;color:${done ? 'rgba(255,255,255,0.4)' : '#fff'};line-height:1.3;flex:1;letter-spacing:normal;text-transform:none;${done ? 'text-decoration:line-through;' : ''}">${escapeHtmlRem(r.text)}</div>
+            ${!done ? `<div style="font-size:14px;color:rgba(255,255,255,0.2);flex-shrink:0;margin-top:2px;"><i class="bi bi-chevron-right"></i></div>` : ''}
         </div>
-        <button onclick="scrollToNewReminder()" style="width:36px;height:36px;border-radius:11px;background:rgba(136,153,255,0.1);border:1px solid rgba(136,153,255,0.22);display:flex;align-items:center;justify-content:center;font-size:18px;color:#8899ff;cursor:pointer;font-family:-apple-system,sans-serif;flex-shrink:0;">+</button>
-        <button onclick="closeReminders()" style="width:36px;height:36px;border-radius:11px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:16px;color:rgba(255,255,255,0.35);cursor:pointer;font-family:-apple-system,sans-serif;flex-shrink:0;">✕</button>
-    </div>
-    <div id="reminders-list" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0;padding:14px 16px;scrollbar-width:none;"></div>
-    <div style="background:#07070f;border-top:1px solid rgba(255,255,255,0.06);padding:14px 16px;flex-shrink:0;">
-        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;">New reminder</div>
-        <div style="display:flex;align-items:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:0 14px;gap:8px;margin-bottom:10px;">
-            <input id="rem-text-input" type="text" placeholder="What do you need to check?" style="flex:1;background:transparent;border:none;padding:13px 0;font-size:15px;color:#fff;outline:none;font-family:-apple-system,sans-serif;letter-spacing:normal;text-transform:none;font-weight:400;text-align:left;">
-            <div id="rem-mic-btn" onclick="toggleRemMic()" style="display:none;width:28px;height:28px;border-radius:50%;background:rgba(136,153,255,0.1);border:1px solid rgba(136,153,255,0.2);align-items:center;justify-content:center;font-size:14px;color:rgba(136,153,255,0.7);cursor:pointer;flex-shrink:0;"><i class="bi bi-mic"></i></div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-left:21px;">
+            <div style="font-size:12px;color:rgba(255,255,255,0.35);display:flex;align-items:center;gap:4px;"><i class="bi bi-clock" style="font-size:11px;"></i> ${dateStr} · ${timeStr}</div>
+            ${tagHtml}
         </div>
-        <div style="display:flex;gap:10px;margin-bottom:10px;">
-            <label style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px 14px;display:block;cursor:pointer;">
-                <div style="font-size:10px;font-weight:700;color:rgba(136,153,255,0.6);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Date</div>
-                <input id="rem-date-input" type="date" style="width:100%;background:transparent;border:none;font-size:15px;color:#fff;font-family:-apple-system,sans-serif;outline:none;font-weight:600;padding:0;margin:0;display:block;color-scheme:dark;">
-            </label>
-            <label style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px 14px;display:block;cursor:pointer;">
-                <div style="font-size:10px;font-weight:700;color:rgba(136,153,255,0.6);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Time</div>
-                <input id="rem-time-input" type="time" style="width:100%;background:transparent;border:none;font-size:15px;color:#fff;font-family:-apple-system,sans-serif;outline:none;font-weight:600;padding:0;margin:0;display:block;color-scheme:dark;">
-            </label>
-        </div>
-        <button onclick="saveNewReminder()" style="width:100%;background:#8899ff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;color:#000;text-transform:uppercase;letter-spacing:1px;cursor:pointer;font-family:-apple-system,sans-serif;">Set Reminder</button>
-    </div>
-    <div id="reminders-edit-panel" style="display:none;position:absolute;inset:0;background:#060608;z-index:10;flex-direction:column;overflow:hidden;"></div>
-</div>
+        ${actionsHtml}
+    </div>`;
+}
 
-<!-- REMINDER NOTIFICATION SHEET -->
-<div id="reminder-sheet-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;background:rgba(0,0,0,0.88);z-index:99000;align-items:flex-end;">
-    <div id="reminder-sheet" style="width:100%;background:#0f0f1a;border-radius:22px 22px 0 0;overflow-y:auto;max-height:92vh;transform:translateY(100%);transition:transform 0.3s ease;box-sizing:border-box;overflow-x:hidden;">
-        <div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:100px;margin:16px auto 20px;"></div>
-        <div style="padding:0 16px 18px;border-bottom:1px solid rgba(255,255,255,0.07);">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-                <div style="width:36px;height:36px;border-radius:10px;background:rgba(255,80,80,0.12);border:1px solid rgba(255,80,80,0.25);display:flex;align-items:center;justify-content:center;font-size:16px;color:#ff5050;flex-shrink:0;"><i class="bi bi-bell"></i></div>
-                <div style="font-size:8px;font-weight:700;padding:2px 7px;border-radius:100px;background:rgba(255,80,80,0.12);color:#ff5050;border:1px solid rgba(255,80,80,0.2);text-transform:uppercase;letter-spacing:0.5px;">Due now</div>
+function escapeHtmlRem(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function markReminderDone(id) {
+    const reminders = loadReminders();
+    const r = reminders.find(r => r.id === id);
+    if (r) r.done = true;
+    saveRemindersLocal(reminders);
+    renderRemindersList();
+    renderReminderTilePreview();
+}
+
+function deleteReminder(id) {
+    const reminders = loadReminders().filter(r => r.id !== id);
+    saveRemindersLocal(reminders);
+    renderRemindersList();
+    renderReminderTilePreview();
+}
+
+// ── EDIT REMINDER ─────────────────────────────────────────────────────────
+function openEditReminder(id) {
+    const reminders = loadReminders();
+    const r = reminders.find(r => r.id === id);
+    if (!r) return;
+
+    const dt = new Date(r.datetime);
+    const dateVal = dt.toISOString().slice(0, 10);
+    const timeVal = dt.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+
+    const isOverdue = !r.done && dt < new Date();
+    const statusLabel = r.done ? 'Completed' : isOverdue ? 'Overdue' : 'Upcoming';
+    const statusColor = r.done ? 'rgba(255,255,255,0.4)' : isOverdue ? '#ff5050' : '#a6e22e';
+    const statusBg = r.done ? 'rgba(255,255,255,0.06)' : isOverdue ? 'rgba(255,80,80,0.1)' : 'rgba(166,226,46,0.08)';
+    const statusBorder = r.done ? 'rgba(255,255,255,0.1)' : isOverdue ? 'rgba(255,80,80,0.2)' : 'rgba(166,226,46,0.18)';
+
+    const sourceHtml = r.source === 'ai'
+        ? `<span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:100px;background:rgba(136,153,255,0.1);color:#8899ff;border:1px solid rgba(136,153,255,0.2);">Via Pulp AI</span>`
+        : `<span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:100px;background:rgba(166,226,46,0.08);color:#a6e22e;border:1px solid rgba(166,226,46,0.18);">Manual</span>`;
+
+    const panel = document.getElementById('reminders-edit-panel');
+    if (!panel) return;
+
+    panel.innerHTML = `
+        <div style="padding:13px 16px;display:flex;align-items:center;gap:10px;background:#07070f;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;">
+            <div onclick="closeEditReminder()" style="width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:14px;color:rgba(255,255,255,0.5);cursor:pointer;flex-shrink:0;"><i class="bi bi-arrow-left"></i></div>
+            <div style="flex:1;">
+                <div style="font-size:16px;font-weight:800;color:#fff;">Edit Reminder</div>
+                <div style="font-size:10px;color:rgba(136,153,255,0.6);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:1px;">Tap any field to change</div>
             </div>
-            <div id="reminder-sheet-text" style="font-size:14px;font-weight:800;color:#fff;line-height:1.3;margin-bottom:6px;"></div>
-            <div id="reminder-sheet-meta" style="font-size:10px;color:rgba(255,255,255,0.35);"></div>
         </div>
-        <div style="padding:16px 16px 40px;box-sizing:border-box;width:100%;max-width:100%;overflow:hidden;">
-            <div style="display:flex;flex-direction:column;gap:10px;">
-                <div onclick="reminderSheetDone()" style="width:100%;box-sizing:border-box;padding:15px;border-radius:11px;font-size:13px;font-weight:700;text-align:center;cursor:pointer;background:rgba(166,226,46,0.1);color:#a6e22e;border:1px solid rgba(166,226,46,0.2);"><i class="bi bi-check-lg" style="margin-right:5px;"></i>Mark as done</div>
-                <div style="display:flex;gap:6px;">
-                    <div onclick="reminderSheetSnooze(15)" style="flex:1;padding:13px 4px;border-radius:9px;font-size:11px;font-weight:700;text-align:center;cursor:pointer;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.1);">+15 min</div>
-                    <div onclick="reminderSheetSnooze(60)" style="flex:1;padding:13px 4px;border-radius:9px;font-size:11px;font-weight:700;text-align:center;cursor:pointer;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.1);">+1 hr</div>
-                    <div onclick="reminderSheetSnooze(180)" style="flex:1;padding:13px 4px;border-radius:9px;font-size:11px;font-weight:700;text-align:center;cursor:pointer;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.1);">+3 hr</div>
+        <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;display:flex;flex-direction:column;gap:12px;">
+            <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px;">
+                <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;">Reminder text</div>
+                <textarea id="edit-rem-text" rows="3" style="width:100%;background:transparent;border:none;font-size:15px;color:#fff;outline:none;font-weight:500;line-height:1.5;resize:none;font-family:-apple-system,sans-serif;letter-spacing:normal;text-transform:none;">${escapeHtmlRem(r.text)}</textarea>
+            </div>
+            <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px;">
+                <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;">Schedule</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+                    <div style="font-size:13px;color:rgba(255,255,255,0.5);"><i class="bi bi-calendar3" style="font-size:14px;margin-right:6px;vertical-align:-2px;"></i>Date</div>
+                    <input id="edit-rem-date" type="date" value="${dateVal}" style="background:transparent;border:none;font-size:13px;font-weight:600;color:#fff;outline:none;font-family:-apple-system,sans-serif;color-scheme:dark;">
                 </div>
-                <div onclick="reminderSheetEdit()" style="width:100%;box-sizing:border-box;padding:15px;border-radius:11px;font-size:13px;font-weight:700;text-align:center;cursor:pointer;background:rgba(136,153,255,0.08);color:#8899ff;border:1px solid rgba(136,153,255,0.18);"><i class="bi bi-pencil" style="margin-right:5px;"></i>Edit reminder</div>
-                <div onclick="reminderSheetDismiss()" style="width:100%;box-sizing:border-box;padding:15px;border-radius:11px;font-size:13px;font-weight:700;text-align:center;cursor:pointer;background:transparent;color:rgba(255,77,77,0.6);border:1px solid rgba(255,77,77,0.15);">Dismiss</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0 0;">
+                    <div style="font-size:13px;color:rgba(255,255,255,0.5);"><i class="bi bi-clock" style="font-size:14px;margin-right:6px;vertical-align:-2px;"></i>Time</div>
+                    <input id="edit-rem-time" type="time" value="${timeVal}" style="background:transparent;border:none;font-size:13px;font-weight:600;color:#fff;outline:none;font-family:-apple-system,sans-serif;color-scheme:dark;">
+                </div>
+            </div>
+            <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px;">
+                <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;">Details</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+                    <div style="font-size:13px;color:rgba(255,255,255,0.5);">Source</div>
+                    ${sourceHtml}
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0 0;">
+                    <div style="font-size:13px;color:rgba(255,255,255,0.5);">Status</div>
+                    <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:100px;background:${statusBg};color:${statusColor};border:1px solid ${statusBorder};">${statusLabel}</span>
+                </div>
             </div>
         </div>
-    </div>
-</div>
+        <button onclick="saveEditReminder('${r.id}')" style="margin:0 16px 12px;background:#8899ff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;color:#000;text-transform:uppercase;letter-spacing:1px;cursor:pointer;font-family:-apple-system,sans-serif;flex-shrink:0;">Save Changes</button>
+        <button onclick="deleteReminderFromEdit('${r.id}')" style="margin:0 16px 20px;background:rgba(255,77,77,0.08);border:1px solid rgba(255,77,77,0.2);border-radius:12px;padding:13px;font-size:13px;font-weight:700;color:rgba(255,77,77,0.7);text-transform:uppercase;letter-spacing:1px;cursor:pointer;font-family:-apple-system,sans-serif;flex-shrink:0;"><i class="bi bi-trash" style="font-size:13px;margin-right:5px;"></i>Delete reminder</button>
+    `;
 
-<script src="js/app.js"></script>
-<script src="js/history.js"></script>
-<script src="js/push.js"></script>
-<script src="js/navigation.js"></script>
-<script src="js/calculator.js"></script>
-<script src="js/colour-scanner.js"></script>
-<script src="js/pulp-ai.js"></script>
-<script src="js/reminders.js"></script>
-<script>checkAccess();</script>
-</body>
-</html>
+    panel.style.display = 'flex';
+}
+
+function closeEditReminder() {
+    const panel = document.getElementById('reminders-edit-panel');
+    if (panel) panel.style.display = 'none';
+}
+
+function saveEditReminder(id) {
+    const text = document.getElementById('edit-rem-text').value.trim();
+    const date = document.getElementById('edit-rem-date').value;
+    const time = document.getElementById('edit-rem-time').value;
+
+    if (!text) { alert('Please enter a reminder.'); return; }
+    if (!date || !time) { alert('Please set a date and time.'); return; }
+
+    const reminders = loadReminders();
+    const r = reminders.find(r => r.id === id);
+    if (!r) return;
+
+    r.text = text;
+    r.datetime = new Date(`${date}T${time}`).toISOString();
+
+    saveRemindersLocal(reminders);
+    closeEditReminder();
+    renderRemindersList();
+    renderReminderTilePreview();
+}
+
+function deleteReminderFromEdit(id) {
+    const reminders = loadReminders().filter(r => r.id !== id);
+    saveRemindersLocal(reminders);
+    closeEditReminder();
+    renderRemindersList();
+    renderReminderTilePreview();
+}
+
+// ── ADD REMINDER FORM ─────────────────────────────────────────────────────
+function saveNewReminder() {
+    const text = document.getElementById('rem-text-input').value.trim();
+    const date = document.getElementById('rem-date-input').value;
+    const time = document.getElementById('rem-time-input').value;
+
+    if (!text) { alert('Please enter a reminder.'); return; }
+    if (!date || !time) { alert('Please set a date and time.'); return; }
+
+    const localDatetime = new Date(`${date}T${time}`);
+    const datetime = localDatetime.toISOString();
+
+    const reminders = loadReminders();
+    reminders.push({
+        id: 'rem_' + Date.now(),
+        text,
+        datetime,
+        source: 'manual',
+        done: false,
+        createdAt: new Date().toISOString()
+    });
+    saveRemindersLocal(reminders);
+
+    document.getElementById('rem-text-input').value = '';
+    document.getElementById('rem-date-input').value = '';
+    document.getElementById('rem-time-input').value = '';
+
+    renderRemindersList();
+    renderReminderTilePreview();
+}
+
+// ── MIC FOR REMINDERS ─────────────────────────────────────────────────────
+let remMicActive = false;
+let remRecognition = null;
+
+function initRemMic() {
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    const micBtn = document.getElementById('rem-mic-btn');
+    if (!micBtn) return;
+    if (!isAndroid || !('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+        micBtn.style.display = 'none';
+        return;
+    }
+    micBtn.style.display = 'flex';
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    remRecognition = new SpeechRecognition();
+    const lang = localStorage.getItem('pulpai_lang') || 'nl-NL';
+    remRecognition.lang = lang;
+    remRecognition.continuous = false;
+    remRecognition.interimResults = false;
+    remRecognition.onstart = () => {
+        remMicActive = true;
+        micBtn.style.background = 'rgba(136,153,255,0.2)';
+        micBtn.style.borderColor = 'rgba(136,153,255,0.5)';
+        micBtn.style.color = '#8899ff';
+    };
+    remRecognition.onresult = (e) => {
+        const transcript = e.results[0][0].transcript;
+        const confidence = e.results[0][0].confidence;
+        const input = document.getElementById('rem-text-input');
+        if (input) {
+            input.value = typeof applyVocabCorrections === 'function'
+                ? applyVocabCorrections(transcript)
+                : transcript;
+            if (confidence < 0.7) {
+                input.style.borderColor = 'rgba(255,140,0,0.5)';
+                input.style.color = '#ffaa44';
+                setTimeout(() => {
+                    input.style.borderColor = '';
+                    input.style.color = '';
+                }, 3000);
+            }
+        }
+    };
+    remRecognition.onend = () => {
+        remMicActive = false;
+        micBtn.style.background = 'rgba(136,153,255,0.1)';
+        micBtn.style.borderColor = 'rgba(136,153,255,0.2)';
+        micBtn.style.color = 'rgba(136,153,255,0.7)';
+    };
+    remRecognition.onerror = () => {
+        remMicActive = false;
+        micBtn.style.background = 'rgba(136,153,255,0.1)';
+        micBtn.style.borderColor = 'rgba(136,153,255,0.2)';
+        micBtn.style.color = 'rgba(136,153,255,0.7)';
+    };
+}
+
+function toggleRemMic() {
+    if (!remRecognition) return;
+    if (remMicActive) {
+        remRecognition.stop();
+    } else {
+        remRecognition.start();
+    }
+}
+
+// ── TILE PREVIEW ──────────────────────────────────────────────────────────
+function renderReminderTilePreview() {
+    const container = document.getElementById('rem-tile-preview');
+    if (!container) return;
+    const reminders = loadReminders();
+    const now = new Date();
+    const upcoming = reminders
+        .filter(r => !r.done && new Date(r.datetime) >= now)
+        .sort((a, b) => new Date(a.datetime) - new Date(b.datetime))
+        .slice(0, 2);
+
+    if (upcoming.length === 0) {
+        container.innerHTML = `<div style="font-size:11px;color:rgba(255,255,255,0.25);letter-spacing:normal;text-transform:none;font-weight:400;">No upcoming reminders</div>`;
+        return;
+    }
+
+    container.innerHTML = upcoming.map(r => {
+        const dt = new Date(r.datetime);
+        const dateStr = dt.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' });
+        const timeStr = dt.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+        const dotColor = r.source === 'ai' ? '#8899ff' : '#a6e22e';
+        return `<div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:7px 10px;margin-bottom:6px;">
+            <div style="width:7px;height:7px;border-radius:50%;background:${dotColor};flex-shrink:0;"></div>
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:11px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:normal;text-transform:none;">${escapeHtmlRem(r.text)}</div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:1px;"><i class="bi bi-clock" style="font-size:9px;"></i> ${dateStr} · ${timeStr}</div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// ── TILE MIC ──────────────────────────────────────────────────────────────
+function initTileMic() {
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    const tileMicBtn = document.getElementById('rem-tile-mic-btn');
+    if (!tileMicBtn) return;
+    if (!isAndroid || !('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+        tileMicBtn.style.display = 'none';
+        return;
+    }
+    tileMicBtn.style.display = 'flex';
+}
+
+function triggerTileMic() {
+    openReminders();
+    setTimeout(() => {
+        initRemMic();
+        if (remRecognition) {
+            setTimeout(() => toggleRemMic(), 300);
+        }
+    }, 400);
+}
+
+
+// ── REMINDER NOTIFICATION SHEET ───────────────────────────────────────────
+let _sheetReminderId = null;
+
+function showReminderSheet(reminderId) {
+    const reminders = loadReminders();
+    let r = reminderId ? reminders.find(r => r.id === reminderId) : null;
+    if (!r) {
+        // Fall back to most recent overdue or upcoming
+        const now = new Date();
+        const overdue = reminders.filter(x => !x.done && new Date(x.datetime) < now);
+        const upcoming = reminders.filter(x => !x.done && new Date(x.datetime) >= now);
+        r = overdue.sort((a,b) => new Date(b.datetime)-new Date(a.datetime))[0]
+            || upcoming.sort((a,b) => new Date(a.datetime)-new Date(b.datetime))[0];
+    }
+    if (!r) return;
+    _sheetReminderId = r.id;
+
+    const dt = new Date(r.datetime);
+    const dateStr = dt.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' });
+    const timeStr = dt.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+    const sourceStr = r.source === 'ai' ? ' · Via Pulp AI' : ' · Manual';
+
+    document.getElementById('reminder-sheet-text').textContent = r.text;
+    document.getElementById('reminder-sheet-meta').innerHTML = '<i class="bi bi-clock" style="font-size:10px;margin-right:3px;"></i>' + dateStr + ' · ' + timeStr + sourceStr;
+
+    const overlay = document.getElementById('reminder-sheet-overlay');
+    const sheet = document.getElementById('reminder-sheet');
+    overlay.style.display = 'flex';
+    overlay.style.flexDirection = 'column';
+    overlay.style.justifyContent = 'flex-end';
+    setTimeout(() => { sheet.style.transform = 'translateY(0)'; }, 10);
+}
+
+
+function showReminderSheetWithData(text, datetime, source, id) {
+    // Shows the sheet with data passed directly — no localStorage needed
+    // Used when Safari opens from notification tap (separate localStorage context)
+    _sheetReminderId = id || null;
+
+    const dt = datetime ? new Date(datetime) : null;
+    const dateStr = dt ? dt.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' }) : '';
+    const timeStr = dt ? dt.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) : '';
+    const sourceStr = source === 'ai' ? ' · Via Pulp AI' : ' · Manual';
+
+    const textEl = document.getElementById('reminder-sheet-text');
+    const metaEl = document.getElementById('reminder-sheet-meta');
+    if (!textEl || !metaEl) return;
+
+    textEl.textContent = text || 'You have a reminder due now.';
+    metaEl.innerHTML = dt
+        ? '<i class="bi bi-clock" style="font-size:10px;margin-right:3px;"></i>' + dateStr + ' · ' + timeStr + sourceStr
+        : '<i class="bi bi-bell" style="font-size:10px;margin-right:3px;"></i>Due now';
+
+    const overlay = document.getElementById('reminder-sheet-overlay');
+    const sheet = document.getElementById('reminder-sheet');
+    if (!overlay || !sheet) return;
+    overlay.style.background = 'rgba(0,0,0,0.92)';
+    overlay.style.display = 'flex';
+    setTimeout(() => { sheet.style.transform = 'translateY(0)'; }, 10);
+}
+
+function hideReminderSheet() {
+    const sheet = document.getElementById('reminder-sheet');
+    const overlay = document.getElementById('reminder-sheet-overlay');
+    sheet.style.transform = 'translateY(100%)';
+    setTimeout(() => { overlay.style.display = 'none'; }, 300);
+    _sheetReminderId = null;
+}
+
+function reminderSheetDone() {
+    if (!_sheetReminderId) return;
+    markReminderDone(_sheetReminderId);
+    hideReminderSheet();
+}
+
+function reminderSheetDismiss() {
+    hideReminderSheet();
+}
+
+function reminderSheetEdit() {
+    if (!_sheetReminderId) return;
+    const id = _sheetReminderId;
+    hideReminderSheet();
+    setTimeout(() => {
+        openReminders();
+        setTimeout(() => openEditReminder(id), 150);
+    }, 320);
+}
+
+function reminderSheetSnooze(minutes) {
+    if (!_sheetReminderId) return;
+    const reminders = loadReminders();
+    const r = reminders.find(r => r.id === _sheetReminderId);
+    if (!r) return;
+    const newTime = new Date(new Date().getTime() + minutes * 60000);
+    r.datetime = newTime.toISOString();
+    r.notified = false;
+    saveRemindersLocal(reminders);
+    renderReminderTilePreview();
+    hideReminderSheet();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    renderReminderTilePreview();
+    initTileMic();
+
+    const input = document.getElementById('rem-text-input');
+    if (input) {
+        input.addEventListener('keypress', e => {
+            if (e.key === 'Enter') saveNewReminder();
+        });
+    }
+
+    const view = document.getElementById('reminders-view');
+    if (view) {
+        const observer = new MutationObserver(() => {
+            if (!view.classList.contains('hidden')) {
+                setTimeout(initRemMic, 100);
+            }
+        });
+        observer.observe(view, { attributes: true, attributeFilter: ['class'] });
+    }
+});

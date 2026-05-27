@@ -445,6 +445,7 @@ function showReminderSheet(reminderId) {
 
     const overlay = document.getElementById('reminder-sheet-overlay');
     const sheet = document.getElementById('reminder-sheet');
+    overlay.style.background = 'rgba(0,0,0,0.92)';
     overlay.style.display = 'flex';
     setTimeout(() => { sheet.style.transform = 'translateY(0)'; }, 10);
 }
@@ -472,6 +473,7 @@ function showReminderSheetWithData(text, datetime, source, id) {
     const overlay = document.getElementById('reminder-sheet-overlay');
     const sheet = document.getElementById('reminder-sheet');
     if (!overlay || !sheet) return;
+    overlay.style.background = 'rgba(0,0,0,0.92)';
     overlay.style.display = 'flex';
     setTimeout(() => { sheet.style.transform = 'translateY(0)'; }, 10);
 }

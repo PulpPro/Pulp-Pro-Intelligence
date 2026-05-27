@@ -47,10 +47,6 @@ function saveReminderFromAI(data) {
 
 // ── OPEN / CLOSE ──────────────────────────────────────────────────────────
 function openReminders() {
-    // Request permission immediately on user tap — iOS requires direct user gesture
-    if (typeof requestPushPermission === 'function' && Notification.permission === 'default') {
-        requestPushPermission();
-    }
     document.getElementById('fruit-hub').classList.add('hidden');
     document.getElementById('appInterface').classList.add('hidden');
     document.getElementById('colour-scanner-view').classList.add('hidden');
@@ -60,9 +56,10 @@ function openReminders() {
     const menuTrigger = document.getElementById('menu-trigger');
     if (menuTrigger) menuTrigger.style.display = 'none';
     renderRemindersList();
-    // Show permission banner if not yet granted — user taps it directly
-    const banner = document.getElementById('push-permission-banner');
-    if (banner) banner.style.display = Notification.permission === 'default' ? 'block' : 'none';
+    // Request push permission — called directly from user tap context
+    if (typeof requestPushPermission === 'function' && Notification.permission === 'default') {
+        requestPushPermission();
+    }
 }
 
 function closeReminders() {

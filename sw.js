@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v15';
+const CACHE_VERSION = 'v16';
 const CACHE_NAME = 'pulp-pro-' + CACHE_VERSION;
 const ASSETS = [
     '/',
@@ -140,5 +140,23 @@ self.addEventListener('notificationclick', (event) => {
         return;
     }
 
-    // dismiss or plain tap — nothing opens
+    if (event.action === 'dismiss') return;
+
+    // plain tap — open/focus app with reminder sheet
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+            if (clientList.length > 0) {
+                const client = clientList[0];
+                client.focus();
+                client.postMessage({ type: 'OPEN_REMINDERS', reminderId });
+                return;
+            }
+            const base = 'https://pulppro.github.io/Pulp-Pro-Intelligence/';
+            let param = '?open=reminders';
+            if (reminderId) param += `&reminderId=${reminderId}`;
+            if (usercode === '__admin__') param += '&admin=true';
+            else if (usercode) param += `&code=${usercode}`;
+            return clients.openWindow(base + param);
+        })
+    );
 });

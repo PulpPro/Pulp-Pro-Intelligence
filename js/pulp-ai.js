@@ -1,7 +1,6 @@
 // ── PULP AI ──────────────────────────────────────────────────────────────
 const WORKER_URL = 'https://pulppro-access.pulpprobrain.workers.dev';
-// VAPID Public Key generated from your server infrastructure for Web Push security
-const VAPID_PUBLIC_KEY = 'YOUR_PUBLIC_VAPID_KEY_HERE'; 
+const VAPID_PUBLIC_KEY = 'BFXr3Hu8BG9kcn2v_S-wO7QzlK1jn8rMsSxkKyJUWGRa4TpbBeNxFy_nJQDkiOBKVZLGQwVKN1od2xjUvT0RW4k';
 
 let pulpAIChats = [];
 let currentChatId = null;
@@ -319,13 +318,12 @@ async function sendPulpAIMessage() {
         }
 
         let reply = data.reply;
-        
-        // ── CAPTURE NATIVE REMINDER PROP DIRECTLY ──
+
         if (data.reminder) {
             try {
                 await saveAndScheduleReminder(data.reminder);
             } catch(e) {
-                console.error("Local reminder intercept failure:", e);
+                console.error('Reminder save failed:', e);
             }
         }
 
@@ -350,21 +348,16 @@ async function sendPulpAIMessage() {
     isAIThinking = false;
 }
 
-// ── PWA REMINDERS ENGINE (REMOTE PUSH DRIVEN) ─────────────────────────────
+// ── PWA REMINDERS ENGINE ──────────────────────────────────────────────────
 async function initPWAReminders() {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-        console.log('Push notifications are not supported on this legacy browser/device.');
-        return;
-    }
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
     try {
         swRegistration = await navigator.serviceWorker.register('/sw.js');
-        console.log('Service Worker safely embedded into background thread.');
-        
         if (Notification.permission === 'granted') {
             await syncPushSubscription();
         }
-    } catch (e) {
-        console.error('Service Worker setup encountered an issue:', e);
+    } catch(e) {
+        console.error('Service Worker setup error:', e);
     }
 }
 
@@ -390,82 +383,74 @@ async function syncPushSubscription() {
                 applicationServerKey: convertedKey
             });
         }
-        
-        const code = localStorage.getItem('pulpProAccessCode') || 'admin';
-        await fetch(WORKER_URL + '/push-subscribe', { // Corrected target path endpoint mapping
+        const isAdmin = localStorage.getItem('pulpProAdmin') === 'true';
+        const code = localStorage.getItem('pulpProAccessCode') || (isAdmin ? 'admin' : 'admin');
+        await fetch(WORKER_URL + '/push-subscribe', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ subscription, userCode: code })
         });
-        
         return subscription;
-    } catch (e) {
-        console.error('Could not construct secure system subscription payload:', e);
+    } catch(e) {
+        console.error('Push subscription error:', e);
         return null;
     }
 }
 
-// Unified reminder scheduling pipeline (called by UI Forms OR AI Engines)
+// ── SAVE AND SCHEDULE REMINDER ────────────────────────────────────────────
 async function saveAndScheduleReminder(data) {
     try {
         if (!data.text || !data.datetime) return;
-        
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') {
-            alert(`⚠️ Notification permissions denied. Reminders will fallback to offline alert logs inside the app.`);
-        }
-
-        const subscription = await syncPushSubscription();
-        let cleanTargetString = data.datetime;
-        if (cleanTargetString.length === 16) cleanTargetString += ':00'; 
-        const parsedTargetDate = new Date(cleanTargetString);
-
-        if (isNaN(parsedTargetDate.getTime())) return;
 
         // FIX: Convert AI local datetime to UTC
+        // AI outputs local time (e.g. 17:38 local Rotterdam = 15:38 UTC)
+        // Use Date constructor with local components — same as reminders.js saveReminderFromAI
         const dtRaw = data.datetime || '';
         const [dtDatePart, dtTimePart] = dtRaw.split('T');
         const [dtY, dtMo, dtD] = dtDatePart.split('-').map(Number);
         const [dtH, dtM] = (dtTimePart || '00:00').split(':').map(Number);
         const datetimeUTC = new Date(dtY, dtMo - 1, dtD, dtH, dtM).toISOString();
 
-        // Keep local storage history for visual logging
+        // Save to localStorage FIRST — before any async push ops that could fail
         const reminders = JSON.parse(localStorage.getItem('pulpai_reminders') || '[]');
         reminders.push({
             id: 'rem_' + Date.now(),
             text: data.text,
             datetime: datetimeUTC,
-            source: data.source || 'ai',
+            source: 'ai',
             done: false,
-            notified: false, 
+            notified: false,
             createdAt: new Date().toISOString()
         });
         localStorage.setItem('pulpai_reminders', JSON.stringify(reminders));
+
+        // Update tile preview immediately
         if (typeof renderReminderTilePreview === 'function') renderReminderTilePreview();
 
-        // CRITICAL SYNC BACKUP PAIRING: Sync local state to Cloudflare KV Database store directly!
-        const code = localStorage.getItem('pulpProAccessCode') || 'admin';
+        // Sync to KV
+        const isAdmin = localStorage.getItem('pulpProAdmin') === 'true';
+        const code = localStorage.getItem('pulpProAccessCode') || (isAdmin ? 'admin' : 'admin');
         await fetch(WORKER_URL + '/reminders-sync', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                userCode: code,
-                reminders: reminders
-            })
+            body: JSON.stringify({ userCode: code, reminders })
         });
 
+        // Request push permission if not granted
+        if (Notification.permission === 'default') {
+            await Notification.requestPermission();
+        }
+
+        // Sync push subscription in background — don't block reminder save
+        syncPushSubscription().catch(() => {});
+
     } catch(e) {
-        console.error('Remote schedule pipeline failure:', e);
+        console.error('Reminder save error:', e);
     }
 }
 
-// Standard UI reminder feature helper 
 function setManualReminder(text, datetimeString) {
-    saveAndScheduleReminder({
-        text: text,
-        datetime: datetimeString,
-        source: 'manual'
-    });
+    saveAndScheduleReminder({ text, datetime: datetimeString, source: 'manual' });
 }
 
 // ── PHOTO ANALYSIS ────────────────────────────────────────────────────────

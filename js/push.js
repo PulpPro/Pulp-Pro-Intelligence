@@ -45,29 +45,42 @@ async function savePushSubscription(subscription) {
 }
 
 function showNotificationPrompt() {
-    // Only show if permission not yet decided
     if (Notification.permission !== 'default') return;
-    // Only show if already logged in
+    if (document.getElementById('notif-prompt-overlay')) return;
     const isAdmin = localStorage.getItem('pulpProAdmin') === 'true';
     const userCode = localStorage.getItem('pulpProAccessCode');
     if (!isAdmin && !userCode) return;
-    // Only show if overlay not already on screen
-    if (document.getElementById('notif-prompt-overlay')) return;
 
-    const overlay = document.createElement('div');
-    overlay.id = 'notif-prompt-overlay';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:999999;display:flex;align-items:flex-end;';
-    overlay.innerHTML = `
-        <div style="width:100%;background:#0f0f1a;border-radius:22px 22px 0 0;padding:28px 24px 40px;">
-            <div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:100px;margin:0 auto 24px;"></div>
-            <div style="font-size:36px;text-align:center;margin-bottom:16px;">🔔</div>
-            <div style="font-size:20px;font-weight:800;color:#fff;text-align:center;margin-bottom:8px;">Enable Reminders</div>
-            <div style="font-size:14px;color:rgba(255,255,255,0.45);text-align:center;line-height:1.6;margin-bottom:28px;">Get notified when your fruit floor reminders are due. You can turn this off anytime.</div>
-            <button onclick="requestPushPermission();document.getElementById('notif-prompt-overlay').remove();" style="width:100%;background:#a6e22e;border:none;border-radius:14px;padding:16px;font-size:16px;font-weight:800;color:#000;font-family:-apple-system,sans-serif;margin-bottom:12px;">Enable Notifications</button>
-            <button onclick="document.getElementById('notif-prompt-overlay').remove();" style="width:100%;background:transparent;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:600;color:rgba(255,255,255,0.4);font-family:-apple-system,sans-serif;">Not now</button>
-        </div>
-    `;
-    document.body.appendChild(overlay);
+    const sheet = document.createElement('div');
+    sheet.id = 'notif-prompt-overlay';
+    sheet.style.position = 'fixed';
+    sheet.style.inset = '0';
+    sheet.style.background = 'rgba(0,0,0,0.85)';
+    sheet.style.zIndex = '999999';
+    sheet.style.display = 'flex';
+    sheet.style.alignItems = 'flex-end';
+
+    const inner = document.createElement('div');
+    inner.style.cssText = 'width:100%;background:#0f0f1a;border-radius:22px 22px 0 0;padding:28px 24px 40px;';
+    inner.innerHTML = '<div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:100px;margin:0 auto 24px;"></div><div style="font-size:36px;text-align:center;margin-bottom:16px;">🔔</div><div style="font-size:20px;font-weight:800;color:#fff;text-align:center;margin-bottom:8px;">Enable Reminders</div><div style="font-size:14px;color:rgba(255,255,255,0.45);text-align:center;line-height:1.6;margin-bottom:28px;">Get notified when your fruit floor reminders are due.</div>';
+
+    const enableBtn = document.createElement('button');
+    enableBtn.innerText = 'Enable Notifications';
+    enableBtn.style.cssText = 'display:block;width:100%;background:#a6e22e;border:none;border-radius:14px;padding:16px;font-size:16px;font-weight:800;color:#000;font-family:-apple-system,sans-serif;margin-bottom:12px;';
+    enableBtn.addEventListener('click', function() {
+        requestPushPermission();
+        sheet.remove();
+    });
+
+    const skipBtn = document.createElement('button');
+    skipBtn.innerText = 'Not now';
+    skipBtn.style.cssText = 'display:block;width:100%;background:transparent;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:600;color:rgba(255,255,255,0.4);font-family:-apple-system,sans-serif;';
+    skipBtn.addEventListener('click', function() { sheet.remove(); });
+
+    inner.appendChild(enableBtn);
+    inner.appendChild(skipBtn);
+    sheet.appendChild(inner);
+    document.body.appendChild(sheet);
 }
 
 // Re-sync subscription on load if already granted

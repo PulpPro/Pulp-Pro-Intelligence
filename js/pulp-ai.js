@@ -1,7 +1,5 @@
 // ── PULP AI ──────────────────────────────────────────────────────────────
 const WORKER_URL = 'https://pulppro-access.pulpprobrain.workers.dev';
-const VAPID_PUBLIC_KEY = 'BFXr3Hu8BG9kcn2v_S-wO7QzlK1jn8rMsSxkKyJUWGRa4TpbBeNxFy_nJQDkiOBKVZLGQwVKN1od2xjUvT0RW4k';
-
 let pulpAIChats = [];
 let currentChatId = null;
 let pulpAIUsage = { used: 0, limit: 1000 };

@@ -419,8 +419,6 @@ const ColourScanner = (() => {
         if(photoEl&&capturedPhotos[0]){
             photoEl.src=capturedPhotos[0];
             photoEl.style.display='block';
-            photoEl.style.objectFit='cover';
-            photoEl.style.objectPosition='center';
             document.getElementById('csSinglePhotoPlaceholder').style.display='none';
         }
         const confidenceEl=document.getElementById('csAIConfidence');

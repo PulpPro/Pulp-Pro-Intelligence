@@ -684,7 +684,7 @@ if ('serviceWorker' in navigator) {
 <!-- QUIZ SCREEN -->
 <div class="iq-screen" id="iq-s-quiz">
     <div class="iq-hdr">
-        <div class="iq-back" onclick="clearInterval(iqTimerInt);iqShowScreen('iq-s-lobby');">←</div>
+        <div class="iq-back" onclick="iqExitQuiz();">←</div>
         <div style="flex:1;margin-left:6px;">
             <div style="font-size:13px;font-weight:900;color:#fff;" id="iq-q-num">Question 1</div>
             <div style="font-size:8px;color:rgba(255,165,0,0.55);font-weight:700;" id="iq-score-hdr">Score: 0 pts</div>

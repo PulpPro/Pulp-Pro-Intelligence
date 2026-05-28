@@ -363,22 +363,7 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 <div class="cs-toggle-btn" id="csMultiBtn" onclick="ColourScanner.setScanMode('multi')">Multi Scan</div>
 </div>
 <div id="cs-scanner">
-<div id="cs-cam-wrap" style="position:relative;width:100%;height:38vh;background:#000;overflow:hidden;border-radius:16px;flex-shrink:0;">
-    <video id="csVideo" autoplay playsinline muted style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100%;height:100%;object-fit:cover;object-position:center;display:none;"></video>
-    <canvas id="csCanvas" style="display:none;"></canvas>
-    <div id="csPlaceholder" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
-        <i class="bi bi-camera" style="font-size:2rem;opacity:0.25;color:var(--text-main);"></i>
-        <span id="csPointCamera" style="font-size:0.55rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--text-dim);">Point camera at produce</span>
-    </div>
-    <div id="cs-crosshair" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:88%;height:72%;border:2.5px solid rgba(166,226,46,0.85);border-radius:10px;pointer-events:none;">
-        <div style="position:absolute;top:-2px;left:-2px;width:20px;height:20px;border-top:3px solid #a6e22e;border-left:3px solid #a6e22e;border-radius:4px 0 0 0;"></div>
-        <div style="position:absolute;top:-2px;right:-2px;width:20px;height:20px;border-top:3px solid #a6e22e;border-right:3px solid #a6e22e;border-radius:0 4px 0 0;"></div>
-        <div style="position:absolute;bottom:-2px;left:-2px;width:20px;height:20px;border-bottom:3px solid #a6e22e;border-left:3px solid #a6e22e;border-radius:0 0 0 4px;"></div>
-        <div style="position:absolute;bottom:-2px;right:-2px;width:20px;height:20px;border-bottom:3px solid #a6e22e;border-right:3px solid #a6e22e;border-radius:0 0 4px 0;"></div>
-    </div>
-    <div style="position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:0.48rem;font-weight:700;color:rgba(166,226,46,0.55);text-transform:uppercase;letter-spacing:1px;white-space:nowrap;pointer-events:none;">Align produce to frame</div>
-    <button class="capture-btn" id="csScanBtn" onclick="ColourScanner.doScan()">Scan</button>
-</div>
+<div id="cs-cam-wrap"></div>
 <div id="csOfflineLabel" style="font-size:0.55rem; color:var(--text-dim); text-align:center; text-transform:uppercase; letter-spacing:2px; margin:10px 0; opacity:0.4;">Works offline &mdash; no internet needed</div>
 <div id="csMultiList" style="margin-bottom:10px;"></div>
 <button id="csBatchBtn" class="btn-main" style="display:none; margin-bottom:8px;" onclick="ColourScanner.getBatchResult()">Get Batch Result &rarr;</button>

@@ -293,14 +293,14 @@ input {
 }
 .cs-toggle-btn.active { border-color: var(--pulp-lime); color: var(--pulp-lime); background: rgba(166, 226, 46, 0.08); }
 
-/* Updated Camera Wrapper to lock the 38vh height viewport */
 #cs-cam-wrap {
     position: relative;
     width: 100%;
     height: 38vh;
     background: #000;
-    flex-shrink: 0;
     overflow: hidden;
+    border-radius: 16px;
+    flex-shrink: 0;
 }
 
 #csVideo {
@@ -311,28 +311,59 @@ input {
     height: 100%;
     object-fit: cover;
     object-position: center;
-    display: block;
+    display: block; /* Turned on display: block so the stream shows up */
 }
 
-/* Updated Crosshair to include the precise 2.5px framing and corner brackets */
+#csPlaceholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+#csPointCamera {
+    font-size: 0.55rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+}
+
+/* Upgraded crosshairs with target-bracketing corners */
 .cs-crosshair {
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
     width: 88%; height: 72%;
     border: 2.5px solid rgba(166, 226, 46, 0.85);
-    border-radius: 8px;
+    border-radius: 10px;
     pointer-events: none;
+    box-sizing: border-box;
 }
 .cs-crosshair::before, .cs-crosshair::after {
     content: '';
     position: absolute;
     width: 20px; height: 20px;
-    border-color: var(--pulp-lime);
+    border-color: #a6e22e;
     border-style: solid;
 }
-.cs-crosshair::before { top: -2px; left: -2px; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
-.cs-crosshair::after  { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+.cs-crosshair::before { top: -2.5px; left: -2.5px; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
+.cs-crosshair::after  { bottom: -2.5px; right: -2.5px; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+
+.cs-align-label {
+    position: absolute;
+    bottom: 12px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.48rem;
+    font-weight: 700;
+    color: rgba(166, 226, 46, 0.55);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    pointer-events: none;
+}
 
 .cs-scan-row {
     display: flex; align-items: center; gap: 10px;

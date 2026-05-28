@@ -182,6 +182,9 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 .cr-status{font-size:0.48rem;color:rgba(255,255,255,0.3);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:2px;text-align:right}
 .home-bottom{display:flex;gap:32px;margin-top:28px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.05);max-width:600px}
 @keyframes iqPulse{0%,100%{opacity:0.6;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
+@keyframes ageScan{0%{left:-60%}100%{left:110%}}
+@keyframes ageRoll{0%{transform:translateY(0)}10%{transform:translateY(-30px)}20%{transform:translateY(-60px)}30%{transform:translateY(-90px)}40%{transform:translateY(-120px)}50%{transform:translateY(-150px)}60%{transform:translateY(-180px)}70%{transform:translateY(-210px)}80%{transform:translateY(-240px)}90%{transform:translateY(-270px)}100%{transform:translateY(0)}}
+@keyframes csWave{0%,100%{transform:scaleY(0.55);opacity:0.65}50%{transform:scaleY(1);opacity:1}}
 @keyframes iqShimmer{0%{opacity:0.3;transform:translateX(-100%)}100%{opacity:0.6;transform:translateX(200%)}}
 @keyframes iqBrain{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 @keyframes iqFloatUp{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-30px)}}
@@ -195,37 +198,43 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 <div class="home-sub">Professional tools for the fruit floor. Built fast, works offline.</div>
 
 <div class="tool-cards">
-    <div class="tc tc-age" onclick="openAgeChecker()">
-        <div class="tc-tag">Chiquita · Age Checker</div>
-        <div class="tc-title">Banana Age</div>
-        <div class="tc-sub">Enter 3-letter code → instant result</div>
-        <div class="tc-preview">
-            <div class="code-pill">CF1</div>
-            <div style="color:rgba(255,255,255,0.2);font-size:0.9rem;">→</div>
-            <div class="result-pill">
-                <div class="days">14d</div>
-                <div class="rlbl">Perfect</div>
+    <div class="tc tc-age" onclick="openAgeChecker()" style="overflow:hidden;">
+        <div style="position:absolute;top:0;left:-60%;width:55%;height:100%;background:linear-gradient(90deg,transparent,rgba(166,226,46,0.07),transparent);animation:ageScan 2.8s ease-in-out infinite;pointer-events:none;z-index:0;"></div>
+        <div style="position:relative;z-index:1;">
+            <div class="tc-tag">Chiquita · Age Checker</div>
+            <div class="tc-title">Banana Age</div>
+            <div class="tc-sub" style="margin-bottom:14px;">Enter 3-letter code → instant result</div>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <div style="display:flex;gap:3px;">
+                    <div style="width:24px;height:30px;overflow:hidden;border-radius:5px;background:rgba(0,0,0,0.5);border:1px solid rgba(166,226,46,0.15);"><div style="display:flex;flex-direction:column;animation:ageRoll 2.5s steps(1) infinite;animation-delay:0s;"><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">C</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">A</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">B</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">D</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">E</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">F</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">G</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">H</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">J</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">K</span></div></div>
+                    <div style="width:24px;height:30px;overflow:hidden;border-radius:5px;background:rgba(0,0,0,0.5);border:1px solid rgba(166,226,46,0.15);"><div style="display:flex;flex-direction:column;animation:ageRoll 2.5s steps(1) infinite;animation-delay:0.35s;"><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">F</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">B</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">G</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">A</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">H</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">C</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">J</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">D</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">K</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">E</span></div></div>
+                    <div style="width:24px;height:30px;overflow:hidden;border-radius:5px;background:rgba(0,0,0,0.5);border:1px solid rgba(166,226,46,0.15);"><div style="display:flex;flex-direction:column;animation:ageRoll 2.5s steps(1) infinite;animation-delay:0.7s;"><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">1</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">4</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">2</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">5</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">3</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">6</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">1</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">4</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">2</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">5</span></div></div>
+                </div>
+                <div style="color:rgba(255,255,255,0.2);font-size:13px;">→</div>
+                <div>
+                    <div style="font-size:22px;font-weight:900;color:#a6e22e;line-height:1;">14d</div>
+                    <div style="font-size:7px;font-weight:800;color:rgba(166,226,46,0.5);text-transform:uppercase;letter-spacing:1px;">Perfect</div>
+                </div>
             </div>
-            <div class="tc-arrow">›</div>
         </div>
     </div>
 
     <div class="tc tc-colour" onclick="openColourScanner()">
         <div class="tc-tag">AI · Classic · Camera</div>
         <div class="tc-title">Colour Scanner</div>
-        <div class="tc-sub">Point camera · get colour stage</div>
-        <div class="colour-scale">
-            <div class="cs-step" style="background:#2d5a1b"></div>
-            <div class="cs-step" style="background:#4a8a25"></div>
-            <div class="cs-step" style="background:#78c830"></div>
-            <div class="cs-step sel" style="background:#a6e22e"></div>
-            <div class="cs-step" style="background:#d4c426"></div>
-            <div class="cs-step" style="background:#f5a623"></div>
-            <div class="cs-step" style="background:#e8650a"></div>
-        </div>
-        <div class="colour-readout">
-            <div><div class="cr-stage">Stage 3.5</div><div class="cr-name">Yellow-Green</div></div>
-            <div><div class="cr-shelf">5–7 days</div><div class="cr-status">Perfect</div></div>
+        <div class="tc-sub" style="margin-bottom:12px;">Point camera · get colour stage</div>
+        <div style="display:flex;align-items:flex-end;gap:3px;height:30px;">
+            <div style="flex:1;border-radius:4px;background:#2d5a1b;height:10px;animation:csWave 1.8s ease-in-out infinite;animation-delay:0s;"></div>
+            <div style="flex:1;border-radius:4px;background:#4a8a25;height:14px;animation:csWave 1.8s ease-in-out infinite;animation-delay:0.15s;"></div>
+            <div style="flex:1;border-radius:4px;background:#78c830;height:20px;animation:csWave 1.8s ease-in-out infinite;animation-delay:0.3s;"></div>
+            <div style="flex:1;border-radius:4px;background:#a6e22e;height:30px;animation:csWave 1.8s ease-in-out infinite;animation-delay:0.45s;outline:2px solid rgba(255,255,255,0.5);outline-offset:1px;"></div>
+            <div style="flex:1;border-radius:4px;background:#d4c426;height:20px;animation:csWave 1.8s ease-in-out infinite;animation-delay:0.6s;"></div>
+            <div style="flex:1;border-radius:4px;background:#f5a623;height:14px;animation:csWave 1.8s ease-in-out infinite;animation-delay:0.75s;"></div>
+            <div style="flex:1;border-radius:4px;background:#e8650a;height:10px;animation:csWave 1.8s ease-in-out infinite;animation-delay:0.9s;"></div>
+            <div style="margin-left:8px;padding-bottom:2px;flex-shrink:0;">
+                <div style="font-size:13px;font-weight:900;color:#fff;">Stage 3.5</div>
+                <div style="font-size:7px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.5px;">Yellow-Green · 5–7 days</div>
+            </div>
         </div>
     </div>
 
@@ -251,7 +260,7 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 
     <!-- REMINDERS TILE -->
     <div class="tc" onclick="openReminders()" style="background:#06060e;border:1px solid rgba(136,153,255,0.2);border-radius:22px;padding:24px 26px;position:relative;overflow:hidden;cursor:pointer;">
-        <div style="position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(136,153,255,0.1) 0%,transparent 70%);top:-60px;right:-40px;pointer-events:none;"></div>
+        <canvas id="rem-tile-canvas" style="position:absolute;right:-8px;top:50%;transform:translateY(-50%);pointer-events:none;z-index:0;"></canvas>
         <div style="position:relative;z-index:1;">
             <div class="tc-tag" style="color:rgba(136,153,255,0.55);">Notifications · Scheduler</div>
             <div class="tc-title">Reminders <span style="color:#8899ff;">+</span></div>
@@ -268,6 +277,7 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
     </div>
     <!-- FLOOR IQ TILE -->
     <div class="tc" onclick="openFloorIQ()" style="background:#09080e;border:1px solid rgba(255,165,0,0.25);border-radius:22px;padding:24px 26px;position:relative;overflow:hidden;cursor:pointer;">
+        <canvas id="iq-tile-canvas" style="position:absolute;inset:0;width:100%;height:100%;border-radius:22px;pointer-events:none;z-index:0;"></canvas>
         <div style="position:absolute;width:180px;height:180px;border-radius:50%;background:rgba(255,140,0,0.07);top:-60px;right:-40px;pointer-events:none;animation:iqPulse 3s infinite;"></div>
         <div style="position:absolute;width:120px;height:120px;border-radius:50%;background:rgba(255,80,0,0.04);bottom:-30px;left:-20px;pointer-events:none;animation:iqPulse 4s infinite 1s;"></div>
         <div style="position:absolute;top:0;left:0;width:35%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,165,0,0.04),transparent);animation:iqShimmer 3s ease-in-out infinite;pointer-events:none;"></div>
@@ -815,6 +825,7 @@ if ('serviceWorker' in navigator) {
 <script src="js/colour-scanner.js"></script>
 <script src="js/pulp-ai.js"></script>
 <script src="js/reminders.js"></script>
+<script src="js/tile-animations.js"></script>
 <script src="js/floor-iq.js"></script>
 <script>checkAccess();</script>
 </body>

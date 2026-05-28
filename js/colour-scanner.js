@@ -11,7 +11,6 @@ const ColourScanner = (() => {
     let aiReady = false;
     let aiLoading = false;
 
-    // Keep blob refs alive so iOS doesn't GC them before share completes
     let _sharedBlobs = [];
 
     const COLOUR_STAGES = [
@@ -94,30 +93,77 @@ const ColourScanner = (() => {
         return { type: 'single', stage: best.stage };
     }
 
-    // ── CAMERA ────────────────────────────────────────────────
+    // ── CAMERA — Banana Brain layout ─────────────────────────
+    // Crosshair crop constants — matches CSS: width:88%, height:72%, centered
+    const CROP_X = 0.06;
+    const CROP_Y = 0.14;
+    const CROP_W = 0.88;
+    const CROP_H = 0.72;
+
+    function getCropRegion(video) {
+        const vW = video.videoWidth, vH = video.videoHeight;
+        const wrap = document.getElementById('cs-cam-wrap');
+        if (!wrap) return null;
+        const wRect = wrap.getBoundingClientRect();
+        const aspectContainer = wRect.width / wRect.height;
+        const aspectVideo = vW / vH;
+        let testW, testH, sLeft = 0, sTop = 0;
+        if (aspectVideo > aspectContainer) {
+            testH = vH; testW = vH * aspectContainer; sLeft = (vW - testW) / 2;
+        } else {
+            testW = vW; testH = vW / aspectContainer; sTop = (vH - testH) / 2;
+        }
+        return {
+            x: Math.round(sLeft + testW * CROP_X),
+            y: Math.round(sTop + testH * CROP_Y),
+            w: Math.round(testW * CROP_W),
+            h: Math.round(testH * CROP_H)
+        };
+    }
+
     function capturePhotoDataUrl() {
         const video = document.getElementById('csVideo'), canvas = document.getElementById('csCanvas');
         if (!video || !video.videoWidth) return null;
-        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
+        const crop = getCropRegion(video);
+        if (crop) {
+            canvas.width = crop.w; canvas.height = crop.h;
+            canvas.getContext('2d').drawImage(video, crop.x, crop.y, crop.w, crop.h, 0, 0, crop.w, crop.h);
+        } else {
+            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+        }
         return canvas.toDataURL('image/jpeg', 0.9);
     }
+
     function sampleCameraColour() {
         const video = document.getElementById('csVideo'), canvas = document.getElementById('csCanvas');
         if (!video || !video.videoWidth) return null;
-        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d'); ctx.drawImage(video, 0, 0);
-        const cx = Math.floor(canvas.width/2), cy = Math.floor(canvas.height/2), size = 80;
-        const data = ctx.getImageData(cx-size/2, cy-size/2, size, size).data;
+        const crop = getCropRegion(video);
+        if (!crop) {
+            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d'); ctx.drawImage(video, 0, 0);
+            const cx = Math.floor(canvas.width/2), cy = Math.floor(canvas.height/2), size = 80;
+            const data = ctx.getImageData(cx-size/2, cy-size/2, size, size).data;
+            let r=0,g=0,b=0,count=0;
+            for (let i=0;i<data.length;i+=4){r+=data[i];g+=data[i+1];b+=data[i+2];count++;}
+            return { r:Math.round(r/count), g:Math.round(g/count), b:Math.round(b/count) };
+        }
+        canvas.width = crop.w; canvas.height = crop.h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, crop.x, crop.y, crop.w, crop.h, 0, 0, crop.w, crop.h);
+        const sz = Math.min(100, Math.floor(Math.min(crop.w, crop.h) * 0.3));
+        const cx = Math.floor(crop.w/2), cy = Math.floor(crop.h/2);
+        const data = ctx.getImageData(cx-sz/2, cy-sz/2, sz, sz).data;
         let r=0,g=0,b=0,count=0;
         for (let i=0;i<data.length;i+=4){r+=data[i];g+=data[i+1];b+=data[i+2];count++;}
         return { r:Math.round(r/count), g:Math.round(g/count), b:Math.round(b/count) };
     }
+
     async function startCamera() {
         try {
             if (cameraStream) stopCamera();
             cameraStream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } }
+                video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
             });
             const video = document.getElementById('csVideo');
             video.srcObject = cameraStream;
@@ -127,14 +173,24 @@ const ColourScanner = (() => {
                 if (caps.zoom) await track.applyConstraints({ advanced: [{ zoom: caps.zoom.min }] });
             }
             await video.play();
-            const ph = document.getElementById('csPlaceholder'); if (ph) ph.style.display = 'none';
+            // Banana Brain layout — video fills container with object-fit:cover, perfectly centered
             video.style.display = 'block';
+            video.style.position = 'absolute';
+            video.style.top = '50%';
+            video.style.left = '50%';
+            video.style.transform = 'translate(-50%, -50%)';
+            video.style.width = '100%';
+            video.style.height = '100%';
+            video.style.objectFit = 'cover';
+            video.style.objectPosition = 'center';
+            const ph = document.getElementById('csPlaceholder'); if (ph) ph.style.display = 'none';
         } catch (err) {
             console.warn('Camera unavailable:', err);
             const ph = document.getElementById('csPlaceholder'); if (ph) ph.style.display = 'flex';
             const video = document.getElementById('csVideo'); if (video) video.style.display = 'none';
         }
     }
+
     function stopCamera() {
         if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
     }
@@ -235,7 +291,13 @@ const ColourScanner = (() => {
         const shelfEl=document.getElementById('csSingleShelf'); if(shelfEl) shelfEl.innerText=shelfLife;
         const statusEl=document.getElementById('csSingleStatus'); if(statusEl){statusEl.innerText=status.label;statusEl.style.color=status.color;}
         const photoEl=document.getElementById('csSinglePhoto');
-        if(photoEl&&capturedPhotos[0]){photoEl.src=capturedPhotos[0];photoEl.style.display='block';document.getElementById('csSinglePhotoPlaceholder').style.display='none';}
+        if(photoEl&&capturedPhotos[0]){
+            photoEl.src=capturedPhotos[0];
+            photoEl.style.display='block';
+            photoEl.style.objectFit='cover';
+            photoEl.style.objectPosition='center';
+            document.getElementById('csSinglePhotoPlaceholder').style.display='none';
+        }
         const confidenceEl=document.getElementById('csAIConfidence');
         if(confidenceEl){
             if(result.confidence!==undefined){confidenceEl.innerText=`🤖 AI Confidence: ${Math.round(result.confidence*100)}%`;confidenceEl.style.display='block';}
@@ -326,8 +388,6 @@ const ColourScanner = (() => {
     function loadImage(src){
         return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>resolve(null);img.src=src;});
     }
-
-    // Draw image with cover crop inside a rounded rect
     function drawImageCover(ctx, img, x, y, w, h, r) {
         if (!img) return;
         const scale = Math.max(w / img.width, h / img.height);
@@ -345,22 +405,15 @@ const ColourScanner = (() => {
         const canvas = document.createElement('canvas');
         canvas.width = W; canvas.height = H;
         const ctx = canvas.getContext('2d');
-
-        // Background
         ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0, 0, W, H);
-
-        // Header bar
         ctx.fillStyle = '#111111'; ctx.fillRect(0, 0, W, 90);
         ctx.fillStyle = '#a6e22e'; ctx.font = 'bold 28px -apple-system, sans-serif'; ctx.fillText('PULP PRO', 40, 52);
         ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.font = '400 22px -apple-system, sans-serif'; ctx.fillText('Banana Colour Scan Report', 200, 52);
         ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.font = '400 20px -apple-system, sans-serif';
         ctx.textAlign = 'right'; ctx.fillText(timestamp, W - 40, 52); ctx.textAlign = 'left';
-
-        // Photo — full width, properly cropped
         const photoImg = photo ? await loadImage(photo) : null;
         if (photoImg) {
             drawImageCover(ctx, photoImg, 0, 90, W, 480, 0);
-            // Gradient overlay
             const grad = ctx.createLinearGradient(0, 420, 0, 570);
             grad.addColorStop(0, 'rgba(10,10,10,0)');
             grad.addColorStop(1, 'rgba(10,10,10,0.97)');
@@ -370,46 +423,25 @@ const ColourScanner = (() => {
             ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.font = '400 26px -apple-system, sans-serif';
             ctx.textAlign = 'center'; ctx.fillText('No photo captured', W/2, 340); ctx.textAlign = 'left';
         }
-
-        // Colour swatch over photo
         ctx.fillStyle = colour; roundRect(ctx, 40, 480, 110, 110, 22); ctx.fill();
         ctx.shadowColor = colour; ctx.shadowBlur = 30;
         ctx.fillStyle = colour; roundRect(ctx, 40, 480, 110, 110, 22); ctx.fill();
         ctx.shadowBlur = 0;
-
-        // Stage label
         ctx.fillStyle = '#ffffff'; ctx.font = 'bold 56px -apple-system, sans-serif'; ctx.fillText(label, 175, 540);
-
-        // Colour scale
-        const scaleStages = [
-            '#78c830','#86c82c','#98c428','#aec022','#c4bc1c','#d4b418',
-            '#dca814','#e0a010','#d89010','#bc7414','#905818'
-        ];
+        const scaleStages = ['#78c830','#86c82c','#98c428','#aec022','#c4bc1c','#d4b418','#dca814','#e0a010','#d89010','#bc7414','#905818'];
         const scaleY = 620, scaleH = 18, stepW = Math.floor((W-80) / scaleStages.length);
         scaleStages.forEach((hex, i) => {
-            ctx.fillStyle = hex;
-            roundRect(ctx, 40 + i*stepW, scaleY, stepW-4, scaleH, 4);
-            ctx.fill();
-            // Active marker
+            ctx.fillStyle = hex; roundRect(ctx, 40 + i*stepW, scaleY, stepW-4, scaleH, 4); ctx.fill();
             if (hex === colour || (i === 5 && colour.includes('d4b418'))) {
                 ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5;
-                roundRect(ctx, 40 + i*stepW - 2, scaleY - 2, stepW, scaleH+4, 5);
-                ctx.stroke();
+                roundRect(ctx, 40 + i*stepW - 2, scaleY - 2, stepW, scaleH+4, 5); ctx.stroke();
             }
         });
         ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.font = '400 18px -apple-system, sans-serif';
         ctx.fillText('1 · Full Green', 40, scaleY + scaleH + 22);
         ctx.textAlign = 'right'; ctx.fillText('6 · Full Brown', W-40, scaleY + scaleH + 22); ctx.textAlign = 'left';
-
-        // Divider
         ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.fillRect(40, 690, W-80, 1);
-
-        // Data rows
-        const rows = [
-            ['Colour Stage', label],
-            ['Shelf Life', shelf],
-            ['Status', status],
-        ];
+        const rows = [['Colour Stage', label], ['Shelf Life', shelf], ['Status', status]];
         let y = 740;
         rows.forEach(([key, val]) => {
             ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.font = '400 24px -apple-system, sans-serif'; ctx.fillText(key.toUpperCase(), 40, y);
@@ -417,92 +449,62 @@ const ColourScanner = (() => {
             ctx.fillStyle = 'rgba(255,255,255,0.04)'; ctx.fillRect(40, y+12, W-80, 1);
             y += 58;
         });
-
-        // Note
         if (note) {
             ctx.fillStyle = 'rgba(166,226,46,0.08)'; roundRect(ctx, 40, y+10, W-80, 60, 14); ctx.fill();
             ctx.fillStyle = '#a6e22e'; ctx.font = '600 22px -apple-system, sans-serif'; ctx.fillText('NOTE: ' + note, 60, y+48); y += 80;
         }
-
-        // Footer
         ctx.fillStyle = 'rgba(255,255,255,0.04)'; ctx.fillRect(0, H-70, W, 70);
         ctx.fillStyle = '#a6e22e'; ctx.font = 'bold 24px -apple-system, sans-serif'; ctx.fillText('PULP PRO INTELLIGENCE', 40, H-30);
         ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.font = '400 20px -apple-system, sans-serif';
         ctx.textAlign = 'right'; ctx.fillText('pulp-pro-intelligence.pulpprobrain.workers.dev', W-40, H-30); ctx.textAlign = 'left';
-
         return canvas;
     }
 
     // ── GENERATE BATCH REPORT CANVAS ─────────────────────────
     async function generateBatchReportCanvas({label, shelf, status, colour, note, count, scans, photos, timestamp}) {
         const W = 1080;
-        const PHOTO_H = 280; // each box photo height - reduced for better iMessage display
-        const BOX_INFO_H = 120;
-        const HEADER_H = 90;
-        const AVG_H = 260;
-        const SCALE_H = 80;
-        const FOOTER_H = 70;
+        const PHOTO_H = 280, BOX_INFO_H = 120, HEADER_H = 90, AVG_H = 260, SCALE_H = 80, FOOTER_H = 70;
         const NOTE_H = note ? 80 : 0;
         let H = HEADER_H + (scans.length * (PHOTO_H + BOX_INFO_H + 20)) + AVG_H + SCALE_H + NOTE_H + FOOTER_H + 40;
-
         const canvas = document.createElement('canvas');
         canvas.width = W; canvas.height = H;
         const ctx = canvas.getContext('2d');
-
-        // Background
         ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0, 0, W, H);
-
-        // Header
         ctx.fillStyle = '#111111'; ctx.fillRect(0, 0, W, HEADER_H);
         ctx.fillStyle = '#a6e22e'; ctx.font = 'bold 28px -apple-system, sans-serif'; ctx.fillText('PULP PRO', 40, 52);
         ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.font = '400 22px -apple-system, sans-serif';
         ctx.fillText(`Batch Colour Scan · ${scans.length} Boxes`, 200, 52);
         ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.font = '400 20px -apple-system, sans-serif';
         ctx.textAlign = 'right'; ctx.fillText(timestamp, W-40, 52); ctx.textAlign = 'left';
-
-        // Each box
         let y = HEADER_H + 20;
         for (let i = 0; i < scans.length; i++) {
             const scan = scans[i], photo = photos[i];
             const c = getResultColour(scan), lbl = getResultLabel(scan), sh = getResultShelfLife(scan);
             const st = getResultStatus(scan);
-
-            // Photo
             const photoImg = photo ? await loadImage(photo) : null;
             if (photoImg) {
                 drawImageCover(ctx, photoImg, 40, y, W-80, PHOTO_H, 20);
-                // Gradient at bottom
                 const grad = ctx.createLinearGradient(0, y + PHOTO_H - 120, 0, y + PHOTO_H);
-                grad.addColorStop(0, 'rgba(10,10,10,0)');
-                grad.addColorStop(1, 'rgba(10,10,10,0.98)');
+                grad.addColorStop(0, 'rgba(10,10,10,0)'); grad.addColorStop(1, 'rgba(10,10,10,0.98)');
                 ctx.fillStyle = grad; ctx.fillRect(40, y, W-80, PHOTO_H);
             } else {
                 ctx.fillStyle = '#111'; roundRect(ctx, 40, y, W-80, PHOTO_H, 20); ctx.fill();
                 ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.font = '400 24px -apple-system, sans-serif';
                 ctx.textAlign = 'center'; ctx.fillText('No photo — Box ' + (i+1), W/2, y + PHOTO_H/2); ctx.textAlign = 'left';
             }
-
-            // Box label on photo
             ctx.fillStyle = 'rgba(0,0,0,0.7)'; roundRect(ctx, 60, y+20, 140, 44, 22); ctx.fill();
             ctx.fillStyle = '#ffffff'; ctx.font = 'bold 22px -apple-system, sans-serif'; ctx.fillText('BOX ' + (i+1), 78, y+47);
-
-            // Info row below photo
             const infoY = y + PHOTO_H + 10;
             ctx.fillStyle = c; roundRect(ctx, 40, infoY, 80, 80, 16); ctx.fill();
             ctx.fillStyle = '#ffffff'; ctx.font = 'bold 32px -apple-system, sans-serif'; ctx.fillText(lbl, 140, infoY+40);
             ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.font = '400 24px -apple-system, sans-serif'; ctx.fillText('Shelf Life: ' + sh + '  ·  ' + st.label, 140, infoY+72);
-
             ctx.fillStyle = 'rgba(255,255,255,0.05)'; ctx.fillRect(40, infoY + BOX_INFO_H, W-80, 1);
             y += PHOTO_H + BOX_INFO_H + 30;
         }
-
-        // Batch average
         y += 10;
         ctx.fillStyle = 'rgba(166,226,46,0.06)'; roundRect(ctx, 40, y, W-80, AVG_H - 20, 20); ctx.fill();
         ctx.strokeStyle = 'rgba(166,226,46,0.15)'; ctx.lineWidth = 1; roundRect(ctx, 40, y, W-80, AVG_H - 20, 20); ctx.stroke();
-
         ctx.fillStyle = 'rgba(166,226,46,0.7)'; ctx.font = 'bold 22px -apple-system, sans-serif'; ctx.fillText('BATCH AVERAGE', 60, y + 38);
-
         ctx.fillStyle = colour; roundRect(ctx, 60, y + 58, 80, 80, 16); ctx.fill();
         ctx.fillStyle = '#ffffff'; ctx.font = 'bold 40px -apple-system, sans-serif'; ctx.fillText(label, 160, y + 88);
         ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.font = '400 22px -apple-system, sans-serif'; ctx.fillText(shelf + '  ·  ' + status, 160, y + 120);
@@ -515,19 +517,14 @@ const ColourScanner = (() => {
             ay += 46;
         });
         y += AVG_H + 10;
-
-        // Note
         if (note) {
             ctx.fillStyle = 'rgba(166,226,46,0.08)'; roundRect(ctx, 40, y, W-80, 60, 14); ctx.fill();
             ctx.fillStyle = '#a6e22e'; ctx.font = '600 22px -apple-system, sans-serif'; ctx.fillText('NOTE: ' + note, 60, y+38); y += 80;
         }
-
-        // Footer
         ctx.fillStyle = 'rgba(255,255,255,0.04)'; ctx.fillRect(0, H-FOOTER_H, W, FOOTER_H);
         ctx.fillStyle = '#a6e22e'; ctx.font = 'bold 24px -apple-system, sans-serif'; ctx.fillText('PULP PRO INTELLIGENCE', 40, H-30);
         ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.font = '400 20px -apple-system, sans-serif';
         ctx.textAlign = 'right'; ctx.fillText('pulp-pro-intelligence.pulpprobrain.workers.dev', W-40, H-30); ctx.textAlign = 'left';
-
         return canvas;
     }
 
@@ -535,25 +532,19 @@ const ColourScanner = (() => {
     async function shareCanvas(canvas, filename) {
         const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
         const file = new File([blob], filename, { type: 'image/png' });
-
-        // Keep blob alive — iOS GC kills it before share completes otherwise
         _sharedBlobs = [blob, file];
-
         try {
             if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
                 await navigator.share({ files: [file], title: 'Pulp Pro Colour Scan' });
             } else {
-                // Fallback: download
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url; a.download = filename; a.click();
                 setTimeout(() => URL.revokeObjectURL(url), 5000);
             }
         } catch (err) {
-            // User cancelled or error — don't delete the result view
             console.log('Share cancelled or failed:', err);
         } finally {
-            // Clear blob refs after 30s — enough time for any share to complete
             setTimeout(() => { _sharedBlobs = []; }, 30000);
         }
     }

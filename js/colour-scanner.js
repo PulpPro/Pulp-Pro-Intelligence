@@ -27,6 +27,126 @@ const ColourScanner = (() => {
         { value: 6,   hex: '#905818', name: 'Full Brown',      shelfLife: 'Sell Now', status: 'Overripe', statusColor: '#ff5722' }
     ];
 
+    // ── CAMERA UI BUILDER — single source of truth ────────────
+    // Matches Banana Brain exactly: 38vh container, object-fit:cover video,
+    // 88% wide × 72% tall crosshair, CSS ::before/::after corners
+    function buildCameraUI() {
+        const wrap = document.getElementById('cs-cam-wrap');
+        if (!wrap) return;
+
+        // Apply container styles directly — no CSS needed
+        wrap.style.cssText = `
+            position: relative;
+            width: 100%;
+            height: 38vh;
+            background: #000;
+            overflow: hidden;
+            border-radius: 16px;
+            flex-shrink: 0;
+            margin-bottom: 14px;
+        `;
+
+        // Only build once
+        if (wrap.querySelector('#csVideo')) return;
+
+        // Video element
+        const video = document.createElement('video');
+        video.id = 'csVideo';
+        video.autoplay = true;
+        video.playsInline = true;
+        video.muted = true;
+        video.style.cssText = `
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%; height: 100%;
+            object-fit: cover;
+            object-position: center;
+            display: none;
+        `;
+        wrap.appendChild(video);
+
+        // Hidden canvas for capture
+        const canvas = document.createElement('canvas');
+        canvas.id = 'csCanvas';
+        canvas.style.display = 'none';
+        wrap.appendChild(canvas);
+
+        // Placeholder (shown before camera starts)
+        const ph = document.createElement('div');
+        ph.id = 'csPlaceholder';
+        ph.style.cssText = `
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 8px; pointer-events: none;
+        `;
+        ph.innerHTML = `
+            <i class="bi bi-camera" style="font-size:2rem;opacity:0.25;color:#fff;"></i>
+            <span style="font-size:0.55rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.5);">Point camera at produce</span>
+        `;
+        wrap.appendChild(ph);
+
+        // Crosshair — injected <style> so ::before/::after work (same as Banana Brain)
+        if (!document.getElementById('cs-crosshair-style')) {
+            const style = document.createElement('style');
+            style.id = 'cs-crosshair-style';
+            style.textContent = `
+                #cs-crosshair {
+                    position: absolute;
+                    top: 50%; left: 50%;
+                    transform: translate(-50%, -50%);
+                    width: 88%; height: 72%;
+                    border: 2.5px solid rgba(166,226,46,0.85);
+                    border-radius: 10px;
+                    pointer-events: none;
+                    box-sizing: border-box;
+                }
+                #cs-crosshair::before, #cs-crosshair::after {
+                    content: '';
+                    position: absolute;
+                    width: 20px; height: 20px;
+                    border-color: #a6e22e;
+                    border-style: solid;
+                }
+                #cs-crosshair::before { top: -2px; left: -2px; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
+                #cs-crosshair::after  { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+            `;
+            document.head.appendChild(style);
+        }
+        const crosshair = document.createElement('div');
+        crosshair.id = 'cs-crosshair';
+        wrap.appendChild(crosshair);
+
+        // Align label
+        const guide = document.createElement('div');
+        guide.style.cssText = `
+            position: absolute; bottom: 12px; left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.48rem; font-weight: 700;
+            color: rgba(166,226,46,0.55);
+            text-transform: uppercase; letter-spacing: 1px;
+            white-space: nowrap; pointer-events: none;
+        `;
+        guide.textContent = 'Align produce to frame';
+        wrap.appendChild(guide);
+
+        // Scan button
+        const btn = document.createElement('button');
+        btn.id = 'csScanBtn';
+        btn.style.cssText = `
+            position: absolute; bottom: 12px; right: 12px;
+            background: #a6e22e; color: #000;
+            border: none; border-radius: 12px;
+            padding: 8px 16px; font-weight: 900;
+            font-size: 0.65rem; text-transform: uppercase;
+            cursor: pointer; letter-spacing: 1px;
+            z-index: 2; font-family: -apple-system, sans-serif;
+        `;
+        btn.onclick = () => ColourScanner.doScan();
+        wrap.appendChild(btn);
+    }
+
     // ── AI ────────────────────────────────────────────────────
     async function loadAIModel() {
         if (aiReady || aiLoading) return;
@@ -93,8 +213,9 @@ const ColourScanner = (() => {
         return { type: 'single', stage: best.stage };
     }
 
-    // ── CAMERA — Banana Brain layout ─────────────────────────
-    // Crosshair crop constants — matches CSS: width:88%, height:72%, centered
+    // ── CROP — identical to Banana Brain capturePhoto() ───────
+    // CSS crosshair: width:88%, height:72%, centered
+    // → left offset = 6%, top offset = 14%
     const CROP_X = 0.06;
     const CROP_Y = 0.14;
     const CROP_W = 0.88;
@@ -115,14 +236,15 @@ const ColourScanner = (() => {
         }
         return {
             x: Math.round(sLeft + testW * CROP_X),
-            y: Math.round(sTop + testH * CROP_Y),
+            y: Math.round(sTop  + testH * CROP_Y),
             w: Math.round(testW * CROP_W),
             h: Math.round(testH * CROP_H)
         };
     }
 
     function capturePhotoDataUrl() {
-        const video = document.getElementById('csVideo'), canvas = document.getElementById('csCanvas');
+        const video = document.getElementById('csVideo');
+        const canvas = document.getElementById('csCanvas');
         if (!video || !video.videoWidth) return null;
         const crop = getCropRegion(video);
         if (crop) {
@@ -136,7 +258,8 @@ const ColourScanner = (() => {
     }
 
     function sampleCameraColour() {
-        const video = document.getElementById('csVideo'), canvas = document.getElementById('csCanvas');
+        const video = document.getElementById('csVideo');
+        const canvas = document.getElementById('csCanvas');
         if (!video || !video.videoWidth) return null;
         const crop = getCropRegion(video);
         if (!crop) {
@@ -159,6 +282,7 @@ const ColourScanner = (() => {
         return { r:Math.round(r/count), g:Math.round(g/count), b:Math.round(b/count) };
     }
 
+    // ── CAMERA START/STOP ─────────────────────────────────────
     async function startCamera() {
         try {
             if (cameraStream) stopCamera();
@@ -173,19 +297,22 @@ const ColourScanner = (() => {
                 if (caps.zoom) await track.applyConstraints({ advanced: [{ zoom: caps.zoom.min }] });
             }
             await video.play();
-            // CSS owns all camera layout — just show the video and hide placeholder
             video.style.display = 'block';
-            const ph = document.getElementById('csPlaceholder'); if (ph) ph.style.display = 'none';
+            const ph = document.getElementById('csPlaceholder');
+            if (ph) ph.style.display = 'none';
         } catch (err) {
             console.warn('Camera unavailable:', err);
-            const ph = document.getElementById('csPlaceholder'); if (ph) ph.style.display = 'flex';
-            const video = document.getElementById('csVideo'); if (video) video.style.display = 'none';
+            const ph = document.getElementById('csPlaceholder');
+            if (ph) ph.style.display = 'flex';
+            const video = document.getElementById('csVideo');
+            if (video) video.style.display = 'none';
         }
     }
 
     function stopCamera() {
         if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
     }
+
     function showView(viewId) {
         ['cs-scanner','cs-single-result','cs-batch-result'].forEach(id => {
             const el = document.getElementById(id); if (el) el.classList.add('hidden');
@@ -195,12 +322,15 @@ const ColourScanner = (() => {
 
     // ── INIT / MODE ───────────────────────────────────────────
     function init() {
+        buildCameraUI();
         multiScans = []; capturedPhotos = []; scanMode = 'single';
         const sb = document.getElementById('csSingleBtn'), mb = document.getElementById('csMultiBtn');
         if (sb) sb.classList.add('active'); if (mb) mb.classList.remove('active');
         const bb = document.getElementById('csBatchBtn'); if (bb) bb.style.display = 'none';
         showView('cs-scanner'); updateScanButton(); renderMultiScans(); loadAIModel();
+        startCamera();
     }
+
     function setScanMode(mode) {
         scanMode = mode; multiScans = []; capturedPhotos = [];
         const sb = document.getElementById('csSingleBtn'), mb = document.getElementById('csMultiBtn');
@@ -209,10 +339,12 @@ const ColourScanner = (() => {
         const bb = document.getElementById('csBatchBtn'); if (bb) bb.style.display = 'none';
         showView('cs-scanner'); updateScanButton(); renderMultiScans(); startCamera();
     }
+
     function updateScanButton() {
         const btn = document.getElementById('csScanBtn'); if (!btn) return;
-        if (scanMode === 'single') { btn.innerHTML = '<i class="bi bi-camera-fill"></i> Scan'; }
-        else {
+        if (scanMode === 'single') {
+            btn.innerHTML = '<i class="bi bi-camera-fill"></i> Scan';
+        } else {
             const next = multiScans.length + 1;
             btn.innerHTML = next <= MAX_SCANS
                 ? `<i class="bi bi-camera-fill"></i> Scan Box ${next}`
@@ -295,8 +427,7 @@ const ColourScanner = (() => {
             if(result.confidence!==undefined){confidenceEl.innerText=`🤖 AI Confidence: ${Math.round(result.confidence*100)}%`;confidenceEl.style.display='block';}
             else confidenceEl.style.display='none';
         }
-        const noteInput=document.getElementById('csNoteInput'); if(noteInput) noteInput.value='';
-        updateNotePreview(''); showView('cs-single-result');
+        showView('cs-single-result');
     }
 
     // ── MULTI SCAN ────────────────────────────────────────────
@@ -334,8 +465,7 @@ const ColourScanner = (() => {
         const batchStatus=document.getElementById('csBatchStatus'); if(batchStatus){batchStatus.innerText=status.label;batchStatus.style.color=status.color;}
         const batchCount=document.getElementById('csBatchCount'); if(batchCount) batchCount.innerText=multiScans.length+' of '+MAX_SCANS;
         renderBatchPhotos(); renderBatchBreakdown();
-        const noteInput=document.getElementById('csBatchNoteInput'); if(noteInput) noteInput.value='';
-        updateBatchNotePreview(''); showView('cs-batch-result');
+        showView('cs-batch-result');
     }
 
     function renderBatchPhotos() {
@@ -378,7 +508,7 @@ const ColourScanner = (() => {
         ctx.quadraticCurveTo(x,y+h,x,y+h-r); ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
     }
     function loadImage(src){
-        return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>resolve(null);img.src=src;});
+        return new Promise((resolve)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>resolve(null);img.src=src;});
     }
     function drawImageCover(ctx, img, x, y, w, h, r) {
         if (!img) return;
@@ -407,8 +537,7 @@ const ColourScanner = (() => {
         if (photoImg) {
             drawImageCover(ctx, photoImg, 0, 90, W, 480, 0);
             const grad = ctx.createLinearGradient(0, 420, 0, 570);
-            grad.addColorStop(0, 'rgba(10,10,10,0)');
-            grad.addColorStop(1, 'rgba(10,10,10,0.97)');
+            grad.addColorStop(0, 'rgba(10,10,10,0)'); grad.addColorStop(1, 'rgba(10,10,10,0.97)');
             ctx.fillStyle = grad; ctx.fillRect(0, 90, W, 480);
         } else {
             ctx.fillStyle = '#111'; ctx.fillRect(0, 90, W, 480);
@@ -563,7 +692,6 @@ const ColourScanner = (() => {
             await shareCanvas(canvas, 'pulp-pro-batch-scan.png');
         } catch(err) {
             console.error('Batch share failed:', err);
-            alert('Share failed: ' + err.message);
         }
     }
 

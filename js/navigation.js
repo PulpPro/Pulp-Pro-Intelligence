@@ -455,6 +455,8 @@ function showHub() {
     if (pulpaiView) pulpaiView.classList.add('hidden');
     const remView = document.getElementById('reminders-view');
     if (remView) remView.classList.add('hidden');
+    const iqView = document.getElementById('floor-iq-view');
+    if (iqView) iqView.classList.add('hidden');
     const menuTrigger = document.getElementById('menu-trigger');
     if (menuTrigger) menuTrigger.style.display = '';
 }

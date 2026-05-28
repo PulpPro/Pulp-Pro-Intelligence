@@ -445,6 +445,7 @@ function showReminderSheet(reminderId) {
     overlay.style.display = 'flex';
     overlay.style.flexDirection = 'column';
     overlay.style.justifyContent = 'flex-end';
+    overlay.style.pointerEvents = 'auto';
     setTimeout(() => { sheet.style.transform = 'translateY(0)'; }, 10);
 }
 
@@ -473,6 +474,9 @@ function showReminderSheetWithData(text, datetime, source, id) {
     if (!overlay || !sheet) return;
     overlay.style.background = 'rgba(0,0,0,0.92)';
     overlay.style.display = 'flex';
+    overlay.style.flexDirection = 'column';
+    overlay.style.justifyContent = 'flex-end';
+    overlay.style.pointerEvents = 'auto';
     setTimeout(() => { sheet.style.transform = 'translateY(0)'; }, 10);
 }
 
@@ -480,7 +484,7 @@ function hideReminderSheet() {
     const sheet = document.getElementById('reminder-sheet');
     const overlay = document.getElementById('reminder-sheet-overlay');
     sheet.style.transform = 'translateY(100%)';
-    setTimeout(() => { overlay.style.display = 'none'; }, 300);
+    setTimeout(() => { overlay.style.display = 'none'; overlay.style.pointerEvents = 'none'; }, 300);
     _sheetReminderId = null;
 }
 

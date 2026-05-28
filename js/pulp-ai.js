@@ -563,6 +563,23 @@ function openChat(chatId) {
         const glowCanvas = document.getElementById('pulpai-glow-canvas');
         if (glowCanvas) startPerimeterGlow(glowCanvas);
         initMic();
+        // Wire up photo input listeners
+        const camInput = document.getElementById('pulpai-camera-input');
+        const galInput = document.getElementById('pulpai-gallery-input');
+        if (camInput && !camInput._pulpWired) {
+            camInput._pulpWired = true;
+            camInput.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files[0]) handlePhotoSelected(e.target.files[0]);
+                e.target.value = '';
+            });
+        }
+        if (galInput && !galInput._pulpWired) {
+            galInput._pulpWired = true;
+            galInput.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files[0]) handlePhotoSelected(e.target.files[0]);
+                e.target.value = '';
+            });
+        }
     }, 100);
     fetchUsage();
     const popup = document.getElementById('pulpai-photo-popup');

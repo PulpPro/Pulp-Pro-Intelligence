@@ -1,3 +1,17 @@
+// ── EXIT QUIZ (back button mid-session) ───────────────────────────────────
+function iqExitQuiz() {
+    clearInterval(iqTimerInt);
+    // Submit whatever score was earned this session
+    if (iqScore > 0) {
+        iqSaveLocalStats();
+        const acc = (iqCorrectCount + iqWrongCount) > 0
+            ? Math.round(iqCorrectCount / (iqCorrectCount + iqWrongCount) * 100)
+            : 0;
+        iqSubmitScore(iqScore, acc);
+    }
+    iqShowScreen('iq-s-lobby');
+}
+
 // ── FLOOR IQ ─────────────────────────────────────────────────────────────
 const IQ_WORKER = 'https://pulppro-access.pulpprobrain.workers.dev';
 

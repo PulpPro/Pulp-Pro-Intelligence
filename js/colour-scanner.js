@@ -38,7 +38,8 @@ const ColourScanner = (() => {
         wrap.style.cssText = `
             position: relative;
             width: 100%;
-            height: 38vh;
+            aspect-ratio: 4 / 3;
+            max-height: 38vh;
             background: #000;
             overflow: hidden;
             border-radius: 16px;

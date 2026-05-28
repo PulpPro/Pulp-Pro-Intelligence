@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v23';
+const CACHE_VERSION = 'v18';
 const CACHE_NAME = 'pulp-pro-' + CACHE_VERSION;
 const ASSETS = [
     '/',
@@ -16,6 +16,7 @@ const ASSETS = [
     '/js/colour-scanner.js',
     '/js/pulp-ai.js',
     '/js/reminders.js',
+    '/js/floor-iq.js',
     'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css'
 ];
 

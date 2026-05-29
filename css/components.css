@@ -109,6 +109,22 @@ input {
 .log-timestamp { display: block; opacity: 0.6; font-size: 0.55rem; font-weight: 800; }
 
 /* =============================================
+   COLOUR SCANNER TOGGLES & RESULTS
+   ============================================= */
+.cs-toggle-btn {
+    flex: 1; padding: 12px 8px; border-radius: 16px;
+    border: 1.5px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.5); font-weight: 900; font-size: 0.7rem;
+    text-transform: uppercase; letter-spacing: 1px; cursor: pointer;
+    transition: 0.2s; text-align: center;
+}
+.cs-toggle-btn.active {
+    border-color: #a6e22e; color: #a6e22e;
+    background: rgba(166,226,46,0.08);
+}
+
+/* =============================================
    ANIMATIONS
    ============================================= */
 @keyframes pulse {

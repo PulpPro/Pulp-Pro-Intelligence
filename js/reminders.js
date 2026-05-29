@@ -78,9 +78,15 @@ function scrollToNewReminder() {
 function renderRemindersList() {
     const reminders = loadReminders();
     const now = new Date();
-    const upcoming = reminders.filter(r => !r.done && new Date(r.datetime) >= now);
-    const overdue = reminders.filter(r => !r.done && new Date(r.datetime) < now);
-    const done = reminders.filter(r => r.done);
+    const upcoming = reminders
+        .filter(r => !r.done && new Date(r.datetime) >= now)
+        .sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
+    const overdue = reminders
+        .filter(r => !r.done && new Date(r.datetime) < now)
+        .sort((a, b) => new Date(b.datetime) - new Date(a.datetime)); // most recent overdue first
+    const done = reminders
+        .filter(r => r.done)
+        .sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
 
     const container = document.getElementById('reminders-list');
     if (!container) return;
@@ -125,16 +131,16 @@ function renderReminderCard(r, overdue, done) {
 
     const actionsHtml = !done ? `
         <div style="display:flex;gap:6px;padding-left:21px;margin-top:10px;">
-            <div onclick="openEditReminder('${r.id}')" style="flex:1;padding:8px 10px;border-radius:9px;font-size:11px;font-weight:700;text-align:center;cursor:pointer;background:rgba(136,153,255,0.1);color:#8899ff;border:1px solid rgba(136,153,255,0.2);letter-spacing:0.3px;"><i class="bi bi-pencil" style="font-size:10px;margin-right:3px;"></i>Edit</div>
-            <div onclick="markReminderDone('${r.id}')" style="flex:1;padding:8px 10px;border-radius:9px;font-size:11px;font-weight:700;text-align:center;cursor:pointer;background:rgba(166,226,46,0.08);color:#a6e22e;border:1px solid rgba(166,226,46,0.18);letter-spacing:0.3px;"><i class="bi bi-check-lg" style="font-size:10px;margin-right:3px;"></i>Done</div>
-            <div onclick="deleteReminder('${r.id}')" style="padding:8px 12px;border-radius:9px;font-size:11px;cursor:pointer;background:rgba(255,77,77,0.07);color:rgba(255,77,77,0.6);border:1px solid rgba(255,77,77,0.15);"><i class="bi bi-trash" style="font-size:11px;"></i></div>
+            <div onclick="event.stopPropagation();openEditReminder('${r.id}')" style="flex:1;padding:8px 10px;border-radius:9px;font-size:11px;font-weight:700;text-align:center;cursor:pointer;background:rgba(136,153,255,0.1);color:#8899ff;border:1px solid rgba(136,153,255,0.2);letter-spacing:0.3px;"><i class="bi bi-pencil" style="font-size:10px;margin-right:3px;"></i>Edit</div>
+            <div onclick="event.stopPropagation();markReminderDone('${r.id}')" style="flex:1;padding:8px 10px;border-radius:9px;font-size:11px;font-weight:700;text-align:center;cursor:pointer;background:rgba(166,226,46,0.08);color:#a6e22e;border:1px solid rgba(166,226,46,0.18);letter-spacing:0.3px;"><i class="bi bi-check-lg" style="font-size:10px;margin-right:3px;"></i>Done</div>
+            <div onclick="event.stopPropagation();deleteReminder('${r.id}')" style="padding:8px 12px;border-radius:9px;font-size:11px;cursor:pointer;background:rgba(255,77,77,0.07);color:rgba(255,77,77,0.6);border:1px solid rgba(255,77,77,0.15);"><i class="bi bi-trash" style="font-size:11px;"></i></div>
         </div>` : '';
 
-    return `<div style="background:${bgColor};border:1px solid ${borderColor};border-radius:16px;padding:14px 15px;margin-bottom:8px;${done ? 'opacity:0.4;' : ''}">
+    return `<div onclick="${!done ? `openEditReminder('${r.id}')` : ''}" style="background:${bgColor};border:1px solid ${borderColor};border-radius:16px;padding:14px 15px;margin-bottom:8px;${done ? 'opacity:0.4;' : 'cursor:pointer;'}">
         <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;">
             <div style="width:11px;height:11px;border-radius:50%;background:${dotColor};flex-shrink:0;margin-top:3px;"></div>
             <div style="font-size:14px;font-weight:700;color:${done ? 'rgba(255,255,255,0.4)' : '#fff'};line-height:1.3;flex:1;letter-spacing:normal;text-transform:none;${done ? 'text-decoration:line-through;' : ''}">${escapeHtmlRem(r.text)}</div>
-            ${!done ? `<div style="font-size:14px;color:rgba(255,255,255,0.2);flex-shrink:0;margin-top:2px;"><i class="bi bi-chevron-right"></i></div>` : ''}
+            ${!done ? `<div style="font-size:14px;color:rgba(255,255,255,0.25);flex-shrink:0;margin-top:2px;"><i class="bi bi-chevron-right"></i></div>` : ''}
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-left:21px;">
             <div style="font-size:12px;color:rgba(255,255,255,0.35);display:flex;align-items:center;gap:4px;"><i class="bi bi-clock" style="font-size:11px;"></i> ${dateStr} · ${timeStr}</div>
@@ -146,6 +152,12 @@ function renderReminderCard(r, overdue, done) {
 
 function escapeHtmlRem(str) {
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatEditDate(val) {
+    if (!val) return '';
+    const d = new Date(val + 'T00:00:00');
+    return d.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
 }
 
 function markReminderDone(id) {
@@ -202,15 +214,32 @@ function openEditReminder(id) {
             </div>
             <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px;">
                 <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;">Schedule</div>
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+                <label style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;" for="edit-rem-date">
                     <div style="font-size:13px;color:rgba(255,255,255,0.5);"><i class="bi bi-calendar3" style="font-size:14px;margin-right:6px;vertical-align:-2px;"></i>Date</div>
-                    <input id="edit-rem-date" type="date" value="${dateVal}" style="background:transparent;border:none;font-size:13px;font-weight:600;color:#fff;outline:none;font-family:-apple-system,sans-serif;color-scheme:dark;">
-                </div>
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0 0;">
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <span id="edit-rem-date-display" style="font-size:13px;font-weight:700;color:#fff;"></span>
+                        <i class="bi bi-pencil" style="font-size:10px;color:rgba(136,153,255,0.5);"></i>
+                    </div>
+                    <input id="edit-rem-date" type="date" value="${dateVal}" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;" oninput="document.getElementById('edit-rem-date-display').textContent=formatEditDate(this.value);">
+                </label>
+                <label style="display:flex;align-items:center;justify-content:space-between;padding:10px 0 0;cursor:pointer;" for="edit-rem-time">
                     <div style="font-size:13px;color:rgba(255,255,255,0.5);"><i class="bi bi-clock" style="font-size:14px;margin-right:6px;vertical-align:-2px;"></i>Time</div>
-                    <input id="edit-rem-time" type="time" value="${timeVal}" style="background:transparent;border:none;font-size:13px;font-weight:600;color:#fff;outline:none;font-family:-apple-system,sans-serif;color-scheme:dark;">
-                </div>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <span id="edit-rem-time-display" style="font-size:13px;font-weight:700;color:#fff;"></span>
+                        <i class="bi bi-pencil" style="font-size:10px;color:rgba(136,153,255,0.5);"></i>
+                    </div>
+                    <input id="edit-rem-time" type="time" value="${timeVal}" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;" oninput="document.getElementById('edit-rem-time-display').textContent=this.value;">
+                </label>
             </div>
+            <script>
+                (function(){
+                    const dv='${dateVal}', tv='${timeVal}';
+                    const dd=document.getElementById('edit-rem-date-display');
+                    const td=document.getElementById('edit-rem-time-display');
+                    if(dd) dd.textContent=formatEditDate(dv);
+                    if(td) td.textContent=tv;
+                })();
+            <\/script>
             <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px;">
                 <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;">Details</div>
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06);">

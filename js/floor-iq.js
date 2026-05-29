@@ -47,6 +47,7 @@ let iqCategoryStats = {};
 let iqLobbyRefreshInt = null;
 let iqAutoRefreshInt = null;
 let iqSessionActive = false;
+let iqAskedTopics = []; // track category_ids asked this session to avoid repeats
 
 // ── OPEN / CLOSE ──────────────────────────────────────────────────────────
 function openFloorIQ() {
@@ -153,16 +154,31 @@ const IQ_BADGE_LEVELS = [
 ];
 
 const IQ_CATEGORIES = [
-    { id: 'cold_chain', icon: '🌡', name: { en: 'Cold Chain', nl: 'Koelketen' } },
-    { id: 'ripening', icon: '🍌', name: { en: 'Ripening', nl: 'Rijping' } },
-    { id: 'diseases', icon: '🦠', name: { en: 'Diseases', nl: 'Ziekten' } },
-    { id: 'logistics', icon: '🚚', name: { en: 'Logistics', nl: 'Logistiek' } },
-    { id: 'storage', icon: '📦', name: { en: 'Storage', nl: 'Opslag' } },
-    { id: 'growing', icon: '🌱', name: { en: 'Growing', nl: 'Teelt' } },
-    { id: 'weather', icon: '☁️', name: { en: 'Weather', nl: 'Weer' } },
-    { id: 'market', icon: '💰', name: { en: 'Market', nl: 'Markt' } },
-    { id: 'certification', icon: '📋', name: { en: 'Certification', nl: 'Certificering' } },
-    { id: 'post_harvest', icon: '🔬', name: { en: 'Post-Harvest', nl: 'Post-Oogst' } },
+    { id: 'cold_chain',      icon: '🌡️', name: { en: 'Cold Chain',        nl: 'Koelketen' } },
+    { id: 'ripening',        icon: '🍌', name: { en: 'Ripening',           nl: 'Rijping' } },
+    { id: 'diseases',        icon: '🦠', name: { en: 'Diseases & Defects', nl: 'Ziekten' } },
+    { id: 'post_harvest',    icon: '🔬', name: { en: 'Post-Harvest',       nl: 'Post-Oogst' } },
+    { id: 'storage',         icon: '📦', name: { en: 'Storage',            nl: 'Opslag' } },
+    { id: 'logistics',       icon: '🚢', name: { en: 'Logistics',          nl: 'Logistiek' } },
+    { id: 'growing',         icon: '🌱', name: { en: 'Growing',            nl: 'Teelt' } },
+    { id: 'weather',         icon: '☁️', name: { en: 'Weather & Climate',  nl: 'Klimaat' } },
+    { id: 'market',          icon: '💰', name: { en: 'Market & Pricing',   nl: 'Markt' } },
+    { id: 'certification',   icon: '📋', name: { en: 'Certification',      nl: 'Certificering' } },
+    { id: 'mango',           icon: '🥭', name: { en: 'Mango',              nl: 'Mango' } },
+    { id: 'avocado',         icon: '🥑', name: { en: 'Avocado',            nl: 'Avocado' } },
+    { id: 'citrus',          icon: '🍊', name: { en: 'Citrus',             nl: 'Citrus' } },
+    { id: 'berries',         icon: '🍓', name: { en: 'Soft Fruits',        nl: 'Zacht Fruit' } },
+    { id: 'stone_fruit',     icon: '🍑', name: { en: 'Stone Fruit',        nl: 'Steenfruit' } },
+    { id: 'pineapple',       icon: '🍍', name: { en: 'Tropical Fruits',    nl: 'Tropisch Fruit' } },
+    { id: 'food_safety',     icon: '⚠️', name: { en: 'Food Safety',        nl: 'Voedselveiligheid' } },
+    { id: 'packaging',       icon: '🗃️', name: { en: 'Packaging & MA',     nl: 'Verpakking' } },
+    { id: 'nutrition',       icon: '💊', name: { en: 'Nutrition',          nl: 'Voeding' } },
+    { id: 'origins',         icon: '🌍', name: { en: 'Origins & Varieties',nl: 'Herkomst' } },
+    { id: 'quality_grading', icon: '🔍', name: { en: 'Quality Grading',    nl: 'Kwaliteit' } },
+    { id: 'pest_control',    icon: '🐛', name: { en: 'Pest Control',       nl: 'Plaagbestrijding' } },
+    { id: 'soil_water',      icon: '💧', name: { en: 'Soil & Water',       nl: 'Bodem & Water' } },
+    { id: 'import_export',   icon: '📜', name: { en: 'Import/Export',      nl: 'Import/Export' } },
+    { id: 'tech_innovation', icon: '🤖', name: { en: 'Tech & Innovation',  nl: 'Innovatie' } },
 ];
 
 function iqGetBadgeLevel(correct) {
@@ -270,6 +286,7 @@ async function iqStartQuiz() {
     iqCorrectCount = 0;
     iqWrongCount = 0;
     iqCategoryStats = {};
+    iqAskedTopics = [];
     iqSessionActive = true;
     iqShowScreen('iq-s-quiz');
     iqUpdateScoreHdr();
@@ -283,7 +300,7 @@ async function iqLoadNextBatch() {
         const res = await fetch(IQ_WORKER + '/iq-questions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ lang: iqLang, count: 5 })
+            body: JSON.stringify({ lang: iqLang, count: 5, askedTopics: iqAskedTopics })
         });
         const data = await res.json();
         if (data.error === 'limit_reached') {
@@ -292,6 +309,12 @@ async function iqLoadNextBatch() {
         }
         if (data.questions && data.questions.length > 0) {
             iqQuestions = [...iqQuestions, ...data.questions];
+            // Track which categories were used so next batch avoids them
+            if (data.usedCategoryIds) {
+                iqAskedTopics = [...new Set([...iqAskedTopics, ...data.usedCategoryIds])];
+                // Reset after 20 topics so we can cycle back through
+                if (iqAskedTopics.length > 20) iqAskedTopics = iqAskedTopics.slice(-10);
+            }
         }
     } catch(e) {
         console.error('IQ load error:', e);

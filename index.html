@@ -152,7 +152,7 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 <div class="menu-item" onclick="toggleRevokePanel()" style="color:#a6e22e;background:rgba(166,226,46,0.05);border:1px solid rgba(166,226,46,0.12);border-radius:10px;margin-bottom:4px;"><span><i class="bi bi-people"></i> Active Users</span></div>
 <div id="revoke-panel" class="hidden" style="background:#0a0808;border:1px solid rgba(255,77,77,0.2);border-radius:12px;padding:12px;margin-bottom:8px;">
 <div style="font-size:8px;font-weight:900;color:rgba(255,77,77,0.6);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Active Users</div>
-<div id="revoke-list" style="font-size:11px;color:rgba(255,255,255,0.4);">Tap to load...</div>
+<div id="revoke-list" style="font-size:11px;color:rgba(255,255,255,0.4);max-height:220px;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;">Tap to load...</div>
 <button onclick="loadActiveUsers()" style="width:100%;margin-top:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px;font-size:9px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;cursor:pointer;font-family:-apple-system,sans-serif;">↻ Load Users</button>
 </div>
 <div class="menu-item" onclick="adminLogout()" style="color:rgba(255,77,77,0.6);"><span><i class="bi bi-box-arrow-right"></i> Logout</span></div>

@@ -109,26 +109,40 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 <div class="menu-item" onclick="sendFeedback()"><span>&#x1F4AC; Send Feedback</span></div>
 
       <div class="notif-section">
-        <div class="notif-section-lbl">Notifications</div>
-        <div class="notif-row" onclick="toggleNotif('reminders')">
+        <div class="notif-section-lbl">Notification Settings</div>
+
+        <div style="font-size:9px;font-weight:800;color:rgba(255,255,255,0.2);text-transform:uppercase;letter-spacing:1.5px;margin:8px 4px 6px;">Holiday Planner</div>
+        <div class="notif-row" onclick="toggleNotif('holiday_rijpers')">
           <div class="notif-row-left">
-            <div class="notif-row-icon">🔔</div>
+            <div class="notif-row-icon">🍌</div>
             <div>
-              <div class="notif-row-title">Reminders</div>
-              <div class="notif-row-sub">Alerts for your scheduled reminders</div>
+              <div class="notif-row-title">Rijpers</div>
+              <div class="notif-row-sub">Holiday updates from Rijpers</div>
             </div>
           </div>
-          <div class="notif-toggle on" id="notif-toggle-reminders"><div class="notif-toggle-knob"></div></div>
+          <div class="notif-toggle on" id="notif-toggle-holiday_rijpers"><div class="notif-toggle-knob"></div></div>
         </div>
-        <div class="notif-row" onclick="toggleNotif('calendar')">
+        <div class="notif-row" onclick="toggleNotif('holiday_heftrucker')">
           <div class="notif-row-left">
-            <div class="notif-row-icon">📅</div>
+            <div class="notif-row-icon">🚜</div>
             <div>
-              <div class="notif-row-title">Calendar</div>
-              <div class="notif-row-sub">When team members add or cancel holidays</div>
+              <div class="notif-row-title">Heftrucker</div>
+              <div class="notif-row-sub">Holiday updates from Heftruckers</div>
             </div>
           </div>
-          <div class="notif-toggle on" id="notif-toggle-calendar"><div class="notif-toggle-knob"></div></div>
+          <div class="notif-toggle on" id="notif-toggle-holiday_heftrucker"><div class="notif-toggle-knob"></div></div>
+        </div>
+
+        <div style="font-size:9px;font-weight:800;color:rgba(255,255,255,0.2);text-transform:uppercase;letter-spacing:1.5px;margin:10px 4px 6px;">Shift Swap</div>
+        <div class="notif-row" onclick="toggleNotif('swap_request')">
+          <div class="notif-row-left">
+            <div class="notif-row-icon">🔄</div>
+            <div>
+              <div class="notif-row-title">Swap Requests</div>
+              <div class="notif-row-sub">New and accepted swap requests</div>
+            </div>
+          </div>
+          <div class="notif-toggle on" id="notif-toggle-swap_request"><div class="notif-toggle-knob"></div></div>
         </div>
       </div>
 
@@ -870,30 +884,50 @@ if ('serviceWorker' in navigator) {
 <script src="js/floor-iq.js"></script>
 <script>
 // ── NOTIFICATION TOGGLES ──────────────────────────────────────────────────
+const NOTIF_TYPES = ['holiday_rijpers', 'holiday_heftrucker', 'swap_request'];
+
 function toggleNotif(type) {
     const key = 'notif_' + type;
-    const current = localStorage.getItem(key) !== 'false'; // default ON
+    const current = localStorage.getItem(key) !== 'false';
     const newVal = !current;
     localStorage.setItem(key, newVal ? 'true' : 'false');
     const toggle = document.getElementById('notif-toggle-' + type);
-    if (toggle) {
-        toggle.className = 'notif-toggle ' + (newVal ? 'on' : 'off');
-    }
+    if (toggle) toggle.className = 'notif-toggle ' + (newVal ? 'on' : 'off');
+    // Sync ALL prefs to KV so worker respects them
+    syncNotifPrefsToWorker();
 }
 
 function initNotifToggles() {
-    ['reminders', 'calendar'].forEach(type => {
-        const key = 'notif_' + type;
-        const isOn = localStorage.getItem(key) !== 'false'; // default ON
+    NOTIF_TYPES.forEach(type => {
+        const isOn = localStorage.getItem('notif_' + type) !== 'false';
         const toggle = document.getElementById('notif-toggle-' + type);
-        if (toggle) {
-            toggle.className = 'notif-toggle ' + (isOn ? 'on' : 'off');
-        }
+        if (toggle) toggle.className = 'notif-toggle ' + (isOn ? 'on' : 'off');
     });
+}
+
+async function syncNotifPrefsToWorker() {
+    const userCode = localStorage.getItem('pulpProAccessCode') ||
+                     (localStorage.getItem('pulpProAdmin') === 'true' ? 'admin' : null);
+    if (!userCode) return;
+    const prefs = {};
+    NOTIF_TYPES.forEach(type => {
+        prefs[type] = localStorage.getItem('notif_' + type) !== 'false';
+    });
+    // reminders always true — fixed on, not user-controlled anymore
+    prefs.reminders = true;
+    try {
+        await fetch('https://pulppro-access.pulpprobrain.workers.dev/update-notif-prefs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userCode, prefs })
+        });
+    } catch(e) { console.log('Notif prefs sync failed', e); }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     initNotifToggles();
+    // Sync prefs to worker on load in case they changed offline
+    syncNotifPrefsToWorker();
 });
 
 // Expose notif check for push.js / reminders.js

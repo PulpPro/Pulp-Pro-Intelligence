@@ -108,6 +108,30 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 <div class="menu-item" onclick="clearHistory()" style="color:var(--pulp-red);"><span>&#x26A0;&#xFE0F; Clear Logs</span></div>
 <div class="menu-item" onclick="sendFeedback()"><span>&#x1F4AC; Send Feedback</span></div>
 
+      <div class="notif-section">
+        <div class="notif-section-lbl">Notifications</div>
+        <div class="notif-row" onclick="toggleNotif('reminders')">
+          <div class="notif-row-left">
+            <div class="notif-row-icon">🔔</div>
+            <div>
+              <div class="notif-row-title">Reminders</div>
+              <div class="notif-row-sub">Alerts for your scheduled reminders</div>
+            </div>
+          </div>
+          <div class="notif-toggle on" id="notif-toggle-reminders"><div class="notif-toggle-knob"></div></div>
+        </div>
+        <div class="notif-row" onclick="toggleNotif('calendar')">
+          <div class="notif-row-left">
+            <div class="notif-row-icon">📅</div>
+            <div>
+              <div class="notif-row-title">Calendar</div>
+              <div class="notif-row-sub">When team members add or cancel holidays</div>
+            </div>
+          </div>
+          <div class="notif-toggle on" id="notif-toggle-calendar"><div class="notif-toggle-knob"></div></div>
+        </div>
+      </div>
+
 <div id="admin-menu-section" class="hidden">
 <div class="settings-label" style="color:rgba(166,226,46,0.5);">Admin</div>
 <div class="menu-item" onclick="toggleCodeGenerator()" style="color:#a6e22e;background:rgba(166,226,46,0.05);border:1px solid rgba(166,226,46,0.12);border-radius:10px;margin-bottom:4px;"><span><i class="bi bi-key"></i> Generate Access Code</span></div>
@@ -507,6 +531,32 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 #pulpai-fruit-input,#rem-text-input,#rem-date-input,#rem-time-input{font-size:15px!important;font-weight:400!important;letter-spacing:normal!important;text-transform:none!important;height:auto!important;line-height:normal!important;text-align:left!important;color:#fff!important;-webkit-text-fill-color:#fff!important;color-scheme:dark!important}
 #pulpai-fruit-input{padding:10px 14px!important;background:rgba(255,255,255,0.05)!important;border:1px solid rgba(255,255,255,0.1)!important;border-radius:10px!important;width:100%!important;outline:none!important;display:block!important;box-sizing:border-box!important}
 #pulpai-photo-popup{display:none}
+
+/* ── MENU DRAWER SCROLL FIX ── */
+#menu-drawer{
+  overflow-y:auto!important;
+  -webkit-overflow-scrolling:touch!important;
+  overscroll-behavior:contain!important;
+}
+#menu-overlay{
+  touch-action:none!important;
+}
+
+/* ── NOTIFICATION TOGGLES ── */
+.notif-section{margin:12px 0 4px;}
+.notif-section-lbl{font-size:9px;font-weight:800;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;padding:0 4px;}
+.notif-row{display:flex;align-items:center;justify-content:space-between;padding:11px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;margin-bottom:6px;cursor:pointer;}
+.notif-row:active{opacity:0.8;}
+.notif-row-left{display:flex;align-items:center;gap:10px;}
+.notif-row-icon{font-size:16px;}
+.notif-row-title{font-size:13px;font-weight:700;color:#fff;}
+.notif-row-sub{font-size:10px;color:rgba(255,255,255,0.3);margin-top:1px;}
+.notif-toggle{width:44px;height:26px;border-radius:100px;position:relative;transition:background 0.2s;flex-shrink:0;cursor:pointer;}
+.notif-toggle.on{background:#a6e22e;}
+.notif-toggle.off{background:rgba(255,255,255,0.12);}
+.notif-toggle-knob{position:absolute;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.3);}
+.notif-toggle.on .notif-toggle-knob{left:21px;}
+.notif-toggle.off .notif-toggle-knob{left:3px;}
 </style>
 
 <script>
@@ -818,6 +868,39 @@ if ('serviceWorker' in navigator) {
 <script src="js/reminders.js"></script>
 <script src="js/tile-animations.js"></script>
 <script src="js/floor-iq.js"></script>
+<script>
+// ── NOTIFICATION TOGGLES ──────────────────────────────────────────────────
+function toggleNotif(type) {
+    const key = 'notif_' + type;
+    const current = localStorage.getItem(key) !== 'false'; // default ON
+    const newVal = !current;
+    localStorage.setItem(key, newVal ? 'true' : 'false');
+    const toggle = document.getElementById('notif-toggle-' + type);
+    if (toggle) {
+        toggle.className = 'notif-toggle ' + (newVal ? 'on' : 'off');
+    }
+}
+
+function initNotifToggles() {
+    ['reminders', 'calendar'].forEach(type => {
+        const key = 'notif_' + type;
+        const isOn = localStorage.getItem(key) !== 'false'; // default ON
+        const toggle = document.getElementById('notif-toggle-' + type);
+        if (toggle) {
+            toggle.className = 'notif-toggle ' + (isOn ? 'on' : 'off');
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initNotifToggles();
+});
+
+// Expose notif check for push.js / reminders.js
+function isNotifEnabled(type) {
+    return localStorage.getItem('notif_' + type) !== 'false';
+}
+</script>
 <script>checkAccess();</script>
 </body>
 </html>

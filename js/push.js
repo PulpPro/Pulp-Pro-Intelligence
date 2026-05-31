@@ -15,6 +15,11 @@ function requestPushPermission() {
         navigator.serviceWorker.ready.then(reg => {
             reg.pushManager.getSubscription().then(existing => {
                 if (existing) { savePushSubscription(existing); return; }
+                // Check toggle before subscribing
+                if (typeof isNotifEnabled === 'function' && !isNotifEnabled('reminders')) {
+                    console.log('Notifications disabled by user toggle');
+                    return;
+                }
                 reg.pushManager.subscribe({
                     userVisibleOnly: true,
                     applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
@@ -47,6 +52,9 @@ async function savePushSubscription(subscription) {
 function showNotificationPrompt() {
     if (Notification.permission !== 'default') return;
     if (document.getElementById('notif-prompt-overlay')) return;
+    // Only show if on home screen — don't interrupt other views
+    const hub = document.getElementById('fruit-hub');
+    if (!hub || hub.classList.contains('hidden')) return;
     const isAdmin = localStorage.getItem('pulpProAdmin') === 'true';
     const userCode = localStorage.getItem('pulpProAccessCode');
     if (!isAdmin && !userCode) return;

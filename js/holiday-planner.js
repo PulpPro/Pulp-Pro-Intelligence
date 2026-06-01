@@ -78,11 +78,12 @@ async function holLoadTeam() {
 async function holSave() {
     try {
         const me = holTeam[holMyCode];
-        await fetch(HOL_WORKER + '/holidays-save', {
+        // Save to KV in background — don't wait for reload (KV eventual consistency)
+        fetch(HOL_WORKER + '/holidays-save', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userCode: holMyCode, entries: me ? me.entries : [] })
-        });
-        await holLoadTeam();
+        }).catch(e => console.error('Holiday save error:', e));
+        // Re-render immediately from in-memory data — no KV race condition
         holRender();
     } catch(e) { console.error('Holiday save error:', e); }
 }
@@ -236,17 +237,33 @@ function holQuickRemove(ds) {
 }
 
 // ── PLAN POPUP ────────────────────────────────────────────────────────────
+function holSetDropdowns(prefix, dateStr) {
+    if (!dateStr) return;
+    const [y, m, d] = dateStr.split('-');
+    document.getElementById(prefix + '-d').value = d;
+    document.getElementById(prefix + '-m').value = m;
+    document.getElementById(prefix + '-y').value = y;
+}
+
+function holGetDropdowns(prefix) {
+    const d = document.getElementById(prefix + '-d').value;
+    const m = document.getElementById(prefix + '-m').value;
+    const y = document.getElementById(prefix + '-y').value;
+    if (!d || !m || !y) return '';
+    return `${y}-${m}-${d}`;
+}
+
 function holOpenPlan(prefill) {
     const today = prefill || new Date().toISOString().split('T')[0];
-    document.getElementById('hol-plan-from').value = today;
-    document.getElementById('hol-plan-to').value = today;
+    holSetDropdowns('hol-plan-from', today);
+    holSetDropdowns('hol-plan-to', today);
     document.getElementById('hol-plan-note').value = '';
     holOpenOv('hol-ov-plan');
 }
 
 async function holSavePlan() {
-    const f = document.getElementById('hol-plan-from').value;
-    const t = document.getElementById('hol-plan-to').value;
+    const f = holGetDropdowns('hol-plan-from');
+    const t = holGetDropdowns('hol-plan-to');
     const n = document.getElementById('hol-plan-note').value.trim();
     if (!f || !t) { alert('Please select both dates'); return; }
     if (t < f) { alert('End date must be after start date'); return; }
@@ -301,15 +318,15 @@ function holOpenEdit(idx) {
     holEditIdx = idx;
     const me = holTeam[holMyCode]; if (!me) return;
     const e = me.entries[idx];
-    document.getElementById('hol-edit-from').value = e.from;
-    document.getElementById('hol-edit-to').value = e.to;
+    holSetDropdowns('hol-edit-from', e.from);
+    holSetDropdowns('hol-edit-to', e.to);
     document.getElementById('hol-edit-note').value = e.note || '';
     holOpenOv('hol-ov-edit');
 }
 
 async function holSaveEdit() {
-    const f = document.getElementById('hol-edit-from').value;
-    const t = document.getElementById('hol-edit-to').value;
+    const f = holGetDropdowns('hol-edit-from');
+    const t = holGetDropdowns('hol-edit-to');
     const n = document.getElementById('hol-edit-note').value.trim();
     if (!f || !t) { alert('Please select both dates'); return; }
     if (t < f) { alert('End date must be after start date'); return; }

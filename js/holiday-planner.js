@@ -237,7 +237,6 @@ function holQuickRemove(ds) {
     me.entries = ne;
     holCloseOv('hol-ov-day');
     holSave();
-    holNotify('cancel', ds, ds);
 }
 
 // ── PLAN POPUP ────────────────────────────────────────────────────────────
@@ -289,7 +288,6 @@ async function holSavePlan() {
     holMergeMine();
     holCloseOv('hol-ov-plan');
     await holSave();
-    holNotify('add', f, t);
 }
 
 // ── CANCEL POPUP ──────────────────────────────────────────────────────────
@@ -329,7 +327,6 @@ async function holDeleteEntry(idx) {
     me.entries.splice(idx, 1);
     holRenderCancelList();
     await holSave();
-    if (entry) holNotify('cancel', entry.from, entry.to);
 }
 
 // ── EDIT POPUP ────────────────────────────────────────────────────────────
@@ -372,18 +369,6 @@ function holMergeMine() {
     }
     r.push({ from: st, to: p, note: noteMap[st] || '', id: 'hol_' + st });
     me.entries = r;
-}
-
-// ── NOTIFICATIONS ─────────────────────────────────────────────────────────
-async function holNotify(action, fromDate, toDate) {
-    try {
-        const role = localStorage.getItem('pulpProUserRole') || '';
-        const name = holTeam[holMyCode]?.name || holMyCode;
-        await fetch(HOL_WORKER + '/holiday-notify', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ senderName: name, senderRole: role, senderCode: holMyCode, action, fromDate, toDate })
-        });
-    } catch(e) {}
 }
 
 // ── OVERLAY HELPERS ───────────────────────────────────────────────────────

@@ -18,7 +18,19 @@ document.addEventListener('DOMContentLoaded', () => {
 function initHomeWelcome() {
     const el = document.getElementById('home-welcome');
     if (!el) return;
-    const name = localStorage.getItem('pulpProUserName');
+    // Try saved name first, then fallback for admin
+    let name = localStorage.getItem('pulpProUserName');
+    const isAdmin = localStorage.getItem('pulpProAdmin') === 'true';
+    if (!name && isAdmin) name = 'Akash';
+    if (!name) {
+        // Try parsing from access code
+        const code = localStorage.getItem('pulpProAccessCode');
+        if (code) {
+            const parts = code.toUpperCase().split('-');
+            const raw = parts[0] || '';
+            name = raw.charAt(0) + raw.slice(1).toLowerCase();
+        }
+    }
     if (!name) return;
     const firstName = name.split(' ')[0];
     const h = new Date().getHours();

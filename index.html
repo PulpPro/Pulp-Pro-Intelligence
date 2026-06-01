@@ -197,18 +197,15 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 .home-h1 em{color:#a6e22e;font-style:normal}
 .home-sub{font-size:0.82rem;color:rgba(255,255,255,0.32);line-height:1.7;margin-bottom:32px;font-weight:400;max-width:480px}
 .tool-cards{display:flex;flex-direction:column;gap:12px;max-width:600px}
-.tc{border-radius:22px;overflow:hidden;cursor:pointer;transition:transform 0.2s,border-color 0.2s;position:relative}
+.tc{border-radius:22px;overflow:hidden;cursor:pointer;transition:transform 0.2s,border-color 0.2s;position:relative;height:148px;flex-shrink:0;}
 .tc:hover{transform:translateY(-3px)}
 .tc:active{transform:scale(0.98)}
 .tc-age{background:#030d12;border:1px solid rgba(34,211,238,0.22);padding:24px 26px;position:relative;overflow:hidden;}
-.tc-colour{background:#0f0f0f;border:1px solid rgba(255,255,255,0.07);padding:24px 26px}
 .tc-tag{font-size:0.48rem;font-weight:900;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
 .tc-age .tc-tag{color:rgba(34,211,238,0.55)}
-.tc-colour .tc-tag{color:rgba(255,255,255,0.28)}
 .tc-title{font-size:1.3rem;font-weight:900;color:#fff;letter-spacing:-0.3px;margin-bottom:3px}
 .tc-sub{font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:18px}
 .tc-age .tc-sub{color:rgba(34,211,238,0.4)}
-.tc-colour .tc-sub{color:rgba(255,255,255,0.22)}
 .tc-preview{display:flex;align-items:center;gap:10px}
 .code-pill{background:rgba(0,0,0,0.4);border:1px solid rgba(166,226,46,0.2);border-radius:10px;padding:9px 14px;font-size:1.1rem;font-weight:900;color:#fff;letter-spacing:5px;font-family:monospace}
 .result-pill{background:rgba(166,226,46,0.1);border:1px solid rgba(166,226,46,0.25);border-radius:10px;padding:9px 14px;text-align:center}
@@ -227,7 +224,6 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 @keyframes iqPulse{0%,100%{opacity:0.6;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
 @keyframes ageScan{0%{left:-60%}100%{left:110%}}
 @keyframes ageRoll{0%{transform:translateY(0)}10%{transform:translateY(-30px)}20%{transform:translateY(-60px)}30%{transform:translateY(-90px)}40%{transform:translateY(-120px)}50%{transform:translateY(-150px)}60%{transform:translateY(-180px)}70%{transform:translateY(-210px)}80%{transform:translateY(-240px)}90%{transform:translateY(-270px)}100%{transform:translateY(0)}}
-@keyframes csWave{0%,100%{transform:scaleY(0.55);opacity:0.65}50%{transform:scaleY(1);opacity:1}}
 @keyframes iqShimmer{0%{opacity:0.3;transform:translateX(-100%)}100%{opacity:0.6;transform:translateX(200%)}}
 @keyframes iqBrain{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 @keyframes iqFloatUp{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-30px)}}
@@ -273,7 +269,7 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
     </div>
 
     <!-- 2. PULP AI -->
-    <div class="tc" onclick="openPulpAI()" style="position:relative;overflow:hidden;min-height:150px;border:1px solid rgba(166,226,46,0.2);background:#040904;">
+    <div class="tc" onclick="openPulpAI()" style="position:relative;overflow:hidden;border:1px solid rgba(166,226,46,0.2);background:#040904;">
         <canvas id="pulpai-tile-canvas" style="position:absolute;inset:0;width:100%;height:100%;border-radius:22px;pointer-events:none;"></canvas>
         <div style="position:relative;z-index:2;padding:24px 26px;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
@@ -427,72 +423,6 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 </div>
 
 <!-- COLOUR SCANNER -->
-<div id="colour-scanner-view" class="nav-view hidden">
-<div style="max-width:400px; margin:0 auto; position:relative;">
-<div style="text-align:center; margin-bottom:14px;">
-<img src="edited-image.png" style="width:46px; border-radius:14px; margin-bottom:6px;">
-<div style="font-size:0.6rem; font-weight:900; color:var(--pulp-lime); letter-spacing:3px; text-transform:uppercase;">Pulp Pro</div>
-</div>
-<div class="hub-title" id="csScannerTitle">Banana Colour Scanner</div>
-<div id="csAIStatus" style="text-align:center; font-size:0.5rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:rgba(255,255,255,0.3); margin-bottom:10px;">&#x1F4CA; Classic Mode</div>
-<div style="display:flex; gap:8px; margin-bottom:14px;">
-<div class="cs-toggle-btn active" id="csSingleBtn" onclick="ColourScanner.setScanMode('single')">Single Scan</div>
-<div class="cs-toggle-btn" id="csMultiBtn" onclick="ColourScanner.setScanMode('multi')">Multi Scan</div>
-</div>
-<div id="cs-scanner">
-<div id="cs-cam-wrap"></div>
-<div id="csOfflineLabel" style="font-size:0.55rem; color:var(--text-dim); text-align:center; text-transform:uppercase; letter-spacing:2px; margin:10px 0; opacity:0.4;">Works offline &mdash; no internet needed</div>
-<div id="csMultiList" style="margin-bottom:10px;"></div>
-<button id="csBatchBtn" class="btn-main" style="display:none; margin-bottom:8px;" onclick="ColourScanner.getBatchResult()">Get Batch Result &rarr;</button>
-</div>
-<div id="cs-single-result" class="hidden">
-<div style="margin-bottom:14px;border-radius:16px;overflow:hidden;background:#000;position:relative;">
-<img id="csSinglePhoto" style="display:none; width:100%; height:auto; display:block; border-radius:16px;">
-<div id="csSinglePhotoPlaceholder" style="display:flex; flex-direction:column; align-items:center; gap:8px; padding:30px;">
-<i class="bi bi-image" style="font-size:2rem; opacity:0.2; color:var(--text-main);"></i>
-<span style="font-size:0.55rem; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:var(--text-dim);">No photo</span>
-</div>
-</div>
-<div class="report-card" style="margin-bottom:12px;">
-<div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
-<div id="csSingleSwatch" style="width:54px; height:54px; border-radius:14px; flex-shrink:0; background:#78c830;"></div>
-<div style="flex:1;">
-<div id="csSingleLabel" style="font-size:1.4rem; font-weight:900; color:var(--text-main); line-height:1;">Color 1</div>
-<div id="csSingleName" style="font-size:0.65rem; font-weight:900; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-top:3px;">Full Green</div>
-<div class="color-bar-wrap" style="margin-top:8px;"><div id="csSingleBar" class="color-bar" style="width:16%; background:#78c830;"></div></div>
-</div>
-</div>
-<div id="csAIConfidence" style="display:none; font-size:0.5rem; font-weight:700; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; opacity:0.8;"></div>
-<div class="report-row"><span class="report-key" id="shelfLifeLabel">Shelf Life</span><span class="report-val" id="csSingleShelf">&mdash;</span></div>
-<div class="report-row"><span class="report-key" id="statusLabel2">Status</span><span class="report-val" id="csSingleStatus">&mdash;</span></div>
-</div>
-<button class="btn-main" style="margin-bottom:8px;" onclick="ColourScanner.shareReport()"><i class="bi bi-share-fill"></i> Share Report Card</button>
-<button id="csCopySingle" class="btn-copy" style="width:100%; justify-content:center; margin-bottom:10px;" onclick="ColourScanner.copySingleResult()"><i class="bi bi-clipboard"></i> Copy Text Report</button>
-<button class="btn-main btn-back" onclick="ColourScanner.resetScanner()" id="csNewScanBtn">&larr; New Scan</button>
-</div>
-<div id="cs-batch-result" class="hidden">
-<div id="csBatchPhotoGrid" style="display:flex; gap:8px; margin-bottom:12px;"></div>
-<div style="background:rgba(166,226,46,0.06); border:1px solid rgba(166,226,46,0.2); border-radius:16px; padding:14px; margin-bottom:12px; display:flex; align-items:center; gap:12px;">
-<div id="csBatchSwatch" style="width:48px; height:48px; border-radius:12px; flex-shrink:0; background:#98c428;"></div>
-<div>
-<div id="batchAvgLabel" style="font-size:0.55rem; font-weight:900; color:var(--pulp-lime); text-transform:uppercase; letter-spacing:2px; margin-bottom:3px;">Batch Average</div>
-<div id="csBatchLabel" style="font-size:0.95rem; font-weight:900; color:var(--text-main);">Color 1.5</div>
-</div>
-</div>
-<div class="report-card" style="margin-bottom:12px;">
-<div id="csBatchBreakdown" style="margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--border-glass);"></div>
-<div class="report-row"><span class="report-key" id="boxesScannedLabel">Boxes Scanned</span><span class="report-val" id="csBatchCount">&mdash;</span></div>
-<div class="report-row"><span class="report-key" id="shelfLifeEstLabel">Shelf Life Est.</span><span class="report-val" id="csBatchShelf">&mdash;</span></div>
-<div class="report-row"><span class="report-key" id="batchStatusLabel">Batch Status</span><span class="report-val" id="csBatchStatus">&mdash;</span></div>
-</div>
-<button class="btn-main" style="margin-bottom:8px;" onclick="ColourScanner.shareBatchReport()"><i class="bi bi-share-fill"></i> Share Batch Report</button>
-<button id="csCopyBatch" class="btn-copy" style="width:100%; justify-content:center; margin-bottom:10px;" onclick="ColourScanner.copyBatchResult()"><i class="bi bi-clipboard"></i> Copy Text Report</button>
-<button class="btn-main btn-back" onclick="ColourScanner.resetScanner()" id="csNewBatchScanBtn">&larr; New Scan</button>
-</div>
-<button class="btn-main btn-back" style="margin-top:10px;" onclick="showHub()" id="csBackBtn">&larr; Back</button>
-</div>
-</div>
-
 <!-- PULP AI VIEW -->
 <div id="pulpai-view" class="hidden" style="padding:0;display:flex;flex-direction:column;height:100%;position:relative;">
     <div id="pulpai-list-screen" style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;">
@@ -930,7 +860,6 @@ if ('serviceWorker' in navigator) {
 <script src="js/push.js"></script>
 <script src="js/navigation.js"></script>
 <script src="js/calculator.js"></script>
-<script src="js/colour-scanner.js"></script>
 <script src="js/pulp-ai.js"></script>
 <script src="js/reminders.js"></script>
 <script src="js/tile-animations.js"></script>

@@ -137,9 +137,7 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 <div id="revoke-list" style="font-size:11px;color:rgba(255,255,255,0.4);max-height:220px;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;">Tap to load...</div>
 <button onclick="loadActiveUsers()" style="width:100%;margin-top:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px;font-size:9px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;cursor:pointer;font-family:-apple-system,sans-serif;">↻ Load Users</button>
 </div>
-<div class="menu-item" onclick="fixAllNames()" style="color:rgba(255,165,0,0.6);background:rgba(255,165,0,0.04);border:1px solid rgba(255,165,0,0.1);border-radius:10px;margin-bottom:4px;"><span><i class="bi bi-wrench"></i> Fix My Names</span></div>
-<div class="menu-item" onclick="rebuildSubIndex()" style="color:rgba(255,165,0,0.6);background:rgba(255,165,0,0.04);border:1px solid rgba(255,165,0,0.1);border-radius:10px;margin-bottom:4px;"><span><i class="bi bi-arrow-repeat"></i> Rebuild Notif Index</span></div>
-<div class="menu-item" onclick="clearMyHolidays()" style="color:rgba(255,165,0,0.6);background:rgba(255,165,0,0.04);border:1px solid rgba(255,165,0,0.1);border-radius:10px;margin-bottom:4px;"><span><i class="bi bi-trash"></i> Clear Test Holidays</span></div>
+
 <div class="menu-item" onclick="adminLogout()" style="color:rgba(255,77,77,0.6);"><span><i class="bi bi-box-arrow-right"></i> Logout</span></div>
 </div>
 
@@ -1115,31 +1113,6 @@ function isNotifEnabled(type) {
 }
 
 // ── FIX ALL NAMES ────────────────────────────────────────────────────────
-async function rebuildSubIndex() {
-    try {
-        const res = await fetch('https://pulppro-access.pulpprobrain.workers.dev/rebuild-sub-index', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ adminPassword: 'BananaBoss1.' })
-        });
-        const data = await res.json();
-        if (data.success) alert('✅ Notification index rebuilt for: ' + data.codes.join(', '));
-        else alert('Error: ' + (data.error || 'Unknown'));
-    } catch(e) { alert('Error: ' + e.message); }
-}
-
-async function clearMyHolidays() {
-    if (!confirm('Clear all your test holiday entries from KV?')) return;
-    try {
-        const res = await fetch('https://pulppro-access.pulpprobrain.workers.dev/holidays-clear', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userCode: 'ADMIN', adminPassword: 'BananaBoss1.' })
-        });
-        const data = await res.json();
-        if (data.success) alert('✅ Test holidays cleared. Reopen Holiday Planner to see fresh calendar.');
-        else alert('Error: ' + (data.error || 'Unknown'));
-    } catch(e) { alert('Error: ' + e.message); }
-}
-
 async function fixAllNames() {
     const W = 'https://pulppro-access.pulpprobrain.workers.dev';
     const P = 'BananaBoss1.';

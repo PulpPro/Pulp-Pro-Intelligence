@@ -216,9 +216,13 @@ async function submitDevLogin() {
         if (data.success) {
             isAdminLoggedIn = true;
             localStorage.setItem('pulpProAdmin', 'true');
+            if (!localStorage.getItem('pulpProUserName')) {
+                localStorage.setItem('pulpProUserName', 'Akash');
+            }
             hideDevLogin();
             showApp();
             renderAdminMenu();
+            if (typeof initHomeWelcome === 'function') initHomeWelcome();
         } else {
             err.innerText = 'Invalid credentials.';
             err.style.display = 'block';

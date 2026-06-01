@@ -106,37 +106,7 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 <div class="menu-item" onclick="sendFeedback()"><span>&#x1F4AC; Send Feedback</span></div>
 
       <div class="notif-section">
-        <div class="notif-section-lbl">Notification Settings</div>
-
-        <div style="font-size:9px;font-weight:800;color:rgba(255,255,255,0.2);text-transform:uppercase;letter-spacing:1.5px;margin:8px 4px 6px;">Holiday Planner</div>
-        <div class="notif-row" onclick="toggleNotif('holiday_rijpers')">
-          <div class="notif-row-left">
-            <div class="notif-row-icon">🍌</div>
-            <div>
-              <div class="notif-row-title">Rijpers</div>
-              <div class="notif-row-sub">Holiday updates from Rijpers</div>
-            </div>
-          </div>
-          <div class="notif-toggle on" id="notif-toggle-holiday_rijpers"><div class="notif-toggle-knob"></div></div>
-        </div>
-        <div class="notif-row" onclick="toggleNotif('holiday_heftrucker')">
-          <div class="notif-row-left">
-            <div class="notif-row-icon">🚜</div>
-            <div>
-              <div class="notif-row-title">Heftrucker</div>
-              <div class="notif-row-sub">Holiday updates from Heftruckers</div>
-            </div>
-          </div>
-          <div class="notif-toggle on" id="notif-toggle-holiday_heftrucker"><div class="notif-toggle-knob"></div></div>
-        </div>
-
-        <div style="font-size:9px;font-weight:800;color:rgba(255,255,255,0.2);text-transform:uppercase;letter-spacing:1.5px;margin:10px 4px 6px;">Shift Swap</div>
-        <div class="notif-row" onclick="toggleNotif('swap_request')">
-          <div class="notif-row-left">
-            <div class="notif-row-icon">🔄</div>
-            <div>
-              <div class="notif-row-title">Swap Requests</div>
-              <div class="notif-row-sub">New and accepted swap requests</div>
+        
             </div>
           </div>
           <div class="notif-toggle on" id="notif-toggle-swap_request"><div class="notif-toggle-knob"></div></div>
@@ -175,6 +145,8 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 <button onclick="loadActiveUsers()" style="width:100%;margin-top:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px;font-size:9px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;cursor:pointer;font-family:-apple-system,sans-serif;">↻ Load Users</button>
 </div>
 <div class="menu-item" onclick="fixAllNames()" style="color:rgba(255,165,0,0.6);background:rgba(255,165,0,0.04);border:1px solid rgba(255,165,0,0.1);border-radius:10px;margin-bottom:4px;"><span><i class="bi bi-wrench"></i> Fix My Names</span></div>
+<div class="menu-item" onclick="rebuildSubIndex()" style="color:rgba(255,165,0,0.6);background:rgba(255,165,0,0.04);border:1px solid rgba(255,165,0,0.1);border-radius:10px;margin-bottom:4px;"><span><i class="bi bi-arrow-repeat"></i> Rebuild Notif Index</span></div>
+<div class="menu-item" onclick="clearMyHolidays()" style="color:rgba(255,165,0,0.6);background:rgba(255,165,0,0.04);border:1px solid rgba(255,165,0,0.1);border-radius:10px;margin-bottom:4px;"><span><i class="bi bi-trash"></i> Clear Test Holidays</span></div>
 <div class="menu-item" onclick="adminLogout()" style="color:rgba(255,77,77,0.6);"><span><i class="bi bi-box-arrow-right"></i> Logout</span></div>
 </div>
 
@@ -326,28 +298,6 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
                 <div style="display:flex;flex-direction:column;gap:3px;align-items:center;"><div style="width:26px;height:26px;border-radius:7px;background:rgba(255,165,0,0.12);border:1px solid rgba(255,165,0,0.25);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#ffa500;" id="hol-tile-d4">—</div><div style="font-size:6px;color:rgba(255,165,0,0.5);font-weight:700;" id="hol-tile-w4">Thu</div></div>
                 <div style="display:flex;flex-direction:column;gap:3px;align-items:center;"><div style="width:26px;height:26px;border-radius:7px;background:rgba(255,77,77,0.08);border:1px solid rgba(255,77,77,0.18);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:rgba(255,100,100,0.6);" id="hol-tile-d5">—</div><div style="font-size:6px;color:rgba(255,100,100,0.35);font-weight:700;" id="hol-tile-w5">Fri</div></div>
                 <div style="margin-left:auto;display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:2px;"><div style="font-size:13px;font-weight:900;color:#34d399;line-height:1;" id="hol-tile-count">— off</div><div style="font-size:8px;color:rgba(255,255,255,0.25);margin-top:1px;">this week</div></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 5. SHIFT SWAP -->
-    <div class="tc" onclick="openShiftSwap()" style="background:#060810;border:1px solid rgba(136,153,255,0.18);padding:24px 26px;">
-        <canvas id="swap-tile-canvas" style="position:absolute;inset:0;width:100%;height:100%;border-radius:22px;pointer-events:none;z-index:1;"></canvas>
-        <div style="position:relative;z-index:2;">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">
-                <div>
-                    <div class="tc-tag" style="color:rgba(136,153,255,0.55);">Team · Roster · Requests</div>
-                    <div class="tc-title">Shift <span style="color:#8899ff;">Swap</span></div>
-                    <div class="tc-sub" style="color:rgba(136,153,255,0.4);margin-bottom:14px;">Post requests · Find cover · Confirm</div>
-                </div>
-                <div style="position:relative;width:36px;height:36px;flex-shrink:0;">
-                    <div style="position:absolute;inset:0;border-radius:50%;border:1px solid rgba(136,153,255,0.25);animation:swapPing 2s ease-out infinite;"></div>
-                    <div style="position:absolute;inset:0;border-radius:50%;border:1px solid rgba(136,153,255,0.15);animation:swapPing 2s ease-out infinite;animation-delay:0.6s;"></div>
-                    <div style="position:absolute;inset:6px;border-radius:50%;background:rgba(136,153,255,0.12);border:1px solid rgba(136,153,255,0.25);display:flex;align-items:center;justify-content:center;font-size:13px;">🔄</div>
-                </div>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;background:rgba(136,153,255,0.05);border:1px solid rgba(136,153,255,0.12);border-radius:10px;padding:8px 10px;" id="swap-tile-preview">
-                <div style="flex:1;"><div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);">No open requests</div><div style="font-size:8px;color:rgba(136,153,255,0.4);margin-top:2px;">Tap to view the swap board</div></div>
             </div>
         </div>
     </div>
@@ -528,7 +478,6 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 @keyframes ageHBeam{0%,100%{top:20%;opacity:0}10%{opacity:1}50%{top:80%;opacity:1}90%{opacity:1}}
 @keyframes ageStatusPulse{0%{width:0%;margin-left:0}50%{width:60%;margin-left:20%}100%{width:0%;margin-left:100%}}
 @keyframes holFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-@keyframes swapPing{0%{transform:scale(1);opacity:0.7}100%{transform:scale(2.2);opacity:0}}
 @keyframes holPopIn{from{transform:scale(0.9);opacity:0}to{transform:scale(1);opacity:1}}
 
 /* ── MENU DRAWER SCROLL FIX ── */
@@ -1120,7 +1069,7 @@ if ('serviceWorker' in navigator) {
 <script src="js/floor-iq.js"></script>
 <script>
 // ── NOTIFICATION TOGGLES ──────────────────────────────────────────────────
-const NOTIF_TYPES = ['holiday_rijpers', 'holiday_heftrucker', 'swap_request'];
+const NOTIF_TYPES = [];
 
 function toggleNotif(type) {
     const key = 'notif_' + type;
@@ -1141,7 +1090,8 @@ function initNotifToggles() {
     });
 }
 
-async function syncNotifPrefsToWorker() {
+async function syncNotifPrefsToWorker() { return; // No notification toggles
+    /* disabled */
     const userCode = localStorage.getItem('pulpProAccessCode') ||
                      (localStorage.getItem('pulpProAdmin') === 'true' ? 'admin' : null);
     if (!userCode) return;
@@ -1172,6 +1122,31 @@ function isNotifEnabled(type) {
 }
 
 // ── FIX ALL NAMES ────────────────────────────────────────────────────────
+async function rebuildSubIndex() {
+    try {
+        const res = await fetch('https://pulppro-access.pulpprobrain.workers.dev/rebuild-sub-index', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ adminPassword: 'BananaBoss1.' })
+        });
+        const data = await res.json();
+        if (data.success) alert('✅ Notification index rebuilt for: ' + data.codes.join(', '));
+        else alert('Error: ' + (data.error || 'Unknown'));
+    } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function clearMyHolidays() {
+    if (!confirm('Clear all your test holiday entries from KV?')) return;
+    try {
+        const res = await fetch('https://pulppro-access.pulpprobrain.workers.dev/holidays-clear', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userCode: 'ADMIN', adminPassword: 'BananaBoss1.' })
+        });
+        const data = await res.json();
+        if (data.success) alert('✅ Test holidays cleared. Reopen Holiday Planner to see fresh calendar.');
+        else alert('Error: ' + (data.error || 'Unknown'));
+    } catch(e) { alert('Error: ' + e.message); }
+}
+
 async function fixAllNames() {
     const W = 'https://pulppro-access.pulpprobrain.workers.dev';
     const P = 'BananaBoss1.';

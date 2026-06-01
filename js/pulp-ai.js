@@ -537,7 +537,6 @@ function openPulpAI() {
     fetchUsage();
     document.getElementById('fruit-hub').classList.add('hidden');
     document.getElementById('appInterface').classList.add('hidden');
-    document.getElementById('colour-scanner-view').classList.add('hidden');
     document.getElementById('pulpai-view').classList.remove('hidden');
     const menuTrigger = document.getElementById('menu-trigger');
     if (menuTrigger) menuTrigger.style.display = 'none';

@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v20';
 const CACHE_NAME = 'pulp-pro-' + CACHE_VERSION;
 const ASSETS = [
     '/',
@@ -84,7 +84,7 @@ self.addEventListener('push', (event) => {
         body: text || 'You have a reminder due now.',
         icon: '/edited-image.png',
         badge: '/edited-image.png',
-        tag: 'pulpro-reminder',
+        tag: 'pulpro-reminder-' + (id || Date.now()),
         requireInteraction: true,
         actions: [
             { action: 'done', title: '✓ Done' },
@@ -94,18 +94,32 @@ self.addEventListener('push', (event) => {
         data: { reminderId: id || null, usercode: uc || null }
     });
 
-    event.waitUntil(
-        Promise.race([
-            fetch('https://pulppro-access.pulpprobrain.workers.dev/latest-reminder', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ secret: 'pulpro2024' })
-            }).then(r => r.json()),
-            new Promise(resolve => setTimeout(() => resolve(null), 4000))
-        ])
-        .then(data => self.registration.showNotification('Pulp Pro Reminder', notifOptions(data?.text, data?.id, data?.usercode)))
-        .catch(() => self.registration.showNotification('Pulp Pro Reminder', notifOptions(null, null, null)))
-    );
+    // Try to read payload directly first — each push carries its own data
+    let payloadData = null;
+    try {
+        if (event.data) payloadData = event.data.json();
+    } catch(e) {}
+
+    if (payloadData && payloadData.text) {
+        // Payload has the data — show immediately, no KV fetch needed
+        event.waitUntil(
+            self.registration.showNotification('Pulp Pro Reminder', notifOptions(payloadData.text, payloadData.id, payloadData.usercode))
+        );
+    } else {
+        // Fallback — fetch from KV (legacy empty pushes)
+        event.waitUntil(
+            Promise.race([
+                fetch('https://pulppro-access.pulpprobrain.workers.dev/latest-reminder', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ secret: 'pulpro2024' })
+                }).then(r => r.json()),
+                new Promise(resolve => setTimeout(() => resolve(null), 4000))
+            ])
+            .then(data => self.registration.showNotification('Pulp Pro Reminder', notifOptions(data?.text, data?.id, data?.usercode)))
+            .catch(() => self.registration.showNotification('Pulp Pro Reminder', notifOptions(null, null, null)))
+        );
+    }
 });
 
 // ── NOTIFICATION CLICK ────────────────────────────────────────────────────

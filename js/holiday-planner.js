@@ -273,8 +273,9 @@ async function holSavePlan() {
     const n = document.getElementById('hol-plan-note').value.trim();
     if (!f || !t) { alert('Please select a day, month and year for both dates'); return; }
     if (t < f) { alert('End date must be after start date'); return; }
-    // Ensure current user exists in holTeam
-    if (!holTeam[holMyCode]) {
+    // Find or create current user in holTeam
+    const existingKey = Object.keys(holTeam).find(k => k.toUpperCase() === holMyCode.toUpperCase());
+    if (!existingKey) {
         const myName = localStorage.getItem('pulpProUserName') || holMyCode;
         holTeam[holMyCode] = {
             name: myName.split(' ')[0],
@@ -283,7 +284,7 @@ async function holSavePlan() {
             entries: []
         };
     }
-    const me = holTeam[holMyCode];
+    const me = holTeam[existingKey || holMyCode];
     me.entries.push({ from: f, to: t, note: n, id: 'hol_' + Date.now() });
     holMergeMine();
     holCloseOv('hol-ov-plan');
@@ -299,7 +300,9 @@ function holOpenCancel() {
 
 function holRenderCancelList() {
     const list = document.getElementById('hol-cancel-list');
-    const me = holTeam[holMyCode];
+    // Find user case-insensitively
+    const meKey = Object.keys(holTeam).find(k => k.toUpperCase() === holMyCode.toUpperCase()) || holMyCode;
+    const me = holTeam[meKey];
     const entries = me ? me.entries.filter(e => new Date(e.to + 'T00:00:00') >= new Date()) : [];
     if (!entries.length) {
         list.innerHTML = '<div class="hol-no-holidays">No upcoming holidays planned</div>'; return;
@@ -320,7 +323,8 @@ function holRenderCancelList() {
 
 async function holDeleteEntry(idx) {
     if (!confirm('Delete this holiday?')) return;
-    const me = holTeam[holMyCode]; if (!me) return;
+    const meKey = Object.keys(holTeam).find(k => k.toUpperCase() === holMyCode.toUpperCase()) || holMyCode;
+    const me = holTeam[meKey]; if (!me) return;
     const entry = me.entries[idx];
     me.entries.splice(idx, 1);
     holRenderCancelList();

@@ -79,13 +79,11 @@ async function holSave() {
     try {
         const me = holTeam[holMyCode];
         const entries = me ? me.entries : [];
-        console.log('Saving holidays for', holMyCode, ':', entries.length, 'entries');
-        // Save to KV in background
+        alert('DEBUG: saving ' + entries.length + ' entries for ' + holMyCode + '\nFirst entry: ' + (entries[0] ? JSON.stringify(entries[0]) : 'none') + '\nholTeam keys: ' + Object.keys(holTeam).join(', '));
         fetch(HOL_WORKER + '/holidays-save', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userCode: holMyCode, entries })
         }).catch(e => console.error('Holiday save error:', e));
-        // Re-render immediately from in-memory data
         holRender();
     } catch(e) { console.error('Holiday save error:', e); }
 }
@@ -111,6 +109,7 @@ function holADM() {
             });
         });
     });
+    console.log('holADM: team keys=', Object.keys(holTeam), 'day map keys=', Object.keys(m).length);
     return m;
 }
 
@@ -267,7 +266,8 @@ async function holSavePlan() {
     const f = holGetDropdowns('hol-plan-from');
     const t = holGetDropdowns('hol-plan-to');
     const n = document.getElementById('hol-plan-note').value.trim();
-    if (!f || !t) { alert('Please select both dates'); return; }
+    console.log('holSavePlan: f=', f, 't=', t, 'myCode=', holMyCode);
+    if (!f || !t) { alert('Please select a day, month and year for both dates'); return; }
     if (t < f) { alert('End date must be after start date'); return; }
     // Ensure current user exists in holTeam
     if (!holTeam[holMyCode]) {
@@ -281,7 +281,9 @@ async function holSavePlan() {
     }
     const me = holTeam[holMyCode];
     me.entries.push({ from: f, to: t, note: n, id: 'hol_' + Date.now() });
+    console.log('holSavePlan: entries after push=', JSON.stringify(me.entries));
     holMergeMine();
+    console.log('holSavePlan: entries after merge=', JSON.stringify(me.entries));
     holCloseOv('hol-ov-plan');
     await holSave();
     holNotify('add', f, t);

@@ -91,6 +91,9 @@ async function checkAccess() {
             });
             const data = await res.json();
             if (data.valid) {
+                // Silent profile sync — save name + role from KV
+                if (data.name) localStorage.setItem('pulpProUserName', data.name);
+                if (data.role) localStorage.setItem('pulpProUserRole', data.role);
                 showApp();
                 maybeShowSheet();
                 setTimeout(() => { if (typeof showNotificationPrompt === 'function') showNotificationPrompt(); }, 1000);
@@ -98,6 +101,7 @@ async function checkAccess() {
                 // Access revoked — clear localStorage and show gate
                 localStorage.removeItem('pulpProAccessCode');
                 localStorage.removeItem('pulpProUserName');
+                localStorage.removeItem('pulpProUserRole');
                 showGate();
             }
         } catch (e) {
@@ -159,6 +163,7 @@ async function submitCode() {
         if (data.valid) {
             localStorage.setItem('pulpProAccessCode', code);
             localStorage.setItem('pulpProUserName', data.name);
+            if (data.role) localStorage.setItem('pulpProUserRole', data.role);
             showApp();
         } else {
             err.innerText = 'Invalid code. Please check and try again.';
@@ -255,10 +260,8 @@ function toggleCodeGenerator() {
 
 async function generateCode() {
     const name = document.getElementById('codePersonName').value.trim();
-    if (!name) {
-        alert('Please enter a name first.');
-        return;
-    }
+    const role = document.getElementById('codePersonRole') ? document.getElementById('codePersonRole').value : '';
+    if (!name) { alert('Please enter a full name first.'); return; }
     const btn = document.getElementById('generateCodeBtn');
     btn.innerText = 'Generating...';
     btn.disabled = true;
@@ -266,11 +269,11 @@ async function generateCode() {
         const res = await fetch(ACCESS_WORKER + '/generate-code', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, adminPassword: ADMIN_PASSWORD })
+            body: JSON.stringify({ name, role, adminPassword: ADMIN_PASSWORD })
         });
         const data = await res.json();
         document.getElementById('generatedCode').innerText = data.code;
-        document.getElementById('generatedCodeFor').innerText = 'For: ' + name;
+        document.getElementById('generatedCodeFor').innerText = 'For: ' + name + (role ? ' · ' + role : '');
         document.getElementById('generated-code-display').classList.remove('hidden');
     } catch (e) {
         alert('Error generating code.');
@@ -412,20 +415,77 @@ async function loadActiveUsers() {
             const badgeTextColor = isActive ? '#a6e22e' : '#ff8c00';
             const badgeBorder = isActive ? 'rgba(166,226,46,0.3)' : 'rgba(255,140,0,0.3)';
             const badgeText = isActive ? 'Active' : 'Pending';
+            const roleColors = {
+                'Processleider': '#ff6eb4', 'Rijper': '#a6e22e',
+                'Planner': '#8899ff', 'Heftrucker': '#ffa500'
+            };
+            const roleColor = c.role ? (roleColors[c.role] || '#fff') : 'rgba(255,255,255,0.2)';
+            const safeCode = c.code.replace(/'/g, "\'");
+            const safeName = (c.name || 'Unknown').replace(/'/g, "\'");
             return `
             <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-                    <div style="display:flex;align-items:center;gap:6px;">
-                        <div style="font-size:11px;font-weight:700;color:#fff;">${c.name || 'Unknown'}</div>
-                        <span style="font-size:7px;font-weight:800;color:${badgeTextColor};background:${badgeColor};border:1px solid ${badgeBorder};border-radius:20px;padding:2px 7px;text-transform:uppercase;letter-spacing:0.5px;">${badgeText}</span>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
+                    <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0;">
+                        <div style="font-size:11px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.name || 'Unknown'}</div>
+                        <span style="font-size:7px;font-weight:800;color:${badgeTextColor};background:${badgeColor};border:1px solid ${badgeBorder};border-radius:20px;padding:2px 7px;text-transform:uppercase;letter-spacing:0.5px;flex-shrink:0;">${badgeText}</span>
                     </div>
-                    <button onclick="revokeUser('${c.code}', '${c.name || 'this user'}')" style="background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,0.3);border-radius:6px;padding:4px 9px;font-size:7px;font-weight:700;color:rgba(255,77,77,0.8);text-transform:uppercase;cursor:pointer;font-family:-apple-system,sans-serif;letter-spacing:0.5px;">Revoke</button>
+                    <div style="display:flex;gap:4px;flex-shrink:0;margin-left:6px;">
+                        <button onclick="toggleEditUser('${safeCode}')" style="background:rgba(136,153,255,0.1);border:1px solid rgba(136,153,255,0.3);border-radius:6px;padding:4px 9px;font-size:7px;font-weight:700;color:rgba(136,153,255,0.8);text-transform:uppercase;cursor:pointer;font-family:-apple-system,sans-serif;letter-spacing:0.5px;">Edit</button>
+                        <button onclick="revokeUser('${safeCode}', '${safeName}')" style="background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,0.3);border-radius:6px;padding:4px 9px;font-size:7px;font-weight:700;color:rgba(255,77,77,0.8);text-transform:uppercase;cursor:pointer;font-family:-apple-system,sans-serif;letter-spacing:0.5px;">Revoke</button>
+                    </div>
                 </div>
-                <div style="font-size:9px;color:rgba(255,255,255,0.25);font-family:monospace;">${c.code}</div>
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+                    <div style="font-size:9px;color:rgba(255,255,255,0.25);font-family:monospace;">${c.code}</div>
+                    ${c.role ? `<span style="font-size:7px;font-weight:800;color:${roleColor};background:${roleColor}22;border:1px solid ${roleColor}44;border-radius:100px;padding:1px 6px;">${c.role}</span>` : '<span style="font-size:7px;color:rgba(255,255,255,0.15);">No role set</span>'}
+                </div>
+                <div id="edit-form-${safeCode}" class="user-edit-form">
+                    <div class="user-edit-field">Full Name</div>
+                    <input class="user-edit-input" id="edit-name-${safeCode}" value="${c.name || ''}" placeholder="Full name" type="text">
+                    <div class="user-edit-field">Role</div>
+                    <select class="user-edit-select" id="edit-role-${safeCode}">
+                        <option value="">— No role —</option>
+                        <option value="Processleider" ${c.role === 'Processleider' ? 'selected' : ''}>Processleider</option>
+                        <option value="Rijper" ${c.role === 'Rijper' ? 'selected' : ''}>Rijper</option>
+                        <option value="Planner" ${c.role === 'Planner' ? 'selected' : ''}>Planner</option>
+                        <option value="Heftrucker" ${c.role === 'Heftrucker' ? 'selected' : ''}>Heftrucker</option>
+                    </select>
+                    <button class="user-edit-save" onclick="saveUserEdit('${safeCode}')">Save changes</button>
+                </div>
             </div>`;
         }).join('');
     } catch (e) {
         list.innerHTML = '<div style="color:rgba(255,77,77,0.6);font-size:11px;">Error loading users</div>';
+    }
+}
+
+function toggleEditUser(code) {
+    const form = document.getElementById('edit-form-' + code);
+    if (form) form.classList.toggle('show');
+}
+
+async function saveUserEdit(code) {
+    const nameEl = document.getElementById('edit-name-' + code);
+    const roleEl = document.getElementById('edit-role-' + code);
+    if (!nameEl || !roleEl) return;
+    const name = nameEl.value.trim();
+    const role = roleEl.value;
+    if (!name) { alert('Name cannot be empty'); return; }
+    try {
+        const res = await fetch(ACCESS_WORKER + '/update-user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, name, role, adminPassword: ADMIN_PASSWORD })
+        });
+        const data = await res.json();
+        if (data.success) {
+            const form = document.getElementById('edit-form-' + code);
+            if (form) form.classList.remove('show');
+            loadActiveUsers();
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+        }
+    } catch (e) {
+        alert('Error saving changes.');
     }
 }
 

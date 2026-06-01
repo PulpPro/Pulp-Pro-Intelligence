@@ -25,9 +25,6 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 <link rel="stylesheet" href="css/theme.css">
 <link rel="stylesheet" href="css/layout.css">
 <link rel="stylesheet" href="css/components.css">
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/knn-classifier"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
 </head>
 <body>
 
@@ -203,14 +200,14 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 .tc{border-radius:22px;overflow:hidden;cursor:pointer;transition:transform 0.2s,border-color 0.2s;position:relative}
 .tc:hover{transform:translateY(-3px)}
 .tc:active{transform:scale(0.98)}
-.tc-age{background:linear-gradient(135deg,#0a1a06 0%,#0d1209 100%);border:1px solid rgba(166,226,46,0.18);padding:24px 26px}
+.tc-age{background:#030d12;border:1px solid rgba(34,211,238,0.22);padding:24px 26px;position:relative;overflow:hidden;}
 .tc-colour{background:#0f0f0f;border:1px solid rgba(255,255,255,0.07);padding:24px 26px}
 .tc-tag{font-size:0.48rem;font-weight:900;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
-.tc-age .tc-tag{color:rgba(166,226,46,0.55)}
+.tc-age .tc-tag{color:rgba(34,211,238,0.55)}
 .tc-colour .tc-tag{color:rgba(255,255,255,0.28)}
 .tc-title{font-size:1.3rem;font-weight:900;color:#fff;letter-spacing:-0.3px;margin-bottom:3px}
 .tc-sub{font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:18px}
-.tc-age .tc-sub{color:rgba(166,226,46,0.4)}
+.tc-age .tc-sub{color:rgba(34,211,238,0.4)}
 .tc-colour .tc-sub{color:rgba(255,255,255,0.22)}
 .tc-preview{display:flex;align-items:center;gap:10px}
 .code-pill{background:rgba(0,0,0,0.4);border:1px solid rgba(166,226,46,0.2);border-radius:10px;padding:9px 14px;font-size:1.1rem;font-weight:900;color:#fff;letter-spacing:5px;font-family:monospace}
@@ -240,52 +237,43 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 </style>
 
 <div class="home-hero-tag"><div class="home-hero-dot"></div><span>Live fruit intelligence</span></div>
+<div id="home-welcome" style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.4);margin-bottom:6px;min-height:18px;"></div>
 <div class="home-h1">Scan it. Know it.<br><em>Ship it.</em></div>
 <div class="home-sub">Professional tools for the fruit floor. Built fast, works offline.</div>
 
 <div class="tool-cards">
-    <div class="tc tc-age" onclick="openAgeChecker()" style="overflow:hidden;">
-        <div style="position:absolute;top:0;left:-60%;width:55%;height:100%;background:linear-gradient(90deg,transparent,rgba(166,226,46,0.07),transparent);animation:ageScan 2.8s ease-in-out infinite;pointer-events:none;z-index:0;"></div>
-        <div style="position:relative;z-index:1;">
+
+    <!-- 1. BANANA AGE — cyan + radar -->
+    <div class="tc tc-age" onclick="openAgeChecker()">
+        <canvas id="age-tile-canvas" style="position:absolute;inset:0;width:100%;height:100%;border-radius:22px;pointer-events:none;z-index:1;"></canvas>
+        <div style="position:absolute;top:0;left:-60%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(34,211,238,0.06),transparent);animation:ageScan 2.6s ease-in-out infinite;pointer-events:none;z-index:2;"></div>
+        <div style="position:absolute;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(34,211,238,0.3),transparent);animation:ageHBeam 3.2s ease-in-out infinite;pointer-events:none;z-index:2;top:20%;"></div>
+        <div style="position:absolute;width:14px;height:14px;top:9px;left:9px;border-top:1.5px solid rgba(34,211,238,0.3);border-left:1.5px solid rgba(34,211,238,0.3);pointer-events:none;z-index:4;"></div>
+        <div style="position:absolute;width:14px;height:14px;top:9px;right:9px;border-top:1.5px solid rgba(34,211,238,0.3);border-right:1.5px solid rgba(34,211,238,0.3);pointer-events:none;z-index:4;"></div>
+        <div style="position:absolute;width:14px;height:14px;bottom:9px;left:9px;border-bottom:1.5px solid rgba(34,211,238,0.3);border-left:1.5px solid rgba(34,211,238,0.3);pointer-events:none;z-index:4;"></div>
+        <div style="position:absolute;width:14px;height:14px;bottom:9px;right:9px;border-bottom:1.5px solid rgba(34,211,238,0.3);border-right:1.5px solid rgba(34,211,238,0.3);pointer-events:none;z-index:4;"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:rgba(34,211,238,0.06);z-index:3;"><div style="height:100%;background:linear-gradient(90deg,rgba(34,211,238,0),rgba(34,211,238,0.5),rgba(34,211,238,0));animation:ageStatusPulse 2s ease-in-out infinite;"></div></div>
+        <div style="position:relative;z-index:3;padding:24px 26px;">
             <div class="tc-tag">Chiquita · Age Checker</div>
-            <div class="tc-title">Banana Age</div>
+            <div class="tc-title">Banana <span style="color:#22d3ee;">Age</span></div>
             <div class="tc-sub" style="margin-bottom:14px;">Enter 3-letter code → instant result</div>
             <div style="display:flex;align-items:center;gap:10px;">
                 <div style="display:flex;gap:3px;">
-                    <div style="width:24px;height:30px;overflow:hidden;border-radius:5px;background:rgba(0,0,0,0.5);border:1px solid rgba(166,226,46,0.15);"><div style="display:flex;flex-direction:column;animation:ageRoll 2.5s steps(1) infinite;animation-delay:0s;"><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">C</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">A</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">B</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">D</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">E</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">F</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">G</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">H</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">J</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">K</span></div></div>
-                    <div style="width:24px;height:30px;overflow:hidden;border-radius:5px;background:rgba(0,0,0,0.5);border:1px solid rgba(166,226,46,0.15);"><div style="display:flex;flex-direction:column;animation:ageRoll 2.5s steps(1) infinite;animation-delay:0.35s;"><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">F</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">B</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">G</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">A</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">H</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">C</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">J</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">D</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">K</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">E</span></div></div>
-                    <div style="width:24px;height:30px;overflow:hidden;border-radius:5px;background:rgba(0,0,0,0.5);border:1px solid rgba(166,226,46,0.15);"><div style="display:flex;flex-direction:column;animation:ageRoll 2.5s steps(1) infinite;animation-delay:0.7s;"><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">1</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">4</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">2</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">5</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">3</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">6</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">1</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">4</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">2</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#a6e22e;font-family:monospace;">5</span></div></div>
+                    <div style="width:24px;height:30px;overflow:hidden;border-radius:5px;background:rgba(0,0,0,0.6);border:1px solid rgba(34,211,238,0.2);"><div style="display:flex;flex-direction:column;animation:ageRoll 2.5s steps(1) infinite;animation-delay:0s;"><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">C</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">A</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">B</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">D</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">E</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">F</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">G</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">H</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">J</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">K</span></div></div>
+                    <div style="width:24px;height:30px;overflow:hidden;border-radius:5px;background:rgba(0,0,0,0.6);border:1px solid rgba(34,211,238,0.2);"><div style="display:flex;flex-direction:column;animation:ageRoll 2.5s steps(1) infinite;animation-delay:0.35s;"><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">F</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">B</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">G</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">A</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">H</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">C</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">J</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">D</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">K</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">E</span></div></div>
+                    <div style="width:24px;height:30px;overflow:hidden;border-radius:5px;background:rgba(0,0,0,0.6);border:1px solid rgba(34,211,238,0.2);"><div style="display:flex;flex-direction:column;animation:ageRoll 2.5s steps(1) infinite;animation-delay:0.7s;"><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">1</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">4</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">2</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">5</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">3</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">6</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">1</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">4</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">2</span><span style="height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#22d3ee;font-family:monospace;">5</span></div></div>
                 </div>
-                <div style="color:rgba(255,255,255,0.2);font-size:13px;">→</div>
-                <div>
-                    <div style="font-size:22px;font-weight:900;color:#a6e22e;line-height:1;">14d</div>
-                    <div style="font-size:7px;font-weight:800;color:rgba(166,226,46,0.5);text-transform:uppercase;letter-spacing:1px;">Perfect</div>
+                <div style="color:rgba(34,211,238,0.3);font-size:13px;">→</div>
+                <div style="display:flex;flex-direction:column;align-items:center;background:rgba(34,211,238,0.08);border:1px solid rgba(34,211,238,0.2);border-radius:10px;padding:4px 10px;">
+                    <div style="font-size:22px;font-weight:900;color:#22d3ee;line-height:1;">14d</div>
+                    <div style="font-size:7px;font-weight:800;color:rgba(34,211,238,0.55);text-transform:uppercase;letter-spacing:1px;margin-top:1px;">Perfect</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="tc tc-colour" onclick="openColourScanner()">
-        <div class="tc-tag">AI · Classic · Camera</div>
-        <div class="tc-title">Colour Scanner</div>
-        <div class="tc-sub" style="margin-bottom:12px;">Point camera · get colour stage</div>
-        <div style="display:flex;align-items:flex-end;gap:3px;height:30px;">
-            <div style="flex:1;border-radius:4px;background:#2d5a1b;height:10px;animation:csWave 1.8s ease-in-out infinite;animation-delay:0s;"></div>
-            <div style="flex:1;border-radius:4px;background:#4a8a25;height:14px;animation:csWave 1.8s ease-in-out infinite;animation-delay:0.15s;"></div>
-            <div style="flex:1;border-radius:4px;background:#78c830;height:20px;animation:csWave 1.8s ease-in-out infinite;animation-delay:0.3s;"></div>
-            <div style="flex:1;border-radius:4px;background:#a6e22e;height:30px;animation:csWave 1.8s ease-in-out infinite;animation-delay:0.45s;outline:2px solid rgba(255,255,255,0.5);outline-offset:1px;"></div>
-            <div style="flex:1;border-radius:4px;background:#d4c426;height:20px;animation:csWave 1.8s ease-in-out infinite;animation-delay:0.6s;"></div>
-            <div style="flex:1;border-radius:4px;background:#f5a623;height:14px;animation:csWave 1.8s ease-in-out infinite;animation-delay:0.75s;"></div>
-            <div style="flex:1;border-radius:4px;background:#e8650a;height:10px;animation:csWave 1.8s ease-in-out infinite;animation-delay:0.9s;"></div>
-            <div style="margin-left:8px;padding-bottom:2px;flex-shrink:0;">
-                <div style="font-size:13px;font-weight:900;color:#fff;">Stage 3.5</div>
-                <div style="font-size:7px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.5px;">Yellow-Green · 5–7 days</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- PULP AI TILE -->
-    <div class="tc" onclick="openPulpAI()" style="position:relative;overflow:hidden;min-height:150px;border:1px solid rgba(166,226,46,0.2);">
+    <!-- 2. PULP AI -->
+    <div class="tc" onclick="openPulpAI()" style="position:relative;overflow:hidden;min-height:150px;border:1px solid rgba(166,226,46,0.2);background:#040904;">
         <canvas id="pulpai-tile-canvas" style="position:absolute;inset:0;width:100%;height:100%;border-radius:22px;pointer-events:none;"></canvas>
         <div style="position:relative;z-index:2;padding:24px 26px;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
@@ -304,9 +292,9 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
         </div>
     </div>
 
-    <!-- REMINDERS TILE -->
+    <!-- 3. REMINDERS -->
     <div class="tc" onclick="openReminders()" style="background:#06060e;border:1px solid rgba(136,153,255,0.2);border-radius:22px;padding:24px 26px;position:relative;overflow:hidden;cursor:pointer;">
-        <canvas id="rem-tile-canvas" style="position:absolute;right:-8px;top:50%;transform:translateY(-50%);pointer-events:none;z-index:0;"></canvas>
+        <canvas id="rem-tile-canvas" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;z-index:0;opacity:0.7;"></canvas>
         <div style="position:relative;z-index:1;">
             <div class="tc-tag" style="color:rgba(136,153,255,0.55);">Notifications · Scheduler</div>
             <div class="tc-title">Reminders <span style="color:#8899ff;">+</span></div>
@@ -321,7 +309,53 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
             </div>
         </div>
     </div>
-    <!-- FLOOR IQ TILE -->
+
+    <!-- 4. HOLIDAY PLANNER -->
+    <div class="tc" onclick="openHolidayPlanner()" style="background:#030d08;border:1px solid rgba(52,211,153,0.22);border-radius:22px;padding:24px 26px;position:relative;overflow:hidden;cursor:pointer;">
+        <canvas id="hol-tile-canvas" style="position:absolute;inset:0;width:100%;height:100%;border-radius:22px;pointer-events:none;z-index:1;"></canvas>
+        <div style="position:relative;z-index:2;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">
+                <div>
+                    <div class="tc-tag" style="color:rgba(52,211,153,0.6);">Team · Calendar · Holidays</div>
+                    <div class="tc-title">Holiday <span style="color:#34d399;">Planner</span></div>
+                    <div class="tc-sub" style="color:rgba(52,211,153,0.4);margin-bottom:14px;">Plan free days · See team availability</div>
+                </div>
+                <div style="font-size:22px;animation:holFloat 3s ease-in-out infinite;flex-shrink:0;">📅</div>
+            </div>
+            <div style="display:flex;gap:5px;align-items:flex-end;">
+                <div style="display:flex;flex-direction:column;gap:3px;align-items:center;"><div style="width:26px;height:26px;border-radius:7px;background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.3);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#34d399;" id="hol-tile-d1">—</div><div style="font-size:6px;color:rgba(52,211,153,0.5);font-weight:700;" id="hol-tile-w1">Mon</div></div>
+                <div style="display:flex;flex-direction:column;gap:3px;align-items:center;"><div style="width:26px;height:26px;border-radius:7px;background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.3);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#34d399;" id="hol-tile-d2">—</div><div style="font-size:6px;color:rgba(52,211,153,0.5);font-weight:700;" id="hol-tile-w2">Tue</div></div>
+                <div style="display:flex;flex-direction:column;gap:3px;align-items:center;"><div style="width:26px;height:26px;border-radius:7px;background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.3);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#34d399;" id="hol-tile-d3">—</div><div style="font-size:6px;color:rgba(52,211,153,0.5);font-weight:700;" id="hol-tile-w3">Wed</div></div>
+                <div style="display:flex;flex-direction:column;gap:3px;align-items:center;"><div style="width:26px;height:26px;border-radius:7px;background:rgba(255,165,0,0.12);border:1px solid rgba(255,165,0,0.25);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#ffa500;" id="hol-tile-d4">—</div><div style="font-size:6px;color:rgba(255,165,0,0.5);font-weight:700;" id="hol-tile-w4">Thu</div></div>
+                <div style="display:flex;flex-direction:column;gap:3px;align-items:center;"><div style="width:26px;height:26px;border-radius:7px;background:rgba(255,77,77,0.08);border:1px solid rgba(255,77,77,0.18);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:rgba(255,100,100,0.6);" id="hol-tile-d5">—</div><div style="font-size:6px;color:rgba(255,100,100,0.35);font-weight:700;" id="hol-tile-w5">Fri</div></div>
+                <div style="margin-left:auto;display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:2px;"><div style="font-size:13px;font-weight:900;color:#34d399;line-height:1;" id="hol-tile-count">— off</div><div style="font-size:8px;color:rgba(255,255,255,0.25);margin-top:1px;">this week</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. SHIFT SWAP -->
+    <div class="tc" onclick="openShiftSwap()" style="background:#060810;border:1px solid rgba(136,153,255,0.18);border-radius:22px;padding:24px 26px;position:relative;overflow:hidden;cursor:pointer;">
+        <canvas id="swap-tile-canvas" style="position:absolute;inset:0;width:100%;height:100%;border-radius:22px;pointer-events:none;z-index:1;"></canvas>
+        <div style="position:relative;z-index:2;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">
+                <div>
+                    <div class="tc-tag" style="color:rgba(136,153,255,0.55);">Team · Roster · Requests</div>
+                    <div class="tc-title">Shift <span style="color:#8899ff;">Swap</span></div>
+                    <div class="tc-sub" style="color:rgba(136,153,255,0.4);margin-bottom:14px;">Post requests · Find cover · Confirm</div>
+                </div>
+                <div style="position:relative;width:36px;height:36px;flex-shrink:0;">
+                    <div style="position:absolute;inset:0;border-radius:50%;border:1px solid rgba(136,153,255,0.25);animation:swapPing 2s ease-out infinite;"></div>
+                    <div style="position:absolute;inset:0;border-radius:50%;border:1px solid rgba(136,153,255,0.15);animation:swapPing 2s ease-out infinite;animation-delay:0.6s;"></div>
+                    <div style="position:absolute;inset:6px;border-radius:50%;background:rgba(136,153,255,0.12);border:1px solid rgba(136,153,255,0.25);display:flex;align-items:center;justify-content:center;font-size:13px;">🔄</div>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;background:rgba(136,153,255,0.05);border:1px solid rgba(136,153,255,0.12);border-radius:10px;padding:8px 10px;" id="swap-tile-preview">
+                <div style="flex:1;"><div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);">No open requests</div><div style="font-size:8px;color:rgba(136,153,255,0.4);margin-top:2px;">Tap to view the swap board</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. FLOOR IQ -->
     <div class="tc" onclick="openFloorIQ()" style="background:#09080e;border:1px solid rgba(255,165,0,0.25);border-radius:22px;padding:24px 26px;position:relative;overflow:hidden;cursor:pointer;">
         <canvas id="iq-tile-canvas" style="position:absolute;inset:0;width:100%;height:100%;border-radius:22px;pointer-events:none;z-index:0;"></canvas>
         <div style="position:absolute;width:180px;height:180px;border-radius:50%;background:rgba(255,140,0,0.07);top:-60px;right:-40px;pointer-events:none;animation:iqPulse 3s infinite;"></div>
@@ -337,10 +371,6 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
                 </div>
             </div>
             <div class="tc-sub" style="color:rgba(255,255,255,0.2);margin-bottom:14px;">Quiz yourself · Learn the industry · Beat the team</div>
-            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,165,0,0.1);border-radius:10px;padding:8px 10px;margin-bottom:12px;">
-                <div style="font-size:7px;font-weight:700;color:rgba(255,165,0,0.5);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Today's question</div>
-                <div style="font-size:10px;color:rgba(255,255,255,0.55);line-height:1.4;">At what Brix level is a mango considered ready for export?</div>
-            </div>
             <div style="display:flex;border-top:1px solid rgba(255,255,255,0.05);padding-top:10px;">
                 <div style="flex:1;text-align:center;"><div id="iq-tile-streak" style="font-size:14px;font-weight:900;color:#ffa500;">—</div><div style="font-size:7px;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:0.5px;">Streak</div></div>
                 <div style="flex:1;text-align:center;border-left:1px solid rgba(255,255,255,0.05);border-right:1px solid rgba(255,255,255,0.05);"><div id="iq-tile-acc" style="font-size:14px;font-weight:900;color:#ffa500;">—</div><div style="font-size:7px;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:0.5px;">Accuracy</div></div>
@@ -348,6 +378,7 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
             </div>
         </div>
     </div>
+
 </div>
 
 <div class="home-bottom">
@@ -561,6 +592,12 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 .user-edit-input{width:100%;background:#050505;border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:7px 9px;font-size:12px;color:#fff;outline:none;font-family:-apple-system,sans-serif;}
 .user-edit-select{width:100%;background:#050505;border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:7px 9px;font-size:12px;color:#fff;outline:none;font-family:-apple-system,sans-serif;color-scheme:dark;}
 .user-edit-save{background:#a6e22e;color:#000;border:none;border-radius:7px;padding:8px;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1px;cursor:pointer;width:100%;margin-top:8px;font-family:-apple-system,sans-serif;}
+
+/* ── NEW TILE KEYFRAMES ── */
+@keyframes ageHBeam{0%,100%{top:20%;opacity:0}10%{opacity:1}50%{top:80%;opacity:1}90%{opacity:1}}
+@keyframes ageStatusPulse{0%{width:0%;margin-left:0}50%{width:60%;margin-left:20%}100%{width:0%;margin-left:100%}}
+@keyframes holFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes swapPing{0%{transform:scale(1);opacity:0.7}100%{transform:scale(2.2);opacity:0}}
 
 /* ── MENU DRAWER SCROLL FIX ── */
 #menu-drawer{

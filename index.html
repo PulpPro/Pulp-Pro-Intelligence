@@ -950,8 +950,7 @@ async function fixAllNames() {
             if (seed.success) msgs.push('✅ Hall of Fame entry added for Akash');
             else msgs.push('⚠️ HOF: ' + (seed.error || 'Unknown'));
         }
-        alert(msgs.join('
-'));
+        alert(msgs.join('\n'));
     } catch(e) {
         alert('Error: ' + e.message);
     }

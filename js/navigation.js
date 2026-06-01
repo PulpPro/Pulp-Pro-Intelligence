@@ -231,6 +231,11 @@ async function submitDevLogin() {
             showApp();
             renderAdminMenu();
             if (typeof initHomeWelcome === 'function') initHomeWelcome();
+            // Silently rebuild push subscription index on admin login
+            fetch(ACCESS_WORKER + '/rebuild-sub-index', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adminPassword: ADMIN_PASSWORD })
+            }).catch(() => {});
         } else {
             err.innerText = 'Invalid credentials.';
             err.style.display = 'block';

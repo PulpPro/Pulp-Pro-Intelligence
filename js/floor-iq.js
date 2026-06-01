@@ -24,12 +24,13 @@ function iqGetUserCode() {
 
 function iqGetDisplayName(code) {
     if (!code) return 'Unknown';
+    const upper = (code || '').toUpperCase();
+    // Admin
     if (upper === 'ADMIN' || code === 'admin') {
         const adminName = localStorage.getItem('pulpProUserName');
         if (adminName) return adminName.split(' ')[0];
         return 'Admin';
     }
-    const upper = (code || '').toUpperCase();
     if (upper.startsWith('TEST')) return null; // excluded
     // Check if this is the current user — return KV-synced name
     const myCode = localStorage.getItem('pulpProAccessCode') || '';

@@ -507,6 +507,16 @@ async function revokeUser(code, name) {
 }
 
 // ── NAVIGATION ────────────────────────────────────────────────
+function openHolidayPlanner() {
+    // Holiday Planner view — to be built
+    showView('holiday-planner-view');
+}
+
+function openShiftSwap() {
+    // Shift Swap view — to be built
+    showView('shift-swap-view');
+}
+
 function showHub() {
     document.getElementById('fruit-hub').classList.remove('hidden');
     document.getElementById('appInterface').classList.add('hidden');

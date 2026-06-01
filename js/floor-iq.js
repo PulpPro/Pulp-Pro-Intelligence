@@ -64,7 +64,6 @@ let iqAskedTopics = []; // track category_ids asked this session to avoid repeat
 function openFloorIQ() {
     document.getElementById('fruit-hub').classList.add('hidden');
     document.getElementById('appInterface').classList.add('hidden');
-    document.getElementById('colour-scanner-view').classList.add('hidden');
     const pulpaiView = document.getElementById('pulpai-view');
     if (pulpaiView) pulpaiView.classList.add('hidden');
     const remView = document.getElementById('reminders-view');

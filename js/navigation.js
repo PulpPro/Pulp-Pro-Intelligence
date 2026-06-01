@@ -524,11 +524,6 @@ function openHolidayPlanner() {
     showView('holiday-planner-view');
 }
 
-function openShiftSwap() {
-    // Shift Swap view — to be built
-    showView('shift-swap-view');
-}
-
 function showHub() {
     document.getElementById('fruit-hub').classList.remove('hidden');
     document.getElementById('appInterface').classList.add('hidden');
@@ -540,8 +535,7 @@ function showHub() {
     if (iqView) iqView.classList.add('hidden');
     const holView = document.getElementById('holiday-planner-view');
     if (holView) holView.classList.add('hidden');
-    const swapView = document.getElementById('shift-swap-view');
-    if (swapView) swapView.classList.add('hidden');
+
     const menuTrigger = document.getElementById('menu-trigger');
     if (menuTrigger) menuTrigger.style.display = '';
 }

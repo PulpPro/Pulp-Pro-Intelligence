@@ -271,14 +271,9 @@ function holDayTap(dateStr) {
     }
 
     html += `</div>
-    <div style="padding:12px 18px;display:flex;flex-direction:column;gap:8px;">`;
-
-    if (hasMe) {
-        html += `<button onclick="holCancelPrompt('${dateStr}')" style="width:100%;background:rgba(255,77,77,0.08);border:1px solid rgba(255,77,77,0.2);border-radius:12px;padding:12px;font-size:12px;font-weight:700;color:rgba(255,100,100,0.8);cursor:pointer;font-family:-apple-system,sans-serif;">✕ Cancel my holiday</button>`;
-    } else {
-        html += `<button onclick="holClosePopup();holOpenPlan('${dateStr}')" style="width:100%;background:#34d399;border:none;border-radius:12px;padding:13px;font-size:13px;font-weight:900;color:#000;cursor:pointer;font-family:-apple-system,sans-serif;">+ Plan free day →</button>`;
-    }
-    html += `<button onclick="holClosePopup()" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.35);cursor:pointer;font-family:-apple-system,sans-serif;">Close</button>
+    <div style="padding:12px 18px 18px;display:flex;flex-direction:column;gap:8px;">
+        <button onclick="holClosePopup();holOpenPlan('${dateStr}')" style="width:100%;background:#34d399;border:none;border-radius:12px;padding:13px;font-size:13px;font-weight:900;color:#000;cursor:pointer;font-family:-apple-system,sans-serif;">🏖️ Plan this day →</button>
+        <button onclick="holClosePopup()" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.35);cursor:pointer;font-family:-apple-system,sans-serif;">Close</button>
     </div>`;
 
     document.getElementById('hol-popup-body').innerHTML = html;
@@ -335,40 +330,55 @@ async function holSavePlan() {
     await holNotify('add', from, to);
 }
 
-// ── CANCEL HOLIDAY ────────────────────────────────────────────────────────
-function holCancelPrompt(dateStr) {
-    const date = new Date(dateStr + 'T00:00:00');
-    // Find entries that cover this date
-    const affected = holMyEntries.filter(e => {
-        const from = new Date(e.from + 'T00:00:00');
-        const to = new Date(e.to + 'T00:00:00');
-        return date >= from && date <= to;
-    });
-
-    if (!affected.length) { holClosePopup(); return; }
+// ── CANCEL HOLIDAY — shows all planned ranges ────────────────────────────
+function holOpenCancel() {
+    if (!holMyEntries.length) {
+        // No entries at all
+        const html = `<div style="padding:24px 18px;text-align:center;">
+            <div style="font-size:32px;margin-bottom:10px;">🏖️</div>
+            <div style="font-size:15px;font-weight:800;color:#fff;margin-bottom:6px;">No planned days</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:18px;">You haven't planned any free days yet.</div>
+            <button onclick="holClosePopup()" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.35);cursor:pointer;font-family:-apple-system,sans-serif;">Close</button>
+        </div>`;
+        document.getElementById('hol-popup-body').innerHTML = html;
+        document.getElementById('hol-popup').classList.remove('hidden');
+        return;
+    }
 
     let html = `<div style="padding:18px 18px 0;">
         <div style="font-size:18px;font-weight:900;color:#fff;letter-spacing:-0.5px;margin-bottom:4px;">Cancel free day/s</div>
-        <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:16px;">Select which entry to remove</div>`;
+        <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:14px;">Tap delete to remove a planned range</div>`;
 
-    affected.forEach(e => {
+    // Sort entries by date
+    const sorted = [...holMyEntries].sort((a,b) => a.from.localeCompare(b.from));
+    sorted.forEach(e => {
         const fromLabel = new Date(e.from + 'T00:00:00').toLocaleDateString('en-GB', { day:'numeric', month:'short' });
         const toLabel = new Date(e.to + 'T00:00:00').toLocaleDateString('en-GB', { day:'numeric', month:'short' });
-        const days = Math.round((new Date(e.to) - new Date(e.from)) / 86400000) + 1;
-        html += `<div style="background:rgba(255,77,77,0.06);border:1px solid rgba(255,77,77,0.15);border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
-            <div>
-                <div style="font-size:12px;font-weight:700;color:#fff;">${fromLabel} → ${toLabel} · ${days}d</div>
-                ${e.note?`<div style="font-size:9px;color:rgba(255,255,255,0.3);margin-top:2px;">"${e.note}"</div>`:''}
+        const days = Math.round((new Date(e.to + 'T00:00:00') - new Date(e.from + 'T00:00:00')) / 86400000) + 1;
+        const sameDay = e.from === e.to;
+        html += `<div style="background:rgba(255,77,77,0.05);border:1px solid rgba(255,77,77,0.15);border-radius:12px;padding:12px 14px;margin-bottom:8px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${e.note?'4px':'0'};">
+                <div>
+                    <div style="font-size:13px;font-weight:800;color:#fff;">${sameDay ? fromLabel : fromLabel + ' → ' + toLabel}</div>
+                    <div style="font-size:9px;color:rgba(255,255,255,0.3);margin-top:2px;">${days} day${days>1?'s':''}</div>
+                </div>
+                <button onclick="holDeleteEntry('${e.id}')" style="background:rgba(255,77,77,0.12);border:1px solid rgba(255,77,77,0.25);border-radius:8px;padding:6px 12px;font-size:10px;font-weight:700;color:rgba(255,100,100,0.9);cursor:pointer;font-family:-apple-system,sans-serif;flex-shrink:0;">Delete</button>
             </div>
-            <button onclick="holDeleteEntry('${e.id}')" style="background:rgba(255,77,77,0.15);border:1px solid rgba(255,77,77,0.3);border-radius:8px;padding:6px 12px;font-size:10px;font-weight:700;color:rgba(255,100,100,0.9);cursor:pointer;font-family:-apple-system,sans-serif;">Delete</button>
+            ${e.note?`<div style="font-size:9px;color:rgba(255,255,255,0.25);font-style:italic;">"${e.note}"</div>`:''}
         </div>`;
     });
 
-    html += `</div><div style="padding:12px 18px;">
-        <button onclick="holClosePopup()" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.35);cursor:pointer;font-family:-apple-system,sans-serif;">Back</button>
+    html += `</div><div style="padding:12px 18px 18px;">
+        <button onclick="holClosePopup()" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.35);cursor:pointer;font-family:-apple-system,sans-serif;">Close</button>
     </div>`;
 
     document.getElementById('hol-popup-body').innerHTML = html;
+    document.getElementById('hol-popup').classList.remove('hidden');
+}
+
+// Keep holCancelPrompt for legacy day-tap use
+function holCancelPrompt(dateStr) {
+    holOpenCancel();
 }
 
 async function holDeleteEntry(entryId) {

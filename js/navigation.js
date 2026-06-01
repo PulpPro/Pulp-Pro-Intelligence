@@ -124,6 +124,14 @@ function showGate() {
 function showApp() {
     document.getElementById('access-gate').classList.add('hidden');
     document.getElementById('app-wrapper').classList.remove('hidden');
+    // Send userCode to service worker for targeted notifications
+    setTimeout(() => {
+        const userCode = localStorage.getItem('pulpProAdmin') === 'true' ? 'ADMIN' :
+                         (localStorage.getItem('pulpProAccessCode') || '').toUpperCase();
+        if (navigator.serviceWorker && navigator.serviceWorker.controller && userCode) {
+            navigator.serviceWorker.controller.postMessage({ type: 'SET_USER_CODE', userCode });
+        }
+    }, 500);
 
 
     // Check Cache API for pending reminder from notification tap
@@ -530,6 +538,10 @@ function showHub() {
     if (remView) remView.classList.add('hidden');
     const iqView = document.getElementById('floor-iq-view');
     if (iqView) iqView.classList.add('hidden');
+    const holView = document.getElementById('holiday-planner-view');
+    if (holView) holView.classList.add('hidden');
+    const swapView = document.getElementById('shift-swap-view');
+    if (swapView) swapView.classList.add('hidden');
     const menuTrigger = document.getElementById('menu-trigger');
     if (menuTrigger) menuTrigger.style.display = '';
 }

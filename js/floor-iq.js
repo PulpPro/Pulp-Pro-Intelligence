@@ -28,8 +28,8 @@ function iqGetDisplayName(code) {
     // Admin
     if (upper === 'ADMIN' || code === 'admin') {
         const adminName = localStorage.getItem('pulpProUserName');
-        if (adminName) return adminName.split(' ')[0];
-        return 'Admin';
+        if (adminName && adminName.trim()) return adminName.split(' ')[0];
+        return 'Akash'; // default admin name
     }
     if (upper.startsWith('TEST')) return null; // excluded
     // Check if this is the current user — return KV-synced name

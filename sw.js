@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v20';
 const CACHE_NAME = 'pulp-pro-' + CACHE_VERSION;
 const ASSETS = [
     '/',
@@ -99,7 +99,7 @@ self.addEventListener('push', (event) => {
     // Each push now has its own KV key — fetch by reminder ID to get correct title
     event.waitUntil(
         Promise.race([
-            fetch('https://pulppro-access.pulpprobrain.workers.dev/get-reminder', {
+            fetch('https://pulppro-access.pulpprobrain.workers.dev/get-notif', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ secret: 'pulpro2024', userCode: self.__userCode || '' })

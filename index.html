@@ -174,7 +174,7 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 <div id="revoke-list" style="font-size:11px;color:rgba(255,255,255,0.4);max-height:220px;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;">Tap to load...</div>
 <button onclick="loadActiveUsers()" style="width:100%;margin-top:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px;font-size:9px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;cursor:pointer;font-family:-apple-system,sans-serif;">↻ Load Users</button>
 </div>
-<div class="menu-item" onclick="fixHofName()" style="color:rgba(255,165,0,0.6);background:rgba(255,165,0,0.04);border:1px solid rgba(255,165,0,0.1);border-radius:10px;margin-bottom:4px;"><span><i class="bi bi-wrench"></i> Fix HOF Name</span></div>
+<div class="menu-item" onclick="fixAllNames()" style="color:rgba(255,165,0,0.6);background:rgba(255,165,0,0.04);border:1px solid rgba(255,165,0,0.1);border-radius:10px;margin-bottom:4px;"><span><i class="bi bi-wrench"></i> Fix My Names</span></div>
 <div class="menu-item" onclick="adminLogout()" style="color:rgba(255,77,77,0.6);"><span><i class="bi bi-box-arrow-right"></i> Logout</span></div>
 </div>
 
@@ -918,22 +918,85 @@ function isNotifEnabled(type) {
     return localStorage.getItem('notif_' + type) !== 'false';
 }
 
-// ── FIX HOF NAME ──────────────────────────────────────────────────────────
+// ── FIX ALL NAMES ────────────────────────────────────────────────────────
+async function fixAllNames() {
+    const W = 'https://pulppro-access.pulpprobrain.workers.dev';
+    const P = 'BananaBoss1.';
+    let msgs = [];
+    try {
+        // Fix leaderboard
+        const lb = await fetch(W + '/fix-lb-name', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ oldName: 'Admin', newName: 'Akash', userCode: 'admin', adminPassword: P })
+        }).then(r => r.json());
+        if (lb.success) msgs.push('✅ Leaderboard fixed (' + lb.fixed + ' entries)');
+        else msgs.push('⚠️ Leaderboard: ' + (lb.error || 'No entries found'));
+
+        // Fix or patch HOF
+        const hof = await fetch(W + '/fix-hof-name', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ oldName: 'Admin', newName: 'Akash', adminPassword: P })
+        }).then(r => r.json());
+        if (hof.success && hof.fixed > 0) {
+            msgs.push('✅ Hall of Fame fixed (' + hof.fixed + ' entries)');
+        } else {
+            // HOF empty — seed it
+            const now = new Date(); const lw = new Date(now); lw.setDate(now.getDate() - 7);
+            const wl = 'Week of ' + lw.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+            const seed = await fetch(W + '/fix-hof-name', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adminPassword: P, seedEntry: { displayName: 'Akash', userCode: 'admin', score: 0, accuracy: 0, weekLabel: wl } })
+            }).then(r => r.json());
+            if (seed.success) msgs.push('✅ Hall of Fame entry added for Akash');
+            else msgs.push('⚠️ HOF: ' + (seed.error || 'Unknown'));
+        }
+        alert(msgs.join('
+'));
+    } catch(e) {
+        alert('Error: ' + e.message);
+    }
+}
+
+// ── FIX HOF NAME (kept for compatibility) ────────────────────────────────
 async function fixHofName() {
     try {
+        // First try to patch existing entries
         const res = await fetch('https://pulppro-access.pulpprobrain.workers.dev/fix-hof-name', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ oldName: 'Admin', newName: 'Akash', adminPassword: 'BananaBoss1.' })
         });
         const data = await res.json();
-        if (data.success) {
+        if (data.success && data.fixed > 0) {
             alert('✅ Fixed ' + data.fixed + ' HOF entry/entries — Akash now shows correctly.');
+            return;
+        }
+        // HOF is empty or no "Admin" entries — seed last week's win
+        const now = new Date();
+        const lastWeek = new Date(now); lastWeek.setDate(now.getDate() - 7);
+        const weekLabel = lastWeek.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+        const seedRes = await fetch('https://pulppro-access.pulpprobrain.workers.dev/fix-hof-name', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                adminPassword: 'BananaBoss1.',
+                seedEntry: {
+                    displayName: 'Akash',
+                    userCode: 'admin',
+                    score: 0,
+                    accuracy: 0,
+                    weekLabel: 'Week of ' + weekLabel
+                }
+            })
+        });
+        const seedData = await seedRes.json();
+        if (seedData.success) {
+            alert('✅ Your Hall of Fame win has been added. Reload Floor IQ to see it.');
         } else {
-            alert('Error: ' + (data.error || 'Unknown'));
+            alert('Error: ' + (seedData.error || 'Unknown'));
         }
     } catch(e) {
-        alert('Error fixing HOF: ' + e.message);
+        alert('Error: ' + e.message);
     }
 }
 </script>

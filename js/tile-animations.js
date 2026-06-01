@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initIQTileCanvas();
     initAgeTileCanvas();
     initHolTileCanvas();
-    initSwapTileCanvas();
     initHomeWelcome();
     // Pulp AI aurora — call after short delay to ensure canvas is sized
     setTimeout(() => {
@@ -157,58 +156,6 @@ function initHolTileDates() {
         if (dEl) dEl.textContent = d.getDate();
         if (wEl) wEl.textContent = days[i];
     }
-}
-
-// ── SHIFT SWAP — two card swap animation ─────────────────────────────────
-function initSwapTileCanvas() {
-    const cv = document.getElementById('swap-tile-canvas');
-    if (!cv) return;
-    const tile = cv.parentElement;
-    cv.width = tile.offsetWidth || 350;
-    cv.height = tile.offsetHeight || 148;
-    const W = cv.width, H = cv.height;
-    const ctx = cv.getContext('2d');
-    const start = Date.now();
-    const cards = [
-        { label:'Mon', shift:'Morning', col:[136,153,255], x:W*0.58, y:H*0.28 },
-        { label:'Wed', shift:'Afternoon', col:[180,130,255], x:W*0.82, y:H*0.55 },
-    ];
-    const fromA={x:cards[0].x,y:cards[0].y}, fromB={x:cards[1].x,y:cards[1].y};
-    const toA={x:cards[1].x,y:cards[1].y}, toB={x:cards[0].x,y:cards[0].y};
-    let phase=0, swapT=0, idleT=0;
-    function ease(t){return t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
-    function drawCard(x, y, label, shift, col, alpha) {
-        const[r,g,b]=col, cw=62, ch=32;
-        ctx.save(); ctx.globalAlpha=alpha;
-        ctx.fillStyle=`rgba(${r},${g},${b},0.12)`; ctx.strokeStyle=`rgba(${r},${g},${b},0.3)`; ctx.lineWidth=1;
-        ctx.beginPath(); ctx.roundRect(x-cw/2,y-ch/2,cw,ch,8); ctx.fill(); ctx.stroke();
-        ctx.fillStyle=`rgba(${r},${g},${b},0.9)`; ctx.font='900 10px -apple-system,sans-serif'; ctx.textAlign='center'; ctx.fillText(label,x,y-4);
-        ctx.fillStyle=`rgba(${r},${g},${b},0.55)`; ctx.font='700 8px -apple-system,sans-serif'; ctx.fillText(shift,x,y+8);
-        ctx.restore();
-    }
-    function draw() {
-        const t = (Date.now() - start) * 0.001;
-        ctx.clearRect(0, 0, W, H);
-        const bg = ctx.createRadialGradient(W*0.75, H*0.4, 0, W*0.75, H*0.4, W*0.5);
-        bg.addColorStop(0,'rgba(136,153,255,0.04)'); bg.addColorStop(1,'rgba(136,153,255,0)');
-        ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
-        idleT += 0.016;
-        if (phase === 0 && idleT > 2.5) { phase=1; swapT=0; idleT=0; }
-        if (phase === 1) {
-            swapT = Math.min(swapT + 0.022, 1);
-            const e = ease(swapT);
-            cards[0].x=fromA.x+(toA.x-fromA.x)*e; cards[0].y=fromA.y+(toA.y-fromA.y)*e-Math.sin(swapT*Math.PI)*28;
-            cards[1].x=fromB.x+(toB.x-fromB.x)*e; cards[1].y=fromB.y+(toB.y-fromB.y)*e+Math.sin(swapT*Math.PI)*28;
-            if (swapT >= 1) { phase=0; idleT=0; cards[0].x=fromA.x; cards[0].y=fromA.y; cards[1].x=fromB.x; cards[1].y=fromB.y; }
-        }
-        const arrowA = 0.5 + 0.5 * Math.sin(t * 2.5);
-        ctx.save(); ctx.globalAlpha=0.25+0.2*arrowA; ctx.strokeStyle='rgba(136,153,255,0.5)'; ctx.lineWidth=1; ctx.setLineDash([3,4]);
-        ctx.beginPath(); ctx.moveTo(cards[0].x+31,cards[0].y); ctx.lineTo(cards[1].x-31,cards[1].y); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
-        drawCard(cards[1].x,cards[1].y,cards[1].label,cards[1].shift,cards[1].col,0.85);
-        drawCard(cards[0].x,cards[0].y,cards[0].label,cards[0].shift,cards[0].col,0.95);
-        requestAnimationFrame(draw);
-    }
-    draw();
 }
 
 // ── REMINDERS TILE — animated clock ──────────────────────────────────────

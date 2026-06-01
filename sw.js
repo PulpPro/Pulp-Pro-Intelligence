@@ -74,6 +74,9 @@ self.addEventListener('fetch', (event) => {
 });
 
 self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'SET_USER_CODE') {
+        self.__userCode = event.data.userCode || '';
+    }
     if (event.data === 'skipWaiting') self.skipWaiting();
 });
 
@@ -99,7 +102,7 @@ self.addEventListener('push', (event) => {
             fetch('https://pulppro-access.pulpprobrain.workers.dev/get-reminder', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ secret: 'pulpro2024' })
+                body: JSON.stringify({ secret: 'pulpro2024', userCode: self.__userCode || '' })
             }).then(r => r.json()),
             new Promise(resolve => setTimeout(() => resolve(null), 4000))
         ])

@@ -151,8 +151,16 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 <div class="menu-item" onclick="toggleCodeGenerator()" style="color:#a6e22e;background:rgba(166,226,46,0.05);border:1px solid rgba(166,226,46,0.12);border-radius:10px;margin-bottom:4px;"><span><i class="bi bi-key"></i> Generate Access Code</span></div>
 <div id="code-gen-panel" class="hidden" style="margin-bottom:8px;">
 <div style="background:#0a1a06;border:1px solid rgba(166,226,46,0.2);border-radius:12px;padding:12px;margin-bottom:6px;">
-<div style="font-size:8px;font-weight:900;color:rgba(166,226,46,0.6);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Name</div>
-<input id="codePersonName" type="text" placeholder="e.g. Jan" style="width:100%;background:#0a0a0a;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px 10px;font-size:12px;color:#fff;outline:none;text-transform:none;letter-spacing:normal;font-family:-apple-system,sans-serif;box-shadow:none;">
+<div style="font-size:8px;font-weight:900;color:rgba(166,226,46,0.6);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Full Name</div>
+<input id="codePersonName" type="text" placeholder="e.g. Alexander van der Berg" style="width:100%;background:#0a0a0a;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px 10px;font-size:12px;color:#fff;outline:none;text-transform:none;letter-spacing:normal;font-family:-apple-system,sans-serif;box-shadow:none;margin-bottom:10px;">
+<div style="font-size:8px;font-weight:900;color:rgba(166,226,46,0.6);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;margin-top:4px;">Role</div>
+<select id="codePersonRole" style="width:100%;background:#0a0a0a;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px 10px;font-size:12px;color:#fff;outline:none;font-family:-apple-system,sans-serif;color-scheme:dark;">
+<option value="">— Select role —</option>
+<option value="Processleider">Processleider</option>
+<option value="Rijper">Rijper</option>
+<option value="Planner">Planner</option>
+<option value="Heftrucker">Heftrucker</option>
+</select>
 </div>
 <div id="generated-code-display" class="hidden" style="background:#0a1a06;border:1px solid rgba(166,226,46,0.25);border-radius:12px;padding:12px;margin-bottom:6px;text-align:center;">
 <div id="generatedCodeFor" style="font-size:8px;color:rgba(166,226,46,0.5);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;"></div>
@@ -545,6 +553,14 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 #pulpai-fruit-input,#rem-text-input,#rem-date-input,#rem-time-input{font-size:15px!important;font-weight:400!important;letter-spacing:normal!important;text-transform:none!important;height:auto!important;line-height:normal!important;text-align:left!important;color:#fff!important;-webkit-text-fill-color:#fff!important;color-scheme:dark!important}
 #pulpai-fruit-input{padding:10px 14px!important;background:rgba(255,255,255,0.05)!important;border:1px solid rgba(255,255,255,0.1)!important;border-radius:10px!important;width:100%!important;outline:none!important;display:block!important;box-sizing:border-box!important}
 #pulpai-photo-popup{display:none}
+
+/* ── USER EDIT STYLES ── */
+.user-edit-form{background:#0a0a0a;border:1px solid rgba(166,226,46,0.15);border-radius:10px;padding:10px;margin-top:6px;display:none;}
+.user-edit-form.show{display:block;}
+.user-edit-field{font-size:8px;font-weight:800;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:5px;margin-top:8px;}
+.user-edit-input{width:100%;background:#050505;border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:7px 9px;font-size:12px;color:#fff;outline:none;font-family:-apple-system,sans-serif;}
+.user-edit-select{width:100%;background:#050505;border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:7px 9px;font-size:12px;color:#fff;outline:none;font-family:-apple-system,sans-serif;color-scheme:dark;}
+.user-edit-save{background:#a6e22e;color:#000;border:none;border-radius:7px;padding:8px;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1px;cursor:pointer;width:100%;margin-top:8px;font-family:-apple-system,sans-serif;}
 
 /* ── MENU DRAWER SCROLL FIX ── */
 #menu-drawer{

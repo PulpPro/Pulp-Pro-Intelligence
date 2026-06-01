@@ -78,12 +78,14 @@ async function holLoadTeam() {
 async function holSave() {
     try {
         const me = holTeam[holMyCode];
-        // Save to KV in background — don't wait for reload (KV eventual consistency)
+        const entries = me ? me.entries : [];
+        console.log('Saving holidays for', holMyCode, ':', entries.length, 'entries');
+        // Save to KV in background
         fetch(HOL_WORKER + '/holidays-save', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userCode: holMyCode, entries: me ? me.entries : [] })
+            body: JSON.stringify({ userCode: holMyCode, entries })
         }).catch(e => console.error('Holiday save error:', e));
-        // Re-render immediately from in-memory data — no KV race condition
+        // Re-render immediately from in-memory data
         holRender();
     } catch(e) { console.error('Holiday save error:', e); }
 }
@@ -105,7 +107,7 @@ function holADM() {
         u.entries.forEach(e => {
             holDR(e.from, e.to).forEach(d => {
                 if (!m[d]) m[d] = [];
-                m[d].push({ code, name: u.name, color: u.colour, from: e.from, to: e.to, note: e.note || '' });
+                m[d].push({ code, name: u.name, color: u.colour || u.color || '#a6e22e', from: e.from, to: e.to, note: e.note || '' });
             });
         });
     });
@@ -267,8 +269,17 @@ async function holSavePlan() {
     const n = document.getElementById('hol-plan-note').value.trim();
     if (!f || !t) { alert('Please select both dates'); return; }
     if (t < f) { alert('End date must be after start date'); return; }
+    // Ensure current user exists in holTeam
+    if (!holTeam[holMyCode]) {
+        const myName = localStorage.getItem('pulpProUserName') || holMyCode;
+        holTeam[holMyCode] = {
+            name: myName.split(' ')[0],
+            colour: '#a6e22e',
+            role: localStorage.getItem('pulpProUserRole') || '',
+            entries: []
+        };
+    }
     const me = holTeam[holMyCode];
-    if (!me) return;
     me.entries.push({ from: f, to: t, note: n, id: 'hol_' + Date.now() });
     holMergeMine();
     holCloseOv('hol-ov-plan');

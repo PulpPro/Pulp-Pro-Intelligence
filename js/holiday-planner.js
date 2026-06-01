@@ -22,6 +22,8 @@ async function openHolidayPlanner() {
     document.getElementById('fruit-hub').classList.add('hidden');
     const view = document.getElementById('holiday-planner-view');
     view.classList.remove('hidden');
+    const mt = document.getElementById('menu-trigger');
+    if (mt) mt.style.display = 'none';
 
     holUserCode = localStorage.getItem('pulpProAdmin') === 'true' ? 'ADMIN' :
                   (localStorage.getItem('pulpProAccessCode') || '').toUpperCase();
@@ -42,6 +44,8 @@ async function openHolidayPlanner() {
 function closeHolidayPlanner() {
     document.getElementById('holiday-planner-view').classList.add('hidden');
     document.getElementById('fruit-hub').classList.remove('hidden');
+    const mt = document.getElementById('menu-trigger');
+    if (mt) mt.style.display = '';
 }
 
 // ── LOAD DATA ─────────────────────────────────────────────────────────────
@@ -148,7 +152,7 @@ function holRenderCalendar() {
     let html = '';
     // Day headers
     ['Mo','Tu','We','Th','Fr','Sa','Su'].forEach(d => {
-        html += `<div style="text-align:center;font-size:8px;font-weight:800;color:rgba(255,255,255,0.25);padding:4px 0;letter-spacing:1px;">${d}</div>`;
+        html += `<div style="text-align:center;font-size:8px;font-weight:800;color:rgba(255,255,255,0.25);padding:5px 0 4px;letter-spacing:1px;height:22px;box-sizing:border-box;">${d}</div>`;
     });
 
     // Empty cells before first day
@@ -195,7 +199,7 @@ function holRenderCalendar() {
 
         html += `<div onclick="holDayTap('${dateStr}')" style="
             background:${bgColour};border:1px solid ${borderColour};border-radius:6px;
-            padding:3px;cursor:pointer;min-height:46px;
+            padding:3px;cursor:pointer;height:52px;max-height:52px;
             transition:background 0.15s;box-sizing:border-box;overflow:hidden;">
             <div style="font-size:9px;font-weight:${isToday?'900':'700'};color:${isToday?'#fff':dateColour};
                 ${isToday?'background:rgba(255,255,255,0.15);border-radius:3px;width:16px;height:16px;display:flex;align-items:center;justify-content:center;':''}">
@@ -290,25 +294,25 @@ function holOpenPlan(prefillFrom) {
     const from = prefillFrom || today;
 
     const html = `
-    <div style="padding:18px 18px 0;">
-        <div style="font-size:18px;font-weight:900;color:#fff;letter-spacing:-0.5px;margin-bottom:4px;">Plan free day/s</div>
-        <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:16px;">Select your dates and add a note</div>
-        <div style="font-size:8px;font-weight:800;color:rgba(52,211,153,0.6);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;">From</div>
-        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(52,211,153,0.2);border-radius:10px;padding:10px 14px;margin-bottom:10px;">
-            <input type="date" id="hol-plan-from" value="${from}" style="width:100%;background:transparent;border:none;font-size:15px;font-weight:700;color:#fff;outline:none;color-scheme:dark;font-family:-apple-system,sans-serif;">
+    <div style="padding:16px 16px 0;">
+        <div style="font-size:16px;font-weight:900;color:#fff;letter-spacing:-0.5px;margin-bottom:2px;">Plan free day/s</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:12px;">Select your dates and add a note</div>
+        <div style="font-size:8px;font-weight:800;color:rgba(52,211,153,0.6);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:5px;">From</div>
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(52,211,153,0.2);border-radius:10px;padding:8px 12px;margin-bottom:8px;">
+            <input type="date" id="hol-plan-from" value="${from}" style="width:100%;background:transparent;border:none;font-size:13px;font-weight:600;color:#fff;outline:none;color-scheme:dark;font-family:-apple-system,sans-serif;-webkit-appearance:none;">
         </div>
-        <div style="font-size:8px;font-weight:800;color:rgba(52,211,153,0.6);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;">To</div>
-        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(52,211,153,0.2);border-radius:10px;padding:10px 14px;margin-bottom:10px;">
-            <input type="date" id="hol-plan-to" value="${from}" style="width:100%;background:transparent;border:none;font-size:15px;font-weight:700;color:#fff;outline:none;color-scheme:dark;font-family:-apple-system,sans-serif;">
+        <div style="font-size:8px;font-weight:800;color:rgba(52,211,153,0.6);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:5px;">To</div>
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(52,211,153,0.2);border-radius:10px;padding:8px 12px;margin-bottom:8px;">
+            <input type="date" id="hol-plan-to" value="${from}" style="width:100%;background:transparent;border:none;font-size:13px;font-weight:600;color:#fff;outline:none;color-scheme:dark;font-family:-apple-system,sans-serif;-webkit-appearance:none;">
         </div>
-        <div style="font-size:8px;font-weight:800;color:rgba(52,211,153,0.6);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;">Note <span style="color:rgba(255,255,255,0.2);font-weight:600;text-transform:none;letter-spacing:0;">(optional)</span></div>
-        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(52,211,153,0.2);border-radius:10px;padding:10px 14px;margin-bottom:4px;">
-            <input type="text" id="hol-plan-note" placeholder="e.g. Vacation, Doctor" style="width:100%;background:transparent;border:none;font-size:14px;color:#fff;outline:none;font-family:-apple-system,sans-serif;">
+        <div style="font-size:8px;font-weight:800;color:rgba(52,211,153,0.6);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:5px;">Note <span style="color:rgba(255,255,255,0.2);font-weight:600;text-transform:none;letter-spacing:0;">(optional)</span></div>
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(52,211,153,0.2);border-radius:10px;padding:8px 12px;margin-bottom:4px;">
+            <input type="text" id="hol-plan-note" placeholder="e.g. Vacation, Doctor" style="width:100%;background:transparent;border:none;font-size:13px;color:#fff;outline:none;font-family:-apple-system,sans-serif;">
         </div>
     </div>
-    <div style="padding:12px 18px;display:flex;flex-direction:column;gap:8px;">
-        <button onclick="holSavePlan()" style="width:100%;background:#34d399;border:none;border-radius:12px;padding:13px;font-size:13px;font-weight:900;color:#000;cursor:pointer;font-family:-apple-system,sans-serif;">Save →</button>
-        <button onclick="holClosePopup()" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.35);cursor:pointer;font-family:-apple-system,sans-serif;">Cancel</button>
+    <div style="padding:10px 16px 16px;display:flex;flex-direction:column;gap:8px;">
+        <button onclick="holSavePlan()" style="width:100%;background:#34d399;border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:900;color:#000;cursor:pointer;font-family:-apple-system,sans-serif;">Save →</button>
+        <button onclick="holClosePopup()" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:9px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.35);cursor:pointer;font-family:-apple-system,sans-serif;">Cancel</button>
     </div>`;
 
     document.getElementById('hol-popup-body').innerHTML = html;

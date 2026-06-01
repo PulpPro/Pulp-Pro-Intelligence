@@ -49,7 +49,6 @@ function saveReminderFromAI(data) {
 function openReminders() {
     document.getElementById('fruit-hub').classList.add('hidden');
     document.getElementById('appInterface').classList.add('hidden');
-    document.getElementById('colour-scanner-view').classList.add('hidden');
     const pulpaiView = document.getElementById('pulpai-view');
     if (pulpaiView) pulpaiView.classList.add('hidden');
     document.getElementById('reminders-view').classList.remove('hidden');

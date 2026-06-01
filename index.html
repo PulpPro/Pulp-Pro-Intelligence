@@ -197,10 +197,10 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 .home-h1 em{color:#a6e22e;font-style:normal}
 .home-sub{font-size:0.82rem;color:rgba(255,255,255,0.32);line-height:1.7;margin-bottom:32px;font-weight:400;max-width:480px}
 .tool-cards{display:flex;flex-direction:column;gap:12px;max-width:600px}
-.tc{border-radius:22px;overflow:hidden;cursor:pointer;transition:transform 0.2s,border-color 0.2s;position:relative;}
+.tc{border-radius:22px;overflow:hidden;cursor:pointer;transition:transform 0.2s,border-color 0.2s;position:relative;box-sizing:border-box;}
 .tc:hover{transform:translateY(-3px)}
 .tc:active{transform:scale(0.98)}
-.tc-age{background:#030d12;border:1px solid rgba(34,211,238,0.22);padding:24px 26px;position:relative;overflow:hidden;}
+.tc-age{background:#030d12;border:1px solid rgba(34,211,238,0.22);}
 .tc-tag{font-size:0.48rem;font-weight:900;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
 .tc-age .tc-tag{color:rgba(34,211,238,0.55)}
 .tc-title{font-size:1.3rem;font-weight:900;color:#fff;letter-spacing:-0.3px;margin-bottom:3px}
@@ -289,7 +289,7 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
     </div>
 
     <!-- 3. REMINDERS -->
-    <div class="tc" onclick="openReminders()" style="background:#06060e;border:1px solid rgba(136,153,255,0.2);border-radius:22px;padding:24px 26px;position:relative;overflow:hidden;cursor:pointer;">
+    <div class="tc" onclick="openReminders()" style="background:#06060e;border:1px solid rgba(136,153,255,0.2);padding:24px 26px;">
         <canvas id="rem-tile-canvas" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;z-index:0;opacity:0.7;"></canvas>
         <div style="position:relative;z-index:1;">
             <div class="tc-tag" style="color:rgba(136,153,255,0.55);">Notifications · Scheduler</div>
@@ -307,7 +307,7 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
     </div>
 
     <!-- 4. HOLIDAY PLANNER -->
-    <div class="tc" onclick="openHolidayPlanner()" style="background:#030d08;border:1px solid rgba(52,211,153,0.22);border-radius:22px;padding:24px 26px;position:relative;overflow:hidden;cursor:pointer;">
+    <div class="tc" onclick="openHolidayPlanner()" style="background:#030d08;border:1px solid rgba(52,211,153,0.22);padding:24px 26px;">
         <canvas id="hol-tile-canvas" style="position:absolute;inset:0;width:100%;height:100%;border-radius:22px;pointer-events:none;z-index:1;"></canvas>
         <div style="position:relative;z-index:2;">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">
@@ -330,7 +330,7 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
     </div>
 
     <!-- 5. SHIFT SWAP -->
-    <div class="tc" onclick="openShiftSwap()" style="background:#060810;border:1px solid rgba(136,153,255,0.18);border-radius:22px;padding:24px 26px;position:relative;overflow:hidden;cursor:pointer;">
+    <div class="tc" onclick="openShiftSwap()" style="background:#060810;border:1px solid rgba(136,153,255,0.18);padding:24px 26px;">
         <canvas id="swap-tile-canvas" style="position:absolute;inset:0;width:100%;height:100%;border-radius:22px;pointer-events:none;z-index:1;"></canvas>
         <div style="position:relative;z-index:2;">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">
@@ -352,7 +352,7 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
     </div>
 
     <!-- 6. FLOOR IQ -->
-    <div class="tc" onclick="openFloorIQ()" style="background:#09080e;border:1px solid rgba(255,165,0,0.25);border-radius:22px;padding:24px 26px;position:relative;overflow:hidden;cursor:pointer;">
+    <div class="tc" onclick="openFloorIQ()" style="background:#09080e;border:1px solid rgba(255,165,0,0.25);padding:24px 26px;">
         <canvas id="iq-tile-canvas" style="position:absolute;inset:0;width:100%;height:100%;border-radius:22px;pointer-events:none;z-index:0;"></canvas>
         <div style="position:absolute;width:180px;height:180px;border-radius:50%;background:rgba(255,140,0,0.07);top:-60px;right:-40px;pointer-events:none;animation:iqPulse 3s infinite;"></div>
         <div style="position:absolute;width:120px;height:120px;border-radius:50%;background:rgba(255,80,0,0.04);bottom:-30px;left:-20px;pointer-events:none;animation:iqPulse 4s infinite 1s;"></div>

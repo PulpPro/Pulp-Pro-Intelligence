@@ -1,44 +1,34 @@
-// ── HOLIDAY PLANNER ───────────────────────────────────────────────────────
+// ── HOLIDAY PLANNER — exact v8 layout ─────────────────────────────────────
 const HOL_WORKER = 'https://pulppro-access.pulpprobrain.workers.dev';
+const HOL_MN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const HOL_DN = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const HOL_COLS = ['#a6e22e','#ffa500','#8899ff','#ff6eb4','#ffd700','#4ecdc4','#ff6b6b','#c084fc','#22d3ee','#f472b6','#60a5fa','#fb923c','#86efac','#facc15','#e879f9','#4ade80','#93c5fd','#fca5a5','#6ee7b7','#67e8f9'];
+const HOL_NL = {
+  '2026-01-01':'Nieuwjaarsdag','2026-04-03':'Goede Vrijdag','2026-04-05':'1e Paasdag',
+  '2026-04-06':'2e Paasdag','2026-04-27':'Koningsdag','2026-05-05':'Bevrijdingsdag',
+  '2026-05-14':'Hemelvaartsdag','2026-05-24':'1e Pinksterdag','2026-05-25':'2e Pinksterdag',
+  '2026-12-25':'1e Kerstdag','2026-12-26':'2e Kerstdag'
+};
 
-const HOL_COLOURS = [
-  '#a6e22e','#34d399','#22d3ee','#8899ff','#f472b6',
-  '#fb923c','#facc15','#e879f9','#4ade80','#60a5fa',
-  '#f87171','#a78bfa','#2dd4bf','#fbbf24','#c084fc',
-  '#86efac','#93c5fd','#fca5a5','#6ee7b7','#67e8f9'
-];
+let holCY = 2026, holCM = new Date().getMonth();
+let holTeam = {};        // { userCode: { name, colour, role, entries: [{from,to,note,id}] } }
+let holMyCode = '';
+let holEditIdx = null;
 
-let holYear = new Date().getFullYear();
-let holMonth = new Date().getMonth();
-let holMyEntries = [];     // current user's holiday entries
-let holTeamData = [];      // all users' entries
-let holNLHolidays = {};    // { 'YYYY-MM-DD': 'Holiday Name' }
-let holUserCode = '';
-let holUserName = '';
-let holUserColour = '#a6e22e';
-
-// ── OPEN / INIT ───────────────────────────────────────────────────────────
+// ── OPEN ──────────────────────────────────────────────────────────────────
 async function openHolidayPlanner() {
     document.getElementById('fruit-hub').classList.add('hidden');
-    const view = document.getElementById('holiday-planner-view');
-    view.classList.remove('hidden');
+    document.getElementById('holiday-planner-view').classList.remove('hidden');
     const mt = document.getElementById('menu-trigger');
     if (mt) mt.style.display = 'none';
 
-    holUserCode = localStorage.getItem('pulpProAdmin') === 'true' ? 'ADMIN' :
-                  (localStorage.getItem('pulpProAccessCode') || '').toUpperCase();
-    holUserName = (localStorage.getItem('pulpProUserName') || holUserCode.split('-')[0] || 'You');
+    holMyCode = localStorage.getItem('pulpProAdmin') === 'true' ? 'ADMIN' :
+                (localStorage.getItem('pulpProAccessCode') || '').toUpperCase();
+    holCY = new Date().getFullYear();
+    holCM = new Date().getMonth();
 
-    // Assign colour based on code
-    const codeSum = holUserCode.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-    holUserColour = HOL_COLOURS[codeSum % HOL_COLOURS.length];
-
-    holYear = new Date().getFullYear();
-    holMonth = new Date().getMonth();
-
-    holRenderHeader();
-    await holLoadData();
-    holRenderCalendar();
+    await holLoadTeam();
+    holRender();
 }
 
 function closeHolidayPlanner() {
@@ -48,389 +38,340 @@ function closeHolidayPlanner() {
     if (mt) mt.style.display = '';
 }
 
-// ── LOAD DATA ─────────────────────────────────────────────────────────────
-async function holLoadData() {
+// ── LOAD ──────────────────────────────────────────────────────────────────
+async function holLoadTeam() {
     try {
-        // Load NL holidays
+        // Load NL holidays for current year
         const nlRes = await fetch(HOL_WORKER + '/nl-holidays', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ year: holYear })
+            body: JSON.stringify({ year: holCY })
         });
-        const nlData = await nlRes.json();
-        holNLHolidays = {};
-        (Array.isArray(nlData) ? nlData : []).forEach(h => { holNLHolidays[h.date] = h.localName; });
+        if (nlRes.ok) {
+            const nlData = await nlRes.json();
+            if (Array.isArray(nlData)) {
+                nlData.forEach(h => { HOL_NL[h.date] = h.localName; });
+            }
+        }
+    } catch(e) {}
 
-        // Load team data
-        const teamRes = await fetch(HOL_WORKER + '/holidays-all', {
+    try {
+        const res = await fetch(HOL_WORKER + '/holidays-all', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({})
         });
-        const teamData = await teamRes.json();
-        holTeamData = teamData.users || [];
-
-        // Find my entries
-        const me = holTeamData.find(u => u.userCode === holUserCode);
-        holMyEntries = me ? me.entries : [];
-
+        const data = await res.json();
+        holTeam = {};
+        (data.users || []).forEach((u, i) => {
+            const colour = u.userCode === 'ADMIN' ? '#a6e22e' : HOL_COLS[i % HOL_COLS.length];
+            holTeam[u.userCode] = { name: u.name || u.userCode, colour, role: u.role || '', entries: u.entries || [] };
+        });
+        // Ensure current user exists
+        if (!holTeam[holMyCode]) {
+            const myName = localStorage.getItem('pulpProUserName') || holMyCode;
+            holTeam[holMyCode] = { name: myName.split(' ')[0], colour: '#a6e22e', role: localStorage.getItem('pulpProUserRole') || '', entries: [] };
+        }
     } catch(e) {
         console.error('Holiday load error:', e);
-        holTeamData = [];
-        holMyEntries = [];
     }
 }
 
-// ── SAVE MY ENTRIES ───────────────────────────────────────────────────────
 async function holSave() {
     try {
+        const me = holTeam[holMyCode];
         await fetch(HOL_WORKER + '/holidays-save', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userCode: holUserCode, entries: holMyEntries })
+            body: JSON.stringify({ userCode: holMyCode, entries: me ? me.entries : [] })
         });
-        // Refresh team data
-        await holLoadData();
-        holRenderCalendar();
+        await holLoadTeam();
+        holRender();
     } catch(e) { console.error('Holiday save error:', e); }
 }
 
-// ── HEADER ────────────────────────────────────────────────────────────────
-function holRenderHeader() {
-    const el = document.getElementById('hol-month-label');
-    if (el) el.textContent = new Date(holYear, holMonth).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+// ── DATE HELPERS ──────────────────────────────────────────────────────────
+function holDR(f, t) {
+    const d = []; let c = new Date(f + 'T00:00:00'); const e = new Date(t + 'T00:00:00');
+    while (c <= e) { d.push(c.toISOString().split('T')[0]); c.setDate(c.getDate() + 1); }
+    return d;
+}
+function holFR(f, t) {
+    const o = { day: 'numeric', month: 'short' };
+    const fd = new Date(f + 'T00:00:00'), td = new Date(t + 'T00:00:00');
+    return f === t ? fd.toLocaleDateString('en-GB', o) : fd.toLocaleDateString('en-GB', o) + ' → ' + td.toLocaleDateString('en-GB', o);
+}
+function holADM() {
+    const m = {};
+    Object.entries(holTeam).forEach(([code, u]) => {
+        u.entries.forEach(e => {
+            holDR(e.from, e.to).forEach(d => {
+                if (!m[d]) m[d] = [];
+                m[d].push({ code, name: u.name, color: u.colour, from: e.from, to: e.to, note: e.note || '' });
+            });
+        });
+    });
+    return m;
 }
 
-function holPrevMonth() {
-    holMonth--;
-    if (holMonth < 0) { holMonth = 11; holYear--; }
-    holRenderHeader();
-    holRenderCalendar();
-}
-
-function holNextMonth() {
-    holMonth++;
-    if (holMonth > 11) { holMonth = 0; holYear++; }
-    holRenderHeader();
-    holRenderCalendar();
-}
-
-// ── CALENDAR RENDER ───────────────────────────────────────────────────────
-function holRenderCalendar() {
-    const grid = document.getElementById('hol-grid');
+// ── RENDER CALENDAR ───────────────────────────────────────────────────────
+function holRender() {
+    const grid = document.getElementById('hol-cal');
     if (!grid) return;
+    grid.innerHTML = '';
+    const mlbl = document.getElementById('hol-mlbl');
+    if (mlbl) mlbl.textContent = HOL_MN[holCM] + ' ' + holCY;
 
-    const firstDay = new Date(holYear, holMonth, 1);
-    const lastDay = new Date(holYear, holMonth + 1, 0);
-    const startDow = (firstDay.getDay() + 6) % 7; // Mon=0
-    const today = new Date(); today.setHours(0,0,0,0);
-
-    // Build lookup: date string → array of { name, colour, isMe, note }
-    const dayMap = {};
-    holTeamData.forEach(user => {
-        const isMeUser = user.userCode === holUserCode;
-        const codeSum = user.userCode.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-        const colour = isMeUser ? holUserColour : HOL_COLOURS[codeSum % HOL_COLOURS.length];
-        (user.entries || []).forEach(entry => {
-            const from = new Date(entry.from + 'T00:00:00');
-            const to = new Date(entry.to + 'T00:00:00');
-            for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
-                const key = d.toISOString().split('T')[0];
-                if (!dayMap[key]) dayMap[key] = [];
-                dayMap[key].push({ name: user.name, colour, isMe: isMeUser, note: entry.note || '', entryId: entry.id });
-            }
-        });
-    });
-
-    // My reminders from localStorage
-    const reminders = JSON.parse(localStorage.getItem('pulpProReminders') || '[]');
-    const remMap = {};
-    reminders.forEach(r => {
-        if (!r.done) {
-            const key = (r.datetime || '').split('T')[0];
-            if (key) { if (!remMap[key]) remMap[key] = []; remMap[key].push(r); }
-        }
-    });
-
-    let html = '';
-    // Day headers
-    ['Mo','Tu','We','Th','Fr','Sa','Su'].forEach(d => {
-        html += `<div style="text-align:center;font-size:8px;font-weight:800;color:rgba(255,255,255,0.25);padding:5px 0 4px;letter-spacing:1px;height:22px;box-sizing:border-box;">${d}</div>`;
-    });
-
-    // Empty cells before first day
-    for (let i = 0; i < startDow; i++) html += '<div></div>';
-
-    // Day cells
-    for (let day = 1; day <= lastDay.getDate(); day++) {
-        const dateStr = `${holYear}-${String(holMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-        const date = new Date(holYear, holMonth, day);
-        const dow = date.getDay(); // 0=Sun,6=Sat
-        const isWeekend = dow === 0 || dow === 6;
-        const isToday = date.getTime() === today.getTime();
-        const isNLHol = !!holNLHolidays[dateStr];
-        const people = dayMap[dateStr] || [];
-        const myRems = remMap[dateStr] || [];
-        const hasMe = people.some(p => p.isMe);
-
-        let bgColour = 'rgba(255,255,255,0.02)';
-        let borderColour = 'rgba(255,255,255,0.06)';
-        let dateColour = isWeekend ? 'rgba(255,100,100,0.7)' : 'rgba(255,255,255,0.7)';
-
-        if (isNLHol) { bgColour = 'rgba(255,80,80,0.08)'; borderColour = 'rgba(255,80,80,0.2)'; dateColour = 'rgba(255,120,120,0.9)'; }
-        if (hasMe) { bgColour = 'rgba(166,226,46,0.08)'; borderColour = `${holUserColour}44`; }
-        if (isToday) { borderColour = 'rgba(255,255,255,0.3)'; }
-        if (myRems.length) { borderColour = 'rgba(136,100,255,0.5)'; }
-
-        // Trays — reminder first, then people (max 4 visible + overflow)
-        let trays = '';
-        if (isNLHol) {
-            const short = holNLHolidays[dateStr].length > 8 ? holNLHolidays[dateStr].slice(0,7)+'…' : holNLHolidays[dateStr];
-            trays += `<div style="font-size:6px;color:rgba(255,120,120,0.8);font-weight:700;line-height:1.2;margin-top:1px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">🇳🇱 ${short}</div>`;
-        }
-        if (myRems.length) {
-            trays += `<div style="width:100%;height:3px;border-radius:2px;background:rgba(136,100,255,0.7);margin-top:1px;"></div>`;
-        }
-        const visible = people.slice(0, 4);
-        const overflow = people.length - 4;
-        visible.forEach(p => {
-            trays += `<div style="width:100%;height:3px;border-radius:2px;background:${p.colour};margin-top:1px;opacity:${p.isMe?1:0.7};"></div>`;
-        });
-        if (overflow > 0) {
-            trays += `<div style="font-size:5px;font-weight:800;color:#ffa500;margin-top:1px;">+${overflow}</div>`;
-        }
-
-        html += `<div onclick="holDayTap('${dateStr}')" style="
-            background:${bgColour};border:1px solid ${borderColour};border-radius:6px;
-            padding:3px;cursor:pointer;height:52px;max-height:52px;
-            transition:background 0.15s;box-sizing:border-box;overflow:hidden;">
-            <div style="font-size:9px;font-weight:${isToday?'900':'700'};color:${isToday?'#fff':dateColour};
-                ${isToday?'background:rgba(255,255,255,0.15);border-radius:3px;width:16px;height:16px;display:flex;align-items:center;justify-content:center;':''}">
-                ${day}
-            </div>
-            ${trays}
-        </div>`;
-    }
-
-    grid.innerHTML = html;
-}
-
-// ── DAY TAP POPUP ─────────────────────────────────────────────────────────
-function holDayTap(dateStr) {
-    const date = new Date(dateStr + 'T00:00:00');
-    const dateLabel = date.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
-    const dow = date.getDay();
-    const isWeekend = dow === 0 || dow === 6;
-    const nlHol = holNLHolidays[dateStr];
-    const reminders = JSON.parse(localStorage.getItem('pulpProReminders') || '[]');
-    const myRems = reminders.filter(r => !r.done && (r.datetime||'').startsWith(dateStr));
-
-    // People on this day
-    const people = [];
-    holTeamData.forEach(user => {
-        const isMeUser = user.userCode === holUserCode;
-        const codeSum = user.userCode.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-        const colour = isMeUser ? holUserColour : HOL_COLOURS[codeSum % HOL_COLOURS.length];
-        (user.entries || []).forEach(entry => {
-            const from = new Date(entry.from + 'T00:00:00');
-            const to = new Date(entry.to + 'T00:00:00');
-            if (date >= from && date <= to) {
-                people.push({ name: user.name, colour, isMe: isMeUser, role: user.role, note: entry.note, entryId: entry.id });
-            }
-        });
-    });
-
-    const hasMe = people.some(p => p.isMe);
-
-    let html = `
-    <div style="padding:18px 18px 0;">
-        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.35);margin-bottom:4px;">${dateLabel}</div>`;
-
-    if (nlHol) html += `<div style="background:rgba(255,80,80,0.1);border:1px solid rgba(255,80,80,0.25);border-radius:8px;padding:6px 10px;font-size:10px;font-weight:700;color:rgba(255,120,120,0.9);margin-bottom:8px;">🇳🇱 ${nlHol}</div>`;
-    if (isWeekend) html += `<div style="font-size:9px;color:rgba(255,100,100,0.5);margin-bottom:6px;">Weekend</div>`;
-
-    if (myRems.length) {
-        html += `<div style="margin-bottom:8px;">`;
-        myRems.forEach(r => {
-            const time = (r.datetime||'').split('T')[1]?.slice(0,5) || '';
-            html += `<div style="background:rgba(136,100,255,0.1);border:1px solid rgba(136,100,255,0.25);border-radius:8px;padding:6px 10px;font-size:10px;color:rgba(180,150,255,0.9);margin-bottom:4px;">🔔 ${time} — ${r.text}</div>`;
-        });
-        html += `</div>`;
-    }
-
-    // Team list
-    if (people.length) {
-        html += `<div style="font-size:8px;font-weight:800;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;">Off this day</div>`;
-        // Sort: me first, then by role
-        const sorted = [...people].sort((a,b) => (b.isMe?1:0)-(a.isMe?1:0));
-        sorted.forEach(p => {
-            html += `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
-                <div style="width:28px;height:28px;border-radius:8px;background:${p.colour}22;border:1px solid ${p.colour}44;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:${p.colour};flex-shrink:0;">${p.name.slice(0,2).toUpperCase()}</div>
-                <div style="flex:1;">
-                    <div style="font-size:11px;font-weight:700;color:#fff;">${p.name}${p.isMe?' (you)':''}</div>
-                    ${p.role?`<div style="font-size:8px;color:rgba(255,255,255,0.3);">${p.role}</div>`:''}
-                    ${p.note?`<div style="font-size:9px;color:rgba(255,255,255,0.25);font-style:italic;">"${p.note}"</div>`:''}
-                </div>
-            </div>`;
-        });
-    } else {
-        html += `<div style="font-size:11px;color:rgba(255,255,255,0.2);padding:8px 0;">No one off this day.</div>`;
-    }
-
-    html += `</div>
-    <div style="padding:12px 18px 18px;display:flex;flex-direction:column;gap:8px;">
-        <button onclick="holClosePopup();holOpenPlan('${dateStr}')" style="width:100%;background:#34d399;border:none;border-radius:12px;padding:13px;font-size:13px;font-weight:900;color:#000;cursor:pointer;font-family:-apple-system,sans-serif;">🏖️ Plan this day →</button>
-        <button onclick="holClosePopup()" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.35);cursor:pointer;font-family:-apple-system,sans-serif;">Close</button>
-    </div>`;
-
-    document.getElementById('hol-popup-body').innerHTML = html;
-    document.getElementById('hol-popup').classList.remove('hidden');
-}
-
-function holClosePopup() {
-    document.getElementById('hol-popup').classList.add('hidden');
-}
-
-// ── PLAN FREE DAY ─────────────────────────────────────────────────────────
-function holOpenPlan(prefillFrom) {
+    const fd = new Date(holCY, holCM, 1).getDay();
+    const off = fd === 0 ? 6 : fd - 1;
+    const dim = new Date(holCY, holCM + 1, 0).getDate();
     const today = new Date().toISOString().split('T')[0];
-    const from = prefillFrom || today;
+    const dm = holADM();
+    const rows = Math.ceil((off + dim) / 7);
+    grid.style.gridTemplateRows = `repeat(${rows},1fr)`;
 
-    const html = `
-    <div style="padding:16px 16px 0;">
-        <div style="font-size:16px;font-weight:900;color:#fff;letter-spacing:-0.5px;margin-bottom:2px;">Plan free day/s</div>
-        <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:12px;">Select your dates and add a note</div>
-        <div style="font-size:8px;font-weight:800;color:rgba(52,211,153,0.6);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:5px;">From</div>
-        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(52,211,153,0.2);border-radius:10px;padding:8px 12px;margin-bottom:8px;">
-            <input type="date" id="hol-plan-from" value="${from}" style="width:100%;background:transparent;border:none;font-size:13px;font-weight:600;color:#fff;outline:none;color-scheme:dark;font-family:-apple-system,sans-serif;-webkit-appearance:none;">
-        </div>
-        <div style="font-size:8px;font-weight:800;color:rgba(52,211,153,0.6);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:5px;">To</div>
-        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(52,211,153,0.2);border-radius:10px;padding:8px 12px;margin-bottom:8px;">
-            <input type="date" id="hol-plan-to" value="${from}" style="width:100%;background:transparent;border:none;font-size:13px;font-weight:600;color:#fff;outline:none;color-scheme:dark;font-family:-apple-system,sans-serif;-webkit-appearance:none;">
-        </div>
-        <div style="font-size:8px;font-weight:800;color:rgba(52,211,153,0.6);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:5px;">Note <span style="color:rgba(255,255,255,0.2);font-weight:600;text-transform:none;letter-spacing:0;">(optional)</span></div>
-        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(52,211,153,0.2);border-radius:10px;padding:8px 12px;margin-bottom:4px;">
-            <input type="text" id="hol-plan-note" placeholder="e.g. Vacation, Doctor" style="width:100%;background:transparent;border:none;font-size:13px;color:#fff;outline:none;font-family:-apple-system,sans-serif;">
-        </div>
-    </div>
-    <div style="padding:10px 16px 16px;display:flex;flex-direction:column;gap:8px;">
-        <button onclick="holSavePlan()" style="width:100%;background:#34d399;border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:900;color:#000;cursor:pointer;font-family:-apple-system,sans-serif;">Save →</button>
-        <button onclick="holClosePopup()" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:9px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.35);cursor:pointer;font-family:-apple-system,sans-serif;">Cancel</button>
-    </div>`;
+    for (let i = 0; i < off; i++) {
+        const c = document.createElement('div'); c.className = 'hol-cell empty'; grid.appendChild(c);
+    }
 
-    document.getElementById('hol-popup-body').innerHTML = html;
-    document.getElementById('hol-popup').classList.remove('hidden');
+    for (let d = 1; d <= dim; d++) {
+        const ds = `${holCY}-${String(holCM + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const people = dm[ds] || [];
+        const isMe = people.some(p => p.code === holMyCode);
+        const isToday = ds === today;
+        const dow = (off + d - 1) % 7;
+        const isWknd = dow >= 5;
+        const hasMore = people.length >= 5;
+        const pubHol = HOL_NL[ds] || null;
+
+        const cell = document.createElement('div');
+        cell.className = 'hol-cell' +
+            (isToday ? ' hol-today' : '') +
+            (isMe ? ' hol-myhol' : '') +
+            (people.length > 0 ? ' hol-hasp' : '') +
+            (isWknd ? ' hol-wknd' : '') +
+            (pubHol ? ' hol-pubhol' : '');
+
+        // NL holiday label row
+        const hr = document.createElement('div'); hr.className = 'hol-hlabel';
+        if (pubHol) { const hn = document.createElement('div'); hn.className = 'hol-hname'; hn.textContent = pubHol; hr.appendChild(hn); }
+        cell.appendChild(hr);
+
+        // date
+        const dn = document.createElement('div'); dn.className = 'hol-cdate';
+        dn.textContent = d; cell.appendChild(dn);
+
+        // 4 name trays
+        for (let t = 0; t < 4; t++) {
+            const tray = document.createElement('div');
+            if (people[t]) {
+                tray.className = 'hol-tray hol-filled';
+                tray.style.background = people[t].color;
+                const s = document.createElement('div'); s.className = 'hol-tname'; s.textContent = people[t].name.split(' ')[0]; tray.appendChild(s);
+            } else { tray.className = 'hol-tray hol-empty-slot'; }
+            cell.appendChild(tray);
+        }
+
+        // +more row
+        const mt = document.createElement('div'); mt.className = 'hol-tray hol-more' + (hasMore ? ' hol-more-active' : '');
+        const ms = document.createElement('div'); ms.className = 'hol-mtext'; ms.textContent = hasMore ? `+${people.length - 4} more` : '';
+        mt.appendChild(ms); cell.appendChild(mt);
+
+        cell.onclick = () => holOpenDay(ds, people, d, pubHol);
+        grid.appendChild(cell);
+    }
+}
+
+// ── MONTH NAV ─────────────────────────────────────────────────────────────
+function holChM(dir) {
+    holCM += dir;
+    if (holCM > 11) { holCM = 0; holCY++; }
+    if (holCM < 0) { holCM = 11; holCY--; }
+    holRender();
+}
+
+// ── DAY POPUP ─────────────────────────────────────────────────────────────
+function holOpenDay(ds, people, day, pubHol) {
+    const d = new Date(ds + 'T00:00:00');
+    const dow = d.getDay() === 0 ? 6 : d.getDay() - 1;
+    document.getElementById('hol-dp-date').textContent = HOL_DN[dow] + ', ' + d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    document.getElementById('hol-dp-sub').textContent = people.length === 0 ? 'Nobody is off this day' : people.length + ' team member' + (people.length !== 1 ? 's' : '') + ' off';
+    const hw = document.getElementById('hol-dp-holwrap');
+    hw.innerHTML = pubHol ? `<div class="hol-pop-banner"><span style="font-size:18px;">🇳🇱</span><div><div style="font-size:13px;font-weight:800;color:#f87171;">${pubHol}</div><div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:2px;">Nederlandse feestdag</div></div></div>` : '';
+
+    // My reminders
+    const reminders = JSON.parse(localStorage.getItem('pulpProReminders') || '[]');
+    const myRems = reminders.filter(r => !r.done && (r.datetime || '').startsWith(ds));
+    const rw = document.getElementById('hol-dp-remwrap');
+    rw.innerHTML = myRems.length ? myRems.map(r => `<div class="hol-rem-banner">🔔 ${(r.datetime || '').split('T')[1]?.slice(0, 5) || ''} — ${r.text}</div>`).join('') : '';
+
+    document.getElementById('hol-dp-list').innerHTML = people.length === 0
+        ? '<div style="text-align:center;padding:20px 0;font-size:12px;color:rgba(255,255,255,0.2);">No team members off this day</div>'
+        : people.map(p => `
+            <div class="hol-pop-person">
+                <div class="hol-pop-avatar" style="background:${p.color};">${p.name.slice(0, 2).toUpperCase()}</div>
+                <div style="flex:1;"><div style="font-size:14px;font-weight:800;color:#fff;margin-bottom:2px;">${p.name}</div><div style="font-size:10px;color:rgba(255,255,255,0.35);">🏖️ ${holFR(p.from, p.to)}${p.note ? ' · ' + p.note : ''}</div></div>
+                ${p.code === holMyCode ? '<div class="hol-pop-you">You</div>' : ''}
+            </div>`).join('');
+
+    const amOff = people.some(p => p.code === holMyCode);
+    document.getElementById('hol-dp-action').innerHTML = amOff
+        ? `<button class="hol-btn-ghost" style="color:rgba(255,100,100,0.7);border-color:rgba(255,77,77,0.2);" onclick="holQuickRemove('${ds}')">✕ Remove my holiday on this day</button>`
+        : `<button class="hol-btn-primary" onclick="holCloseOv('hol-ov-day');holOpenPlan('${ds}')">🏖️ Mark as my holiday</button>`;
+
+    holOpenOv('hol-ov-day');
+}
+
+function holQuickRemove(ds) {
+    const me = holTeam[holMyCode]; if (!me) return;
+    const ne = [];
+    me.entries.forEach(e => {
+        const dates = holDR(e.from, e.to); const idx = dates.indexOf(ds);
+        if (idx === -1) { ne.push(e); return; }
+        const b = dates.slice(0, idx), a = dates.slice(idx + 1);
+        if (b.length) ne.push({ from: b[0], to: b[b.length - 1], note: e.note });
+        if (a.length) ne.push({ from: a[0], to: a[a.length - 1], note: e.note });
+    });
+    me.entries = ne;
+    holCloseOv('hol-ov-day');
+    holSave();
+    holNotify('cancel', ds, ds);
+}
+
+// ── PLAN POPUP ────────────────────────────────────────────────────────────
+function holOpenPlan(prefill) {
+    const today = prefill || new Date().toISOString().split('T')[0];
+    document.getElementById('hol-plan-from').value = today;
+    document.getElementById('hol-plan-to').value = today;
+    document.getElementById('hol-plan-note').value = '';
+    holOpenOv('hol-ov-plan');
 }
 
 async function holSavePlan() {
-    const from = document.getElementById('hol-plan-from').value;
-    const to = document.getElementById('hol-plan-to').value;
-    const note = document.getElementById('hol-plan-note').value.trim();
-    if (!from || !to) { alert('Please select dates'); return; }
-    if (to < from) { alert('End date must be after start date'); return; }
-
-    const entry = { id: 'hol_' + Date.now(), from, to, note };
-    holMyEntries.push(entry);
-    holClosePopup();
+    const f = document.getElementById('hol-plan-from').value;
+    const t = document.getElementById('hol-plan-to').value;
+    const n = document.getElementById('hol-plan-note').value.trim();
+    if (!f || !t) { alert('Please select both dates'); return; }
+    if (t < f) { alert('End date must be after start date'); return; }
+    const me = holTeam[holMyCode];
+    if (!me) return;
+    me.entries.push({ from: f, to: t, note: n, id: 'hol_' + Date.now() });
+    holMergeMine();
+    holCloseOv('hol-ov-plan');
     await holSave();
-    // Fire notification to team
-    await holNotify('add', from, to);
+    holNotify('add', f, t);
 }
 
-// ── CANCEL HOLIDAY — shows all planned ranges ────────────────────────────
+// ── CANCEL POPUP ──────────────────────────────────────────────────────────
 function holOpenCancel() {
-    if (!holMyEntries.length) {
-        // No entries at all
-        const html = `<div style="padding:24px 18px;text-align:center;">
-            <div style="font-size:32px;margin-bottom:10px;">🏖️</div>
-            <div style="font-size:15px;font-weight:800;color:#fff;margin-bottom:6px;">No planned days</div>
-            <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:18px;">You haven't planned any free days yet.</div>
-            <button onclick="holClosePopup()" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.35);cursor:pointer;font-family:-apple-system,sans-serif;">Close</button>
-        </div>`;
-        document.getElementById('hol-popup-body').innerHTML = html;
-        document.getElementById('hol-popup').classList.remove('hidden');
-        return;
+    holRenderCancelList();
+    holOpenOv('hol-ov-cancel');
+}
+
+function holRenderCancelList() {
+    const list = document.getElementById('hol-cancel-list');
+    const me = holTeam[holMyCode];
+    const entries = me ? me.entries.filter(e => new Date(e.to + 'T00:00:00') >= new Date()) : [];
+    if (!entries.length) {
+        list.innerHTML = '<div class="hol-no-holidays">No upcoming holidays planned</div>'; return;
     }
-
-    let html = `<div style="padding:18px 18px 0;">
-        <div style="font-size:18px;font-weight:900;color:#fff;letter-spacing:-0.5px;margin-bottom:4px;">Cancel free day/s</div>
-        <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:14px;">Tap delete to remove a planned range</div>`;
-
-    // Sort entries by date
-    const sorted = [...holMyEntries].sort((a,b) => a.from.localeCompare(b.from));
-    sorted.forEach(e => {
-        const fromLabel = new Date(e.from + 'T00:00:00').toLocaleDateString('en-GB', { day:'numeric', month:'short' });
-        const toLabel = new Date(e.to + 'T00:00:00').toLocaleDateString('en-GB', { day:'numeric', month:'short' });
-        const days = Math.round((new Date(e.to + 'T00:00:00') - new Date(e.from + 'T00:00:00')) / 86400000) + 1;
-        const sameDay = e.from === e.to;
-        html += `<div style="background:rgba(255,77,77,0.05);border:1px solid rgba(255,77,77,0.15);border-radius:12px;padding:12px 14px;margin-bottom:8px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${e.note?'4px':'0'};">
-                <div>
-                    <div style="font-size:13px;font-weight:800;color:#fff;">${sameDay ? fromLabel : fromLabel + ' → ' + toLabel}</div>
-                    <div style="font-size:9px;color:rgba(255,255,255,0.3);margin-top:2px;">${days} day${days>1?'s':''}</div>
-                </div>
-                <button onclick="holDeleteEntry('${e.id}')" style="background:rgba(255,77,77,0.12);border:1px solid rgba(255,77,77,0.25);border-radius:8px;padding:6px 12px;font-size:10px;font-weight:700;color:rgba(255,100,100,0.9);cursor:pointer;font-family:-apple-system,sans-serif;flex-shrink:0;">Delete</button>
+    list.innerHTML = entries.map((e, i) => `
+        <div class="hol-htray">
+            <div class="hol-htray-bar" style="background:${holTeam[holMyCode]?.colour || '#a6e22e'};"></div>
+            <div class="hol-htray-info">
+                <div class="hol-htray-range">🏖️ ${holFR(e.from, e.to)}</div>
+                ${e.note ? `<div class="hol-htray-note">${e.note}</div>` : '<div class="hol-htray-note" style="color:rgba(255,255,255,0.15);">No note</div>'}
             </div>
-            ${e.note?`<div style="font-size:9px;color:rgba(255,255,255,0.25);font-style:italic;">"${e.note}"</div>`:''}
-        </div>`;
-    });
-
-    html += `</div><div style="padding:12px 18px 18px;">
-        <button onclick="holClosePopup()" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.35);cursor:pointer;font-family:-apple-system,sans-serif;">Close</button>
-    </div>`;
-
-    document.getElementById('hol-popup-body').innerHTML = html;
-    document.getElementById('hol-popup').classList.remove('hidden');
+            <div class="hol-htray-acts">
+                <div class="hol-tact hol-tact-edit" onclick="holOpenEdit(${i})" title="Edit">✏️</div>
+                <div class="hol-tact hol-tact-del" onclick="holDeleteEntry(${i})" title="Delete">🗑️</div>
+            </div>
+        </div>`).join('');
 }
 
-// Keep holCancelPrompt for legacy day-tap use
-function holCancelPrompt(dateStr) {
-    holOpenCancel();
-}
-
-async function holDeleteEntry(entryId) {
-    const entry = holMyEntries.find(e => e.id === entryId);
-    holMyEntries = holMyEntries.filter(e => e.id !== entryId);
-    holClosePopup();
+async function holDeleteEntry(idx) {
+    if (!confirm('Delete this holiday?')) return;
+    const me = holTeam[holMyCode]; if (!me) return;
+    const entry = me.entries[idx];
+    me.entries.splice(idx, 1);
+    holRenderCancelList();
     await holSave();
-    // Fire notification to team
-    if (entry) await holNotify('cancel', entry.from, entry.to);
+    if (entry) holNotify('cancel', entry.from, entry.to);
 }
 
-// ── SEND HOLIDAY NOTIFICATION ────────────────────────────────────────────
+// ── EDIT POPUP ────────────────────────────────────────────────────────────
+function holOpenEdit(idx) {
+    holEditIdx = idx;
+    const me = holTeam[holMyCode]; if (!me) return;
+    const e = me.entries[idx];
+    document.getElementById('hol-edit-from').value = e.from;
+    document.getElementById('hol-edit-to').value = e.to;
+    document.getElementById('hol-edit-note').value = e.note || '';
+    holOpenOv('hol-ov-edit');
+}
+
+async function holSaveEdit() {
+    const f = document.getElementById('hol-edit-from').value;
+    const t = document.getElementById('hol-edit-to').value;
+    const n = document.getElementById('hol-edit-note').value.trim();
+    if (!f || !t) { alert('Please select both dates'); return; }
+    if (t < f) { alert('End date must be after start date'); return; }
+    const me = holTeam[holMyCode]; if (!me) return;
+    me.entries[holEditIdx] = { from: f, to: t, note: n, id: me.entries[holEditIdx]?.id || 'hol_' + Date.now() };
+    holCloseOv('hol-ov-edit');
+    holRenderCancelList();
+    await holSave();
+}
+
+// ── MERGE ENTRIES ─────────────────────────────────────────────────────────
+function holMergeMine() {
+    const me = holTeam[holMyCode]; if (!me) return;
+    const all = new Set();
+    me.entries.forEach(e => holDR(e.from, e.to).forEach(d => all.add(d)));
+    const s = [...all].sort(); if (!s.length) { me.entries = []; return; }
+    const noteMap = {};
+    me.entries.forEach(e => holDR(e.from, e.to).forEach(d => noteMap[d] = e.note || ''));
+    const r = []; let st = s[0], p = s[0];
+    for (let i = 1; i < s.length; i++) {
+        const pv = new Date(p + 'T00:00:00'); pv.setDate(pv.getDate() + 1);
+        if (pv.toISOString().split('T')[0] === s[i]) p = s[i];
+        else { r.push({ from: st, to: p, note: noteMap[st] || '', id: 'hol_' + st }); st = s[i]; p = s[i]; }
+    }
+    r.push({ from: st, to: p, note: noteMap[st] || '', id: 'hol_' + st });
+    me.entries = r;
+}
+
+// ── NOTIFICATIONS ─────────────────────────────────────────────────────────
 async function holNotify(action, fromDate, toDate) {
     try {
         const role = localStorage.getItem('pulpProUserRole') || '';
+        const name = holTeam[holMyCode]?.name || holMyCode;
         await fetch(HOL_WORKER + '/holiday-notify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                senderName: holUserName,
-                senderRole: role,
-                senderCode: holUserCode,
-                action,
-                fromDate,
-                toDate
-            })
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ senderName: name, senderRole: role, senderCode: holMyCode, action, fromDate, toDate })
         });
-    } catch(e) { console.error('Holiday notify error:', e); }
+    } catch(e) {}
 }
 
-// ── UPDATE TILE ───────────────────────────────────────────────────────────
+// ── OVERLAY HELPERS ───────────────────────────────────────────────────────
+function holOpenOv(id) { document.getElementById(id).classList.add('show'); }
+function holCloseOv(id, e) {
+    if (!e || e.target === document.getElementById(id))
+        document.getElementById(id).classList.remove('show');
+}
+
+// ── TILE UPDATE ───────────────────────────────────────────────────────────
 function holUpdateTile() {
-    const today = new Date(); today.setHours(0,0,0,0);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
     const monday = new Date(today);
     const dow = today.getDay() === 0 ? 6 : today.getDay() - 1;
     monday.setDate(today.getDate() - dow);
-
+    const friday = new Date(monday); friday.setDate(monday.getDate() + 4);
     let offCount = 0;
-    holTeamData.forEach(user => {
-        if (user.userCode === holUserCode) return;
-        (user.entries || []).forEach(e => {
-            const from = new Date(e.from + 'T00:00:00');
-            const to = new Date(e.to + 'T00:00:00');
-            const friday = new Date(monday); friday.setDate(monday.getDate() + 4);
+    Object.entries(holTeam).forEach(([code, u]) => {
+        if (code === holMyCode) return;
+        u.entries.forEach(e => {
+            const from = new Date(e.from + 'T00:00:00'), to = new Date(e.to + 'T00:00:00');
             if (from <= friday && to >= monday) offCount++;
         });
     });
-
     const el = document.getElementById('hol-tile-count');
     if (el) el.textContent = offCount + ' off';
 }

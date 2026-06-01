@@ -15,6 +15,11 @@ let holTeam = {};        // { userCode: { name, colour, role, entries: [{from,to
 let holMyCode = '';
 let holEditIdx = null;
 
+// ── LOCAL DATE HELPER — never use toISOString() (UTC bug) ───────────────
+function holLocalDate(date) {
+    return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+}
+
 // ── OPEN ──────────────────────────────────────────────────────────────────
 async function openHolidayPlanner() {
     document.getElementById('fruit-hub').classList.add('hidden');
@@ -90,7 +95,7 @@ async function holSave() {
 // ── DATE HELPERS ──────────────────────────────────────────────────────────
 function holDR(f, t) {
     const d = []; let c = new Date(f + 'T00:00:00'); const e = new Date(t + 'T00:00:00');
-    while (c <= e) { d.push(c.toISOString().split('T')[0]); c.setDate(c.getDate() + 1); }
+    while (c <= e) { d.push(holLocalDate(c)); c.setDate(c.getDate() + 1); }
     return d;
 }
 function holFR(f, t) {
@@ -122,7 +127,7 @@ function holRender() {
     const fd = new Date(holCY, holCM, 1).getDay();
     const off = fd === 0 ? 6 : fd - 1;
     const dim = new Date(holCY, holCM + 1, 0).getDate();
-    const today = new Date().toISOString().split('T')[0];
+    const today = holLocalDate(new Date());
     const dm = holADM();
     const rows = Math.ceil((off + dim) / 7);
     grid.style.gridTemplateRows = `repeat(${rows},1fr)`;
@@ -358,7 +363,7 @@ function holMergeMine() {
     const r = []; let st = s[0], p = s[0];
     for (let i = 1; i < s.length; i++) {
         const pv = new Date(p + 'T00:00:00'); pv.setDate(pv.getDate() + 1);
-        if (pv.toISOString().split('T')[0] === s[i]) p = s[i];
+        if (holLocalDate(pv) === s[i]) p = s[i];
         else { r.push({ from: st, to: p, note: noteMap[st] || '', id: 'hol_' + st }); st = s[i]; p = s[i]; }
     }
     r.push({ from: st, to: p, note: noteMap[st] || '', id: 'hol_' + st });

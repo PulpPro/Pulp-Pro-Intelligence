@@ -24,9 +24,20 @@ function iqGetUserCode() {
 
 function iqGetDisplayName(code) {
     if (!code) return 'Unknown';
-    if (code === 'admin') return 'Akash';
-    const upper = code.toUpperCase();
+    if (upper === 'ADMIN' || code === 'admin') {
+        const adminName = localStorage.getItem('pulpProUserName');
+        if (adminName) return adminName.split(' ')[0];
+        return 'Admin';
+    }
+    const upper = (code || '').toUpperCase();
     if (upper.startsWith('TEST')) return null; // excluded
+    // Check if this is the current user — return KV-synced name
+    const myCode = localStorage.getItem('pulpProAccessCode') || '';
+    if (myCode && myCode.toUpperCase() === upper) {
+        const savedName = localStorage.getItem('pulpProUserName');
+        if (savedName && savedName.trim()) return savedName.split(' ')[0];
+    }
+    // Fallback: parse from code string
     const parts = upper.split('-');
     const raw = parts[0] || '';
     return raw.charAt(0) + raw.slice(1).toLowerCase();

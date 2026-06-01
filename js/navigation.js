@@ -520,7 +520,6 @@ function openShiftSwap() {
 function showHub() {
     document.getElementById('fruit-hub').classList.remove('hidden');
     document.getElementById('appInterface').classList.add('hidden');
-    document.getElementById('colour-scanner-view').classList.add('hidden');
     const pulpaiView = document.getElementById('pulpai-view');
     if (pulpaiView) pulpaiView.classList.add('hidden');
     const remView = document.getElementById('reminders-view');
@@ -534,18 +533,7 @@ function showHub() {
 function openAgeChecker() {
     document.getElementById('fruit-hub').classList.add('hidden');
     document.getElementById('appInterface').classList.remove('hidden');
-    document.getElementById('colour-scanner-view').classList.add('hidden');
     setTimeout(() => document.getElementById('codeIn').focus(), 100);
-}
-
-function openColourScanner() {
-    document.getElementById('fruit-hub').classList.add('hidden');
-    document.getElementById('appInterface').classList.add('hidden');
-    document.getElementById('colour-scanner-view').classList.remove('hidden');
-    if (typeof ColourScanner !== 'undefined') {
-        ColourScanner.init();
-        ColourScanner.setScanMode('single');
-    }
 }
 
 function toggleMenu() {

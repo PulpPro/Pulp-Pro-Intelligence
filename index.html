@@ -529,6 +529,7 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 @keyframes ageStatusPulse{0%{width:0%;margin-left:0}50%{width:60%;margin-left:20%}100%{width:0%;margin-left:100%}}
 @keyframes holFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 @keyframes swapPing{0%{transform:scale(1);opacity:0.7}100%{transform:scale(2.2);opacity:0}}
+@keyframes holPopIn{from{transform:scale(0.9);opacity:0}to{transform:scale(1);opacity:1}}
 
 /* ── MENU DRAWER SCROLL FIX ── */
 #menu-drawer{
@@ -614,6 +615,41 @@ if ('serviceWorker' in navigator) {
 
 
 <!-- FLOOR IQ VIEW -->
+<div id="holiday-planner-view" class="hidden" style="position:fixed;inset:0;background:#030d08;z-index:9800;display:flex;flex-direction:column;overflow:hidden;">
+    <!-- Header -->
+    <div style="padding:44px 20px 12px;background:linear-gradient(180deg,#04100a 0%,#030d08 100%);flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <div onclick="closeHolidayPlanner()" style="width:34px;height:34px;border-radius:11px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:16px;color:rgba(255,255,255,0.45);cursor:pointer;flex-shrink:0;">←</div>
+            <div style="flex:1;">
+                <div style="font-size:9px;font-weight:800;color:rgba(52,211,153,0.6);letter-spacing:2px;text-transform:uppercase;margin-bottom:2px;">Team Calendar</div>
+                <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:-0.5px;line-height:1;">Holiday <span style="color:#34d399;">Planner</span></div>
+            </div>
+            <button onclick="holOpenPlan()" style="background:#34d399;border:none;border-radius:12px;padding:9px 14px;font-size:11px;font-weight:900;color:#000;cursor:pointer;font-family:-apple-system,sans-serif;white-space:nowrap;">+ Plan</button>
+        </div>
+        <!-- Month nav -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;">
+            <button onclick="holPrevMonth()" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:10px;width:32px;height:32px;color:rgba(255,255,255,0.5);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">‹</button>
+            <div id="hol-month-label" style="font-size:14px;font-weight:800;color:#fff;letter-spacing:-0.3px;">June 2026</div>
+            <button onclick="holNextMonth()" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:10px;width:32px;height:32px;color:rgba(255,255,255,0.5);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">›</button>
+        </div>
+    </div>
+    <!-- Calendar grid -->
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 12px 20px;scrollbar-width:none;">
+        <div id="hol-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;"></div>
+        <!-- Legend -->
+        <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:8px;padding:0 4px;">
+            <div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:3px;background:rgba(166,226,46,0.2);border:1px solid rgba(166,226,46,0.4);"></div><div style="font-size:8px;color:rgba(255,255,255,0.3);">Your days</div></div>
+            <div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:3px;border-radius:2px;background:rgba(136,100,255,0.7);"></div><div style="font-size:8px;color:rgba(255,255,255,0.3);">Reminder</div></div>
+            <div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:3px;background:rgba(255,80,80,0.1);border:1px solid rgba(255,80,80,0.25);"></div><div style="font-size:8px;color:rgba(255,255,255,0.3);">NL Holiday</div></div>
+            <div style="display:flex;align-items:center;gap:4px;"><div style="font-size:8px;color:rgba(255,100,100,0.6);">Sa/Su</div><div style="font-size:8px;color:rgba(255,255,255,0.3);">Weekend</div></div>
+        </div>
+    </div>
+    <!-- Day popup overlay -->
+    <div id="hol-popup" class="hidden" style="position:absolute;inset:0;background:rgba(0,0,0,0.8);z-index:10;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);" onclick="if(event.target===this)holClosePopup()">
+        <div id="hol-popup-body" style="background:#0d1a10;border:1px solid rgba(52,211,153,0.2);border-radius:22px;width:100%;max-height:80vh;overflow-y:auto;scrollbar-width:none;animation:holPopIn 0.22s cubic-bezier(.34,1.56,.64,1);"></div>
+    </div>
+</div>
+
 <div id="floor-iq-view" class="hidden" style="position:fixed;inset:0;background:#060608;z-index:9800;display:flex;flex-direction:column;overflow:hidden;">
 <style>
 .iq-screen{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transform:translateX(30px);transition:opacity 0.22s,transform 0.22s;}
@@ -864,6 +900,7 @@ if ('serviceWorker' in navigator) {
 <script src="js/pulp-ai.js"></script>
 <script src="js/reminders.js"></script>
 <script src="js/tile-animations.js"></script>
+<script src="js/holiday-planner.js"></script>
 <script src="js/floor-iq.js"></script>
 <script>
 // ── NOTIFICATION TOGGLES ──────────────────────────────────────────────────

@@ -94,6 +94,7 @@ async function checkAccess() {
                 // Silent profile sync — save name + role from KV
                 if (data.name) localStorage.setItem('pulpProUserName', data.name);
                 if (data.role) localStorage.setItem('pulpProUserRole', data.role);
+                if (data.country) localStorage.setItem('pulpProUserCountry', data.country);
                 showApp();
                 maybeShowSheet();
                 setTimeout(() => { if (typeof showNotificationPrompt === 'function') showNotificationPrompt(); }, 1000);
@@ -102,6 +103,7 @@ async function checkAccess() {
                 localStorage.removeItem('pulpProAccessCode');
                 localStorage.removeItem('pulpProUserName');
                 localStorage.removeItem('pulpProUserRole');
+                localStorage.removeItem('pulpProUserCountry');
                 showGate();
             }
         } catch (e) {
@@ -172,6 +174,7 @@ async function submitCode() {
             localStorage.setItem('pulpProAccessCode', code);
             localStorage.setItem('pulpProUserName', data.name);
             if (data.role) localStorage.setItem('pulpProUserRole', data.role);
+            if (data.country) localStorage.setItem('pulpProUserCountry', data.country);
             showApp();
         } else {
             err.innerText = 'Invalid code. Please check and try again.';
@@ -231,10 +234,10 @@ async function submitDevLogin() {
             showApp();
             renderAdminMenu();
             if (typeof initHomeWelcome === 'function') initHomeWelcome();
-            // Silently rebuild push subscription index on admin login
-            fetch(ACCESS_WORKER + '/rebuild-sub-index', {
+            // Self-register admin in push_sub_index — no list() needed
+            fetch(ACCESS_WORKER + '/add-to-sub-index', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ adminPassword: ADMIN_PASSWORD })
+                body: JSON.stringify({ userCode: 'admin' })
             }).catch(() => {});
         } else {
             err.innerText = 'Invalid credentials.';
@@ -278,6 +281,7 @@ function toggleCodeGenerator() {
 async function generateCode() {
     const name = document.getElementById('codePersonName').value.trim();
     const role = document.getElementById('codePersonRole') ? document.getElementById('codePersonRole').value : '';
+    const country = document.getElementById('codePersonCountry') ? document.getElementById('codePersonCountry').value : '';
     if (!name) { alert('Please enter a full name first.'); return; }
     const btn = document.getElementById('generateCodeBtn');
     btn.innerText = 'Generating...';
@@ -286,11 +290,11 @@ async function generateCode() {
         const res = await fetch(ACCESS_WORKER + '/generate-code', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, role, adminPassword: ADMIN_PASSWORD })
+            body: JSON.stringify({ name, role, country, adminPassword: ADMIN_PASSWORD })
         });
         const data = await res.json();
         document.getElementById('generatedCode').innerText = data.code;
-        document.getElementById('generatedCodeFor').innerText = 'For: ' + name + (role ? ' · ' + role : '');
+        document.getElementById('generatedCodeFor').innerText = 'For: ' + name + (role ? ' · ' + role : '') + (country ? ' · ' + country : '');
         document.getElementById('generated-code-display').classList.remove('hidden');
     } catch (e) {
         alert('Error generating code.');
@@ -437,6 +441,7 @@ async function loadActiveUsers() {
                 'Planner': '#8899ff', 'Heftrucker': '#ffa500'
             };
             const roleColor = c.role ? (roleColors[c.role] || '#fff') : 'rgba(255,255,255,0.2)';
+            const countryColor = c.country === 'NL' ? '#ff8a80' : c.country === 'BE' ? '#ffd54f' : null;
             const safeCode = c.code.replace(/'/g, "\'");
             const safeName = (c.name || 'Unknown').replace(/'/g, "\'");
             return `
@@ -454,6 +459,7 @@ async function loadActiveUsers() {
                 <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
                     <div style="font-size:9px;color:rgba(255,255,255,0.25);font-family:monospace;">${c.code}</div>
                     ${c.role ? `<span style="font-size:7px;font-weight:800;color:${roleColor};background:${roleColor}22;border:1px solid ${roleColor}44;border-radius:100px;padding:1px 6px;">${c.role}</span>` : '<span style="font-size:7px;color:rgba(255,255,255,0.15);">No role set</span>'}
+                    ${countryColor ? `<span style="font-size:7px;font-weight:800;color:${countryColor};background:${countryColor}22;border:1px solid ${countryColor}44;border-radius:100px;padding:1px 6px;">${c.country}</span>` : ''}
                 </div>
                 <div id="edit-form-${safeCode}" class="user-edit-form">
                     <div class="user-edit-field">Full Name</div>
@@ -465,6 +471,12 @@ async function loadActiveUsers() {
                         <option value="Rijper" ${c.role === 'Rijper' ? 'selected' : ''}>Rijper</option>
                         <option value="Planner" ${c.role === 'Planner' ? 'selected' : ''}>Planner</option>
                         <option value="Heftrucker" ${c.role === 'Heftrucker' ? 'selected' : ''}>Heftrucker</option>
+                    </select>
+                    <div class="user-edit-field">Country</div>
+                    <select class="user-edit-select" id="edit-country-${safeCode}">
+                        <option value="">— No country —</option>
+                        <option value="NL" ${c.country === 'NL' ? 'selected' : ''}>NL</option>
+                        <option value="BE" ${c.country === 'BE' ? 'selected' : ''}>BE</option>
                     </select>
                     <button class="user-edit-save" onclick="saveUserEdit('${safeCode}')">Save changes</button>
                 </div>
@@ -483,15 +495,17 @@ function toggleEditUser(code) {
 async function saveUserEdit(code) {
     const nameEl = document.getElementById('edit-name-' + code);
     const roleEl = document.getElementById('edit-role-' + code);
+    const countryEl = document.getElementById('edit-country-' + code);
     if (!nameEl || !roleEl) return;
     const name = nameEl.value.trim();
     const role = roleEl.value;
+    const country = countryEl ? countryEl.value : '';
     if (!name) { alert('Name cannot be empty'); return; }
     try {
         const res = await fetch(ACCESS_WORKER + '/update-user', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code, name, role, adminPassword: ADMIN_PASSWORD })
+            body: JSON.stringify({ code, name, role, country, adminPassword: ADMIN_PASSWORD })
         });
         const data = await res.json();
         if (data.success) {

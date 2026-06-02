@@ -25,20 +25,20 @@ function iqGetUserCode() {
 function iqGetDisplayName(code) {
     if (!code) return 'Unknown';
     const upper = (code || '').toUpperCase();
-    // Admin
+    // Admin — always full name
     if (upper === 'ADMIN' || code === 'admin') {
         const adminName = localStorage.getItem('pulpProUserName');
-        if (adminName && adminName.trim()) return adminName.split(' ')[0];
-        return 'Akash'; // default admin name
+        if (adminName && adminName.trim()) return adminName;
+        return 'Akash Varma';
     }
     if (upper.startsWith('TEST')) return null; // excluded
-    // Check if this is the current user — return KV-synced name
+    // Current user — return full name
     const myCode = localStorage.getItem('pulpProAccessCode') || '';
     if (myCode && myCode.toUpperCase() === upper) {
         const savedName = localStorage.getItem('pulpProUserName');
-        if (savedName && savedName.trim()) return savedName.split(' ')[0];
+        if (savedName && savedName.trim()) return savedName;
     }
-    // Fallback: parse from code string
+    // Fallback: parse first name from code string
     const parts = upper.split('-');
     const raw = parts[0] || '';
     return raw.charAt(0) + raw.slice(1).toLowerCase();
@@ -553,7 +553,7 @@ async function iqSubmitScore(score, accuracy) {
         await fetch(IQ_WORKER + '/iq-submit', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userCode: code, displayName: name, score, accuracy, streak: iqStreak, categoryStats: iqCategoryStats })
+            body: JSON.stringify({ userCode: code, displayName: name, score, accuracy, streak: iqStreak, categoryStats: iqCategoryStats, country: localStorage.getItem('pulpProUserCountry') || '' })
         });
     } catch(e) {}
 }
@@ -611,7 +611,7 @@ async function iqLoadLeaderboard() {
                 return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
                     <div style="font-size:14px;">${medals[i]}</div>
                     <div style="width:${heights[i]};height:${heights[i]};border-radius:50%;background:${colors[i]};display:flex;align-items:center;justify-content:center;font-size:${idx===0?'14px':'11px'};font-weight:800;color:#000;">${initials}</div>
-                    <div style="font-size:8px;font-weight:${e.userCode===myCode?'800':'700'};color:${e.userCode===myCode?'#fff':'rgba(255,255,255,0.55)'};">${e.displayName}</div>
+                    <div style="font-size:8px;font-weight:${e.userCode===myCode?'800':'700'};color:${e.userCode===myCode?'#fff':'rgba(255,255,255,0.55)'};">${(e.displayName||'').split(' ')[0]}${e.country?' ('+e.country+')':''}</div>
                     <div style="font-size:9px;font-weight:900;color:#ffa500;">${(e.weeklyScore||0).toLocaleString()}</div>
                     <div style="width:46px;height:${barH[i]};background:${colors[i]}22;border-radius:4px 4px 0 0;margin-top:3px;"></div>
                 </div>`;
@@ -632,7 +632,7 @@ async function iqLoadLeaderboard() {
                     <div style="width:28px;height:28px;border-radius:50%;background:${isMe ? 'rgba(255,165,0,0.18)' : 'rgba(255,255,255,0.07)'};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:${isMe ? '#ffa500' : 'rgba(255,255,255,0.4)'};">${initials}</div>
                     <div style="flex:1;min-width:0;">
                         <div style="font-size:11px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                            ${e.displayName}${isMe ? ` <span style="font-size:7px;font-weight:700;padding:1px 5px;border-radius:100px;background:rgba(255,165,0,0.12);color:#ffa500;border:1px solid rgba(255,165,0,0.2);">${iqLang==='nl'?'Jij':'You'}</span>` : ''}
+                            ${(e.displayName||'').split(' ')[0]}${e.country?' ('+e.country+')':''}${isMe ? ` <span style="font-size:7px;font-weight:700;padding:1px 5px;border-radius:100px;background:rgba(255,165,0,0.12);color:#ffa500;border:1px solid rgba(255,165,0,0.2);">${iqLang==='nl'?'Jij':'You'}</span>` : ''}
                         </div>
                         <div style="font-size:9px;color:rgba(255,255,255,0.3);">${(e.weeklyScore||0).toLocaleString()} pts · ${e.accuracy||0}% · ${e.streak||0}🔥</div>
                     </div>
@@ -759,7 +759,7 @@ async function iqLoadHallOfFame() {
                 <div style="display:flex;align-items:center;gap:10px;">
                     <div style="width:40px;height:40px;border-radius:50%;background:${avatarBg};display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#000;">${initials}</div>
                     <div style="flex:1;">
-                        <div style="font-size:13px;font-weight:900;color:#fff;">${e.displayName} 👑</div>
+                        <div style="font-size:13px;font-weight:900;color:#fff;">${e.displayName}${e.country?' ('+e.country+')':''} 👑</div>
                         <div style="font-size:10px;color:rgba(255,165,0,0.6);">${(e.score||0).toLocaleString()} pts · ${e.accuracy||0}% acc</div>
                     </div>
                     <div style="font-size:20px;">🥇</div>

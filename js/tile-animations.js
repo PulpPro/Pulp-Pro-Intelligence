@@ -31,10 +31,9 @@ function initHomeWelcome() {
         }
     }
     if (!name) return;
-    const firstName = name.split(' ')[0];
     const h = new Date().getHours();
     const greeting = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-    el.innerHTML = `${greeting}, <em style="color:rgba(166,226,46,0.8);font-style:normal;">${firstName} 👋</em>`;
+    el.innerHTML = `${greeting}, <em style="color:rgba(166,226,46,0.8);font-style:normal;">${name} 👋</em>`;
 }
 
 // ── BANANA AGE — cyan radar sweep ─────────────────────────────────────────

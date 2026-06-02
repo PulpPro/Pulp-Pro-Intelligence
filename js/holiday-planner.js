@@ -259,14 +259,14 @@ function holOpenDay(ds, people, day, pubHol) {
     document.getElementById('hol-dp-list').innerHTML = sortedPeople.length === 0
         ? '<div style="text-align:center;padding:20px 0;font-size:12px;color:rgba(255,255,255,0.2);">No team members off this day</div>'
         : sortedPeople.map(p => {
-        const pCountry = holTeam[p.code]?.country || '';
-        const countryLabel = pCountry ? ` (${pCountry})` : '';
-        return `
-            <div class="hol-pop-person">
+            const pCountry = holTeam[p.code]?.country || '';
+            const countryLabel = pCountry ? ` (${pCountry})` : '';
+            return `<div class="hol-pop-person">
                 <div class="hol-pop-avatar" style="background:${p.color};">${p.name.slice(0, 2).toUpperCase()}</div>
-                <div style="flex:1;"><div style="font-size:14px;font-weight:800;color:#fff;margin-bottom:2px;">${p.name}</div><div style="font-size:10px;color:rgba(255,255,255,0.35);">🏖️ ${holFR(p.from, p.to)}${p.note ? ' · ' + p.note : ''}</div></div>
+                <div style="flex:1;"><div style="font-size:14px;font-weight:800;color:#fff;margin-bottom:2px;">${p.name}${countryLabel}</div><div style="font-size:10px;color:rgba(255,255,255,0.35);">🏖️ ${holFR(p.from, p.to)}${p.note ? ' · ' + p.note : ''}</div></div>
                 ${p.code === holMyCode ? '<div class="hol-pop-you">You</div>' : ''}
-            </div>`).join('');
+            </div>`;
+        }).join('');
 
     const amOff = people.some(p => p.code === holMyCode);
     document.getElementById('hol-dp-action').innerHTML = amOff

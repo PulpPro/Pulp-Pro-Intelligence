@@ -171,7 +171,20 @@ function holRender() {
         const hasRem = dayRems.length > 0;
         const dn = document.createElement('div'); dn.className = 'hol-cdate';
         dn.textContent = d;
-        if (hasRem) dn.style.color = 'rgba(180,150,255,1)';
+        if (hasRem) {
+            if (isToday) {
+                // Today + reminder — keep green, add small purple dot after number
+                const dot = document.createElement('span');
+                dot.style.cssText = 'display:inline-block;width:5px;height:5px;border-radius:50%;background:rgba(180,150,255,0.9);margin-left:2px;vertical-align:middle;';
+                dn.appendChild(dot);
+            } else {
+                // Not today — purple background
+                dn.style.background = 'rgba(136,100,255,0.85)';
+                dn.style.color = '#fff';
+                dn.style.borderRadius = '4px';
+                dn.style.padding = '1px 3px';
+            }
+        }
         cell.appendChild(dn);
 
         // 4 name trays

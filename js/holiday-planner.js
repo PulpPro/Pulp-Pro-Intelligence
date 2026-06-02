@@ -68,7 +68,7 @@ async function holLoadTeam() {
         holTeam = {};
         (data.users || []).forEach((u, i) => {
             const colour = u.userCode === 'ADMIN' ? '#a6e22e' : HOL_COLS[i % HOL_COLS.length];
-            holTeam[u.userCode] = { name: u.name || u.userCode, colour, role: u.role || '', entries: u.entries || [] };
+            holTeam[u.userCode] = { name: u.name || u.userCode, colour, role: u.role || '', country: u.country || '', entries: u.entries || [] };
         });
         // Ensure current user exists
         if (!holTeam[holMyCode]) {
@@ -105,12 +105,25 @@ function holFR(f, t) {
 }
 function holADM() {
     const m = {};
+    const myCountry = localStorage.getItem('pulpProUserCountry') || '';
+    const myRole = localStorage.getItem('pulpProUserRole') || '';
     Object.entries(holTeam).forEach(([code, u]) => {
         u.entries.forEach(e => {
             holDR(e.from, e.to).forEach(d => {
                 if (!m[d]) m[d] = [];
-                m[d].push({ code, name: u.name, color: u.colour || u.color || '#a6e22e', from: e.from, to: e.to, note: e.note || '' });
+                m[d].push({ code, name: u.name, color: u.colour || u.color || '#a6e22e', country: u.country || '', role: u.role || '', from: e.from, to: e.to, note: e.note || '' });
             });
+        });
+    });
+    // Sort each day: my country + same role → my country + other → other country
+    Object.keys(m).forEach(d => {
+        m[d].sort((a, b) => {
+            const aMyC = a.country === myCountry ? 0 : 1;
+            const bMyC = b.country === myCountry ? 0 : 1;
+            if (aMyC !== bMyC) return aMyC - bMyC;
+            const aMyR = a.role === myRole ? 0 : 1;
+            const bMyR = b.role === myRole ? 0 : 1;
+            return aMyR - bMyR;
         });
     });
     return m;
@@ -231,9 +244,24 @@ function holOpenDay(ds, people, day, pubHol) {
     const rw = document.getElementById('hol-dp-remwrap');
     rw.innerHTML = myRems.length ? myRems.map(r => `<div class="hol-rem-banner">🔔 ${(r.datetime || '').split('T')[1]?.slice(0, 5) || ''} — ${r.text}</div>`).join('') : '';
 
-    document.getElementById('hol-dp-list').innerHTML = people.length === 0
+    // Sort: my country + same role → my country + other roles → other country
+    const myCountry = localStorage.getItem('pulpProUserCountry') || '';
+    const myRole = localStorage.getItem('pulpProUserRole') || '';
+    const sortedPeople = [...people].sort((a, b) => {
+        const aMyC = (holTeam[a.code]?.country || '') === myCountry ? 0 : 1;
+        const bMyC = (holTeam[b.code]?.country || '') === myCountry ? 0 : 1;
+        if (aMyC !== bMyC) return aMyC - bMyC;
+        const aMyR = (holTeam[a.code]?.role || '') === myRole ? 0 : 1;
+        const bMyR = (holTeam[b.code]?.role || '') === myRole ? 0 : 1;
+        return aMyR - bMyR;
+    });
+
+    document.getElementById('hol-dp-list').innerHTML = sortedPeople.length === 0
         ? '<div style="text-align:center;padding:20px 0;font-size:12px;color:rgba(255,255,255,0.2);">No team members off this day</div>'
-        : people.map(p => `
+        : sortedPeople.map(p => {
+        const pCountry = holTeam[p.code]?.country || '';
+        const countryLabel = pCountry ? ` (${pCountry})` : '';
+        return `
             <div class="hol-pop-person">
                 <div class="hol-pop-avatar" style="background:${p.color};">${p.name.slice(0, 2).toUpperCase()}</div>
                 <div style="flex:1;"><div style="font-size:14px;font-weight:800;color:#fff;margin-bottom:2px;">${p.name}</div><div style="font-size:10px;color:rgba(255,255,255,0.35);">🏖️ ${holFR(p.from, p.to)}${p.note ? ' · ' + p.note : ''}</div></div>

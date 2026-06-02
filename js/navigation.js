@@ -227,9 +227,8 @@ async function submitDevLogin() {
         if (data.success) {
             isAdminLoggedIn = true;
             localStorage.setItem('pulpProAdmin', 'true');
-            if (!localStorage.getItem('pulpProUserName')) {
-                localStorage.setItem('pulpProUserName', 'Akash');
-            }
+            localStorage.setItem('pulpProUserName', 'Akash Varma');
+            localStorage.setItem('pulpProUserCountry', 'NL');
             hideDevLogin();
             showApp();
             renderAdminMenu();

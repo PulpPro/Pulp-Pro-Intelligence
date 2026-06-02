@@ -202,7 +202,7 @@ function holOpenDay(ds, people, day, pubHol) {
     hw.innerHTML = pubHol ? `<div class="hol-pop-banner"><span style="font-size:18px;">🇳🇱</span><div><div style="font-size:13px;font-weight:800;color:#f87171;">${pubHol}</div><div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:2px;">Nederlandse feestdag</div></div></div>` : '';
 
     // My reminders
-    const reminders = JSON.parse(localStorage.getItem('pulpProReminders') || '[]');
+    const reminders = JSON.parse(localStorage.getItem('pulpai_reminders') || '[]');
     const myRems = reminders.filter(r => !r.done && (r.datetime || '').startsWith(ds));
     const rw = document.getElementById('hol-dp-remwrap');
     rw.innerHTML = myRems.length ? myRems.map(r => `<div class="hol-rem-banner">🔔 ${(r.datetime || '').split('T')[1]?.slice(0, 5) || ''} — ${r.text}</div>`).join('') : '';

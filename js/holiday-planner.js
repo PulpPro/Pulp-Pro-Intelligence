@@ -129,6 +129,13 @@ function holRender() {
     const dim = new Date(holCY, holCM + 1, 0).getDate();
     const today = holLocalDate(new Date());
     const dm = holADM();
+    // Build reminder map for calendar cells
+    const allRems = JSON.parse(localStorage.getItem('pulpai_reminders') || '[]');
+    const remDayMap = {};
+    allRems.filter(r => !r.done).forEach(r => {
+        const day = (r.datetime || '').split('T')[0];
+        if (day) { if (!remDayMap[day]) remDayMap[day] = []; remDayMap[day].push(r); }
+    });
     const rows = Math.ceil((off + dim) / 7);
     grid.style.gridTemplateRows = `repeat(${rows},1fr)`;
 
@@ -159,9 +166,13 @@ function holRender() {
         if (pubHol) { const hn = document.createElement('div'); hn.className = 'hol-hname'; hn.textContent = pubHol; hr.appendChild(hn); }
         cell.appendChild(hr);
 
-        // date
+        // date — purple if reminder exists on this day
+        const dayRems = remDayMap[ds] || [];
+        const hasRem = dayRems.length > 0;
         const dn = document.createElement('div'); dn.className = 'hol-cdate';
-        dn.textContent = d; cell.appendChild(dn);
+        dn.textContent = d;
+        if (hasRem) dn.style.color = 'rgba(180,150,255,1)';
+        cell.appendChild(dn);
 
         // 4 name trays
         for (let t = 0; t < 4; t++) {

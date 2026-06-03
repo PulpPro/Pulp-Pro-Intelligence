@@ -169,7 +169,6 @@ function holRender() {
         const cell = document.createElement('div');
         cell.className = 'hol-cell' +
             (isToday ? ' hol-today' : '') +
-            (isMe ? ' hol-myhol' : '') +
             (people.length > 0 ? ' hol-hasp' : '') +
             (isWknd ? ' hol-wknd' : '') +
             (pubHol ? ' hol-pubhol' : '');
@@ -179,24 +178,30 @@ function holRender() {
         if (pubHol) { const hn = document.createElement('div'); hn.className = 'hol-hname'; hn.textContent = pubHol; hr.appendChild(hn); }
         cell.appendChild(hr);
 
-        // date — purple if reminder exists on this day
+        // date number styling priority:
+        // 1. today = handled by hol-today CSS class (green)
+        // 2. reminder = purple background
+        // 3. my holiday = green number
+        // 4. weekend = red (via hol-wknd CSS)
         const dayRems = remDayMap[ds] || [];
         const hasRem = dayRems.length > 0;
         const dn = document.createElement('div'); dn.className = 'hol-cdate';
         dn.textContent = d;
-        if (hasRem) {
-            if (isToday) {
-                // Today + reminder — keep green, add small purple dot after number
-                const dot = document.createElement('span');
-                dot.style.cssText = 'display:inline-block;width:5px;height:5px;border-radius:50%;background:rgba(180,150,255,0.9);margin-left:2px;vertical-align:middle;';
-                dn.appendChild(dot);
-            } else {
-                // Not today — purple background
-                dn.style.background = 'rgba(136,100,255,0.85)';
-                dn.style.color = '#fff';
-                dn.style.borderRadius = '4px';
-                dn.style.padding = '1px 3px';
-            }
+        if (isToday && hasRem) {
+            // Today + reminder — green from CSS class, add small purple dot
+            const dot = document.createElement('span');
+            dot.style.cssText = 'display:inline-block;width:4px;height:4px;border-radius:50%;background:rgba(180,150,255,0.9);margin-left:2px;vertical-align:middle;';
+            dn.appendChild(dot);
+        } else if (hasRem) {
+            // Reminder only — purple pill
+            dn.style.background = 'rgba(136,100,255,0.85)';
+            dn.style.color = '#fff';
+            dn.style.borderRadius = '3px';
+            dn.style.padding = '0 2px';
+        } else if (isMe && !isToday) {
+            // My holiday (not today) — green date number only, no block
+            dn.style.color = '#a6e22e';
+            dn.style.fontWeight = '900';
         }
         cell.appendChild(dn);
 

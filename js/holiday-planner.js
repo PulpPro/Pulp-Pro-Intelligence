@@ -146,7 +146,7 @@ function holRender() {
     const allRems = JSON.parse(localStorage.getItem('pulpai_reminders') || '[]');
     const remDayMap = {};
     allRems.filter(r => !r.done).forEach(r => {
-        const day = (r.datetime || '').split('T')[0];
+        const day = r.datetime ? holLocalDate(new Date(r.datetime)) : '';
         if (day) { if (!remDayMap[day]) remDayMap[day] = []; remDayMap[day].push(r); }
     });
     const rows = Math.ceil((off + dim) / 7);
@@ -245,9 +245,12 @@ function holOpenDay(ds, people, day, pubHol) {
 
     // My reminders
     const reminders = JSON.parse(localStorage.getItem('pulpai_reminders') || '[]');
-    const myRems = reminders.filter(r => !r.done && (r.datetime || '').startsWith(ds));
+    const myRems = reminders.filter(r => !r.done && r.datetime && holLocalDate(new Date(r.datetime)) === ds);
     const rw = document.getElementById('hol-dp-remwrap');
-    rw.innerHTML = myRems.length ? myRems.map(r => `<div class="hol-rem-banner">🔔 ${(r.datetime || '').split('T')[1]?.slice(0, 5) || ''} — ${r.text}</div>`).join('') : '';
+    rw.innerHTML = myRems.length ? myRems.map(r => {
+        const localTime = r.datetime ? new Date(r.datetime).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) : '';
+        return `<div class="hol-rem-banner">🔔 ${localTime} — ${r.text}</div>`;
+    }).join('') : '';
 
     // Sort: my country + same role → my country + other roles → other country
     const myCountry = localStorage.getItem('pulpProUserCountry') || '';

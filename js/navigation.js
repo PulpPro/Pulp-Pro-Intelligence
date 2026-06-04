@@ -229,6 +229,7 @@ async function submitDevLogin() {
             localStorage.setItem('pulpProAdmin', 'true');
             localStorage.setItem('pulpProUserName', 'Akash Varma');
             localStorage.setItem('pulpProUserCountry', 'NL');
+            localStorage.setItem('pulpProUserRole', 'Rijper');
             hideDevLogin();
             showApp();
             renderAdminMenu();

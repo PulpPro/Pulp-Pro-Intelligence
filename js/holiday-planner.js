@@ -105,8 +105,8 @@ function holFR(f, t) {
 }
 function holADM() {
     const m = {};
-    const myCountry = localStorage.getItem('pulpProUserCountry') || '';
-    const myRole = localStorage.getItem('pulpProUserRole') || '';
+    const myCountry = localStorage.getItem('pulpProUserCountry') || (holTeam[holMyCode]?.country || '');
+    const myRole = localStorage.getItem('pulpProUserRole') || (holTeam[holMyCode]?.role || '');
     Object.entries(holTeam).forEach(([code, u]) => {
         u.entries.forEach(e => {
             holDR(e.from, e.to).forEach(d => {
@@ -118,11 +118,15 @@ function holADM() {
     // Sort each day: my country + same role → my country + other → other country
     Object.keys(m).forEach(d => {
         m[d].sort((a, b) => {
-            const aMyC = a.country === myCountry ? 0 : 1;
-            const bMyC = b.country === myCountry ? 0 : 1;
+            const ac = holTeam[a.code]?.country || a.country || '';
+            const bc = holTeam[b.code]?.country || b.country || '';
+            const ar = holTeam[a.code]?.role || a.role || '';
+            const br = holTeam[b.code]?.role || b.role || '';
+            const aMyC = ac === myCountry ? 0 : 1;
+            const bMyC = bc === myCountry ? 0 : 1;
             if (aMyC !== bMyC) return aMyC - bMyC;
-            const aMyR = a.role === myRole ? 0 : 1;
-            const bMyR = b.role === myRole ? 0 : 1;
+            const aMyR = (myRole && ar === myRole) ? 0 : 1;
+            const bMyR = (myRole && br === myRole) ? 0 : 1;
             return aMyR - bMyR;
         });
     });
@@ -256,11 +260,15 @@ function holOpenDay(ds, people, day, pubHol) {
     const myCountry = localStorage.getItem('pulpProUserCountry') || '';
     const myRole = localStorage.getItem('pulpProUserRole') || '';
     const sortedPeople = [...people].sort((a, b) => {
-        const aMyC = (holTeam[a.code]?.country || '') === myCountry ? 0 : 1;
-        const bMyC = (holTeam[b.code]?.country || '') === myCountry ? 0 : 1;
+        const ac = holTeam[a.code]?.country || '';
+        const bc = holTeam[b.code]?.country || '';
+        const ar = holTeam[a.code]?.role || '';
+        const br = holTeam[b.code]?.role || '';
+        const aMyC = ac === myCountry ? 0 : 1;
+        const bMyC = bc === myCountry ? 0 : 1;
         if (aMyC !== bMyC) return aMyC - bMyC;
-        const aMyR = (holTeam[a.code]?.role || '') === myRole ? 0 : 1;
-        const bMyR = (holTeam[b.code]?.role || '') === myRole ? 0 : 1;
+        const aMyR = (myRole && ar === myRole) ? 0 : 1;
+        const bMyR = (myRole && br === myRole) ? 0 : 1;
         return aMyR - bMyR;
     });
 

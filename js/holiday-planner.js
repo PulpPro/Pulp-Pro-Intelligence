@@ -27,6 +27,28 @@ function holLocalDate(date) {
 }
 
 // ── OPEN ──────────────────────────────────────────────────────────────────
+// Update tile count on app init (background load)
+async function holInitTile() {
+    try {
+        const res = await fetch(HOL_WORKER + '/holidays-all', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        });
+        const data = await res.json();
+        holTeam = {};
+        (data.users || []).forEach((u, i) => {
+            const colour = u.userCode === 'ADMIN' ? '#a6e22e' : HOL_COLS[i % HOL_COLS.length];
+            holTeam[u.userCode] = { name: u.name || u.userCode, colour, role: u.role || '', country: u.country || '', entries: u.entries || [] };
+        });
+        holUpdateTile();
+    } catch(e) {}
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', holInitTile);
+} else {
+    holInitTile();
+}
+
 async function openHolidayPlanner() {
     document.getElementById('fruit-hub').classList.add('hidden');
     document.getElementById('holiday-planner-view').classList.remove('hidden');
@@ -81,6 +103,8 @@ async function holLoadTeam() {
             const myName = localStorage.getItem('pulpProUserName') || holMyCode;
             holTeam[holMyCode] = { name: myName.split(' ')[0], colour: '#a6e22e', role: localStorage.getItem('pulpProUserRole') || '', entries: [] };
         }
+        // Update tile count on home screen after team loads
+        holUpdateTile();
     } catch(e) {
         console.error('Holiday load error:', e);
     }

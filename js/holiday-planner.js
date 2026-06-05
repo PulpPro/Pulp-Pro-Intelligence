@@ -475,14 +475,14 @@ function holUpdateTile() {
     const dow = today.getDay() === 0 ? 6 : today.getDay() - 1;
     monday.setDate(today.getDate() - dow);
     const friday = new Date(monday); friday.setDate(monday.getDate() + 4);
-    let offCount = 0;
+    // Count unique people off this week (including yourself)
+    const offPeople = new Set();
     Object.entries(holTeam).forEach(([code, u]) => {
-        if (code === holMyCode) return;
         u.entries.forEach(e => {
             const from = new Date(e.from + 'T00:00:00'), to = new Date(e.to + 'T00:00:00');
-            if (from <= friday && to >= monday) offCount++;
+            if (from <= friday && to >= monday) offPeople.add(code);
         });
     });
     const el = document.getElementById('hol-tile-count');
-    if (el) el.textContent = offCount + ' off';
+    if (el) el.textContent = offPeople.size + ' off this week';
 }

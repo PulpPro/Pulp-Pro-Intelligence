@@ -2,7 +2,13 @@
 const HOL_WORKER = 'https://pulppro-access.pulpprobrain.workers.dev';
 const HOL_MN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const HOL_DN = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-const HOL_COLS = ['#a6e22e','#ffa500','#8899ff','#ff6eb4','#ffd700','#4ecdc4','#ff6b6b','#c084fc','#22d3ee','#f472b6','#60a5fa','#fb923c','#86efac','#facc15','#e879f9','#4ade80','#93c5fd','#fca5a5','#6ee7b7','#67e8f9'];
+const HOL_COLS = [
+  '#a6e22e','#ffa500','#8899ff','#ff6eb4','#ffd700','#4ecdc4','#ff6b6b','#c084fc','#22d3ee','#f472b6',
+  '#60a5fa','#fb923c','#86efac','#facc15','#e879f9','#4ade80','#93c5fd','#fca5a5','#6ee7b7','#67e8f9',
+  '#f59e0b','#34d399','#818cf8','#f43f5e','#a78bfa','#2dd4bf','#fbbf24','#e11d48','#38bdf8','#84cc16',
+  '#d946ef','#0ea5e9','#f97316','#10b981','#6366f1','#ec4899','#14b8a6','#eab308','#8b5cf6','#06b6d4',
+  '#ef4444','#22c55e','#3b82f6','#f59e0b','#a855f7','#0891b2','#65a30d','#db2777','#0284c7','#7c3aed'
+];
 const HOL_NL = {
   '2026-01-01':'Nieuwjaarsdag','2026-04-03':'Goede Vrijdag','2026-04-05':'1e Paasdag',
   '2026-04-06':'2e Paasdag','2026-04-27':'Koningsdag','2026-05-05':'Bevrijdingsdag',
@@ -231,10 +237,26 @@ function holRender() {
 }
 
 // ── MONTH NAV ─────────────────────────────────────────────────────────────
-function holChM(dir) {
+async function holChM(dir) {
+    const prevYear = holCY;
     holCM += dir;
     if (holCM > 11) { holCM = 0; holCY++; }
     if (holCM < 0) { holCM = 11; holCY--; }
+    // Re-fetch NL holidays if year changed
+    if (holCY !== prevYear) {
+        try {
+            const nlRes = await fetch(HOL_WORKER + '/nl-holidays', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ year: holCY })
+            });
+            if (nlRes.ok) {
+                const nlData = await nlRes.json();
+                if (Array.isArray(nlData)) {
+                    nlData.forEach(h => { HOL_NL[h.date] = h.localName; });
+                }
+            }
+        } catch(e) {}
+    }
     holRender();
 }
 

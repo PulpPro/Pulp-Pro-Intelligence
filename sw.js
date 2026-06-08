@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v2';
 const CACHE_NAME = 'pulp-pro-' + CACHE_VERSION;
 const ASSETS = [
     '/',
@@ -13,9 +13,7 @@ const ASSETS = [
     '/js/navigation.js',
     '/js/history.js',
     '/js/calculator.js',
-    '/js/pulp-ai.js',
     '/js/reminders.js',
-    '/js/floor-iq.js',
     '/js/tile-animations.js',
     '/js/holiday-planner.js',
     'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css'

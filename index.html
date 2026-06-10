@@ -245,22 +245,25 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
         </div>
     </div>
 
-    <!-- 2. PULP AI -->
-    <div class="tc" onclick="openPulpAI()" style="background:#040904;border:1px solid rgba(166,226,46,0.2);padding:24px 26px;">
-        <canvas id="pulpai-tile-canvas" style="position:absolute;inset:0;width:100%;height:100%;border-radius:22px;pointer-events:none;z-index:0;"></canvas>
+    <!-- 4. HOLIDAY PLANNER -->
+    <div class="tc" onclick="openHolidayPlanner()" style="background:#030d08;border:1px solid rgba(52,211,153,0.22);padding:24px 26px;">
+        <canvas id="hol-tile-canvas" style="position:absolute;inset:0;width:100%;height:100%;border-radius:22px;pointer-events:none;z-index:1;"></canvas>
         <div style="position:relative;z-index:2;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-                <div class="tc-tag" style="color:rgba(166,226,46,0.5);">Powered by Pulp Pro Intelligence</div>
-                <div style="display:flex;align-items:center;gap:4px;background:rgba(166,226,46,0.1);border:1px solid rgba(166,226,46,0.2);border-radius:100px;padding:3px 9px;flex-shrink:0;">
-                    <div style="width:4px;height:4px;border-radius:50%;background:#a6e22e;animation:livePulse 2s infinite;"></div>
-                    <div style="font-size:7px;font-weight:800;color:rgba(166,226,46,0.8);text-transform:uppercase;letter-spacing:1px;">Live AI</div>
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">
+                <div>
+                    <div class="tc-tag" style="color:rgba(52,211,153,0.6);">Team · Calendar · Holidays</div>
+                    <div class="tc-title">Holiday <span style="color:#34d399;">Planner</span></div>
+                    <div class="tc-sub" style="color:rgba(52,211,153,0.4);margin-bottom:14px;">Plan free days · See team availability</div>
                 </div>
+                <div style="font-size:22px;animation:holFloat 3s ease-in-out infinite;flex-shrink:0;">📅</div>
             </div>
-            <div class="tc-title">Pulp <span style="color:#a6e22e;">AI</span></div>
-            <div class="tc-sub" style="color:rgba(255,255,255,0.3);">Ask anything · Expert answers</div>
-            <div style="display:flex;flex-direction:column;gap:5px;margin-top:14px;">
-                <div style="display:flex;justify-content:flex-end;"><div style="background:rgba(166,226,46,0.1);border:1px solid rgba(166,226,46,0.18);border-radius:10px;border-bottom-right-radius:2px;padding:6px 10px;font-size:10px;color:rgba(255,255,255,0.7);max-width:80%;">What causes crown rot?</div></div>
-                <div style="display:flex;gap:6px;align-items:flex-start;"><div style="background:rgba(14,14,14,0.9);border:1px solid rgba(255,255,255,0.07);border-radius:10px;border-bottom-left-radius:2px;padding:6px 10px;font-size:10px;color:rgba(255,255,255,0.65);max-width:82%;"><strong style="color:#a6e22e;">High humidity</strong> above 85% triggers Fusarium fungi...</div></div>
+            <div style="display:flex;gap:5px;align-items:flex-end;">
+                <div style="display:flex;flex-direction:column;gap:3px;align-items:center;"><div style="width:26px;height:26px;border-radius:7px;background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.3);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#34d399;" id="hol-tile-d1">—</div><div style="font-size:6px;color:rgba(52,211,153,0.5);font-weight:700;" id="hol-tile-w1">Mon</div></div>
+                <div style="display:flex;flex-direction:column;gap:3px;align-items:center;"><div style="width:26px;height:26px;border-radius:7px;background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.3);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#34d399;" id="hol-tile-d2">—</div><div style="font-size:6px;color:rgba(52,211,153,0.5);font-weight:700;" id="hol-tile-w2">Tue</div></div>
+                <div style="display:flex;flex-direction:column;gap:3px;align-items:center;"><div style="width:26px;height:26px;border-radius:7px;background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.3);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#34d399;" id="hol-tile-d3">—</div><div style="font-size:6px;color:rgba(52,211,153,0.5);font-weight:700;" id="hol-tile-w3">Wed</div></div>
+                <div style="display:flex;flex-direction:column;gap:3px;align-items:center;"><div style="width:26px;height:26px;border-radius:7px;background:rgba(255,165,0,0.12);border:1px solid rgba(255,165,0,0.25);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#ffa500;" id="hol-tile-d4">—</div><div style="font-size:6px;color:rgba(255,165,0,0.5);font-weight:700;" id="hol-tile-w4">Thu</div></div>
+                <div style="display:flex;flex-direction:column;gap:3px;align-items:center;"><div style="width:26px;height:26px;border-radius:7px;background:rgba(255,77,77,0.08);border:1px solid rgba(255,77,77,0.18);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:rgba(255,100,100,0.6);" id="hol-tile-d5">—</div><div style="font-size:6px;color:rgba(255,100,100,0.35);font-weight:700;" id="hol-tile-w5">Fri</div></div>
+                <div style="margin-left:auto;display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:2px;"><div style="font-size:13px;font-weight:900;color:#34d399;line-height:1;" id="hol-tile-count">— off</div><div style="font-size:8px;color:rgba(255,255,255,0.25);margin-top:1px;">this week</div></div>
             </div>
         </div>
     </div>
@@ -283,25 +286,22 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
         </div>
     </div>
 
-    <!-- 4. HOLIDAY PLANNER -->
-    <div class="tc" onclick="openHolidayPlanner()" style="background:#030d08;border:1px solid rgba(52,211,153,0.22);padding:24px 26px;">
-        <canvas id="hol-tile-canvas" style="position:absolute;inset:0;width:100%;height:100%;border-radius:22px;pointer-events:none;z-index:1;"></canvas>
+    <!-- 2. PULP AI -->
+    <div class="tc" onclick="openPulpAI()" style="background:#040904;border:1px solid rgba(166,226,46,0.2);padding:24px 26px;">
+        <canvas id="pulpai-tile-canvas" style="position:absolute;inset:0;width:100%;height:100%;border-radius:22px;pointer-events:none;z-index:0;"></canvas>
         <div style="position:relative;z-index:2;">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">
-                <div>
-                    <div class="tc-tag" style="color:rgba(52,211,153,0.6);">Team · Calendar · Holidays</div>
-                    <div class="tc-title">Holiday <span style="color:#34d399;">Planner</span></div>
-                    <div class="tc-sub" style="color:rgba(52,211,153,0.4);margin-bottom:14px;">Plan free days · See team availability</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                <div class="tc-tag" style="color:rgba(166,226,46,0.5);">Powered by Pulp Pro Intelligence</div>
+                <div style="display:flex;align-items:center;gap:4px;background:rgba(166,226,46,0.1);border:1px solid rgba(166,226,46,0.2);border-radius:100px;padding:3px 9px;flex-shrink:0;">
+                    <div style="width:4px;height:4px;border-radius:50%;background:#a6e22e;animation:livePulse 2s infinite;"></div>
+                    <div style="font-size:7px;font-weight:800;color:rgba(166,226,46,0.8);text-transform:uppercase;letter-spacing:1px;">Live AI</div>
                 </div>
-                <div style="font-size:22px;animation:holFloat 3s ease-in-out infinite;flex-shrink:0;">📅</div>
             </div>
-            <div style="display:flex;gap:5px;align-items:flex-end;">
-                <div style="display:flex;flex-direction:column;gap:3px;align-items:center;"><div style="width:26px;height:26px;border-radius:7px;background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.3);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#34d399;" id="hol-tile-d1">—</div><div style="font-size:6px;color:rgba(52,211,153,0.5);font-weight:700;" id="hol-tile-w1">Mon</div></div>
-                <div style="display:flex;flex-direction:column;gap:3px;align-items:center;"><div style="width:26px;height:26px;border-radius:7px;background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.3);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#34d399;" id="hol-tile-d2">—</div><div style="font-size:6px;color:rgba(52,211,153,0.5);font-weight:700;" id="hol-tile-w2">Tue</div></div>
-                <div style="display:flex;flex-direction:column;gap:3px;align-items:center;"><div style="width:26px;height:26px;border-radius:7px;background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.3);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#34d399;" id="hol-tile-d3">—</div><div style="font-size:6px;color:rgba(52,211,153,0.5);font-weight:700;" id="hol-tile-w3">Wed</div></div>
-                <div style="display:flex;flex-direction:column;gap:3px;align-items:center;"><div style="width:26px;height:26px;border-radius:7px;background:rgba(255,165,0,0.12);border:1px solid rgba(255,165,0,0.25);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#ffa500;" id="hol-tile-d4">—</div><div style="font-size:6px;color:rgba(255,165,0,0.5);font-weight:700;" id="hol-tile-w4">Thu</div></div>
-                <div style="display:flex;flex-direction:column;gap:3px;align-items:center;"><div style="width:26px;height:26px;border-radius:7px;background:rgba(255,77,77,0.08);border:1px solid rgba(255,77,77,0.18);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:rgba(255,100,100,0.6);" id="hol-tile-d5">—</div><div style="font-size:6px;color:rgba(255,100,100,0.35);font-weight:700;" id="hol-tile-w5">Fri</div></div>
-                <div style="margin-left:auto;display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:2px;"><div style="font-size:13px;font-weight:900;color:#34d399;line-height:1;" id="hol-tile-count">— off</div><div style="font-size:8px;color:rgba(255,255,255,0.25);margin-top:1px;">this week</div></div>
+            <div class="tc-title">Pulp <span style="color:#a6e22e;">AI</span></div>
+            <div class="tc-sub" style="color:rgba(255,255,255,0.3);">Ask anything · Expert answers</div>
+            <div style="display:flex;flex-direction:column;gap:5px;margin-top:14px;">
+                <div style="display:flex;justify-content:flex-end;"><div style="background:rgba(166,226,46,0.1);border:1px solid rgba(166,226,46,0.18);border-radius:10px;border-bottom-right-radius:2px;padding:6px 10px;font-size:10px;color:rgba(255,255,255,0.7);max-width:80%;">What causes crown rot?</div></div>
+                <div style="display:flex;gap:6px;align-items:flex-start;"><div style="background:rgba(14,14,14,0.9);border:1px solid rgba(255,255,255,0.07);border-radius:10px;border-bottom-left-radius:2px;padding:6px 10px;font-size:10px;color:rgba(255,255,255,0.65);max-width:82%;"><strong style="color:#a6e22e;">High humidity</strong> above 85% triggers Fusarium fungi...</div></div>
             </div>
         </div>
     </div>

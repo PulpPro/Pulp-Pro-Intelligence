@@ -1111,11 +1111,11 @@ if ('serviceWorker' in navigator) {
 <!-- SCREEN 1: FRUIT PICKER -->
 <div class="or-screen or-active" id="or-s-fruit">
     <div class="or-hdr">
-        <div class="or-back" onclick="closeOriginReport()">←</div>
-        <div style="flex:1;margin-left:4px;">
+        <div style="flex:1;">
             <div class="or-hdr-ttl">Origin Report</div>
             <div class="or-hdr-sub">Live weather · AI quality</div>
         </div>
+        <div class="or-back" onclick="closeOriginReport()">←</div>
     </div>
     <div class="or-scroll">
         <div style="font-size:11px;color:rgba(255,255,255,0.45);line-height:1.6;margin-bottom:14px;padding:0 2px;">Pick a fruit to see live weather and AI-predicted quality across all producing countries.</div>
@@ -1140,11 +1140,11 @@ if ('serviceWorker' in navigator) {
 <!-- SCREEN 2: COUNTRY LIST -->
 <div class="or-screen" id="or-s-country">
     <div class="or-hdr">
-        <div class="or-back" onclick="orBackFromCountry()">←</div>
-        <div style="flex:1;margin-left:4px;">
+        <div style="flex:1;">
             <div class="or-hdr-ttl" id="or-country-title">Origins</div>
             <div class="or-hdr-sub" id="or-country-sub">Tap a country</div>
         </div>
+        <div class="or-back" onclick="orBackFromCountry()">←</div>
     </div>
     <div class="or-scroll" id="or-country-list"></div>
 </div>
@@ -1152,11 +1152,11 @@ if ('serviceWorker' in navigator) {
 <!-- SCREEN 3: COUNTRY DETAIL -->
 <div class="or-screen" id="or-s-detail">
     <div class="or-hdr">
-        <div class="or-back" onclick="orBackFromDetail()">←</div>
-        <div style="flex:1;margin-left:4px;">
+        <div style="flex:1;">
             <div class="or-hdr-ttl" id="or-detail-title">Country</div>
             <div class="or-hdr-sub" id="or-detail-sub">Loading</div>
         </div>
+        <div class="or-back" onclick="orBackFromDetail()">←</div>
     </div>
     <div class="or-scroll" id="or-detail-body"></div>
 </div>

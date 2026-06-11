@@ -60,6 +60,7 @@ const OR_FRUIT_META = {
 
 let orFruit = null;
 let orCountry = null;
+let orHistoryActive = false;
 
 // ── ENTRY / EXIT ───────────────────────────────────────────────────────────
 function openOriginReport() {
@@ -67,14 +68,44 @@ function openOriginReport() {
     if (!view) return;
     view.classList.remove('hidden');
     orShowScreen('or-s-fruit');
+    // Push history entry so device back gesture/button closes the view
+    window.history.pushState({ orScreen: 'fruit' }, '');
+    orHistoryActive = true;
+    window.addEventListener('popstate', orHandlePopstate);
 }
 
 function closeOriginReport() {
+    // Go back through history — popstate handles the actual close
+    if (orHistoryActive) {
+        window.history.back();
+    } else {
+        _orCloseInternal();
+    }
+}
+
+function _orCloseInternal() {
     const view = document.getElementById('origin-report-view');
     if (!view) return;
     view.classList.add('hidden');
     orFruit = null;
     orCountry = null;
+    orHistoryActive = false;
+    window.removeEventListener('popstate', orHandlePopstate);
+}
+
+function orHandlePopstate(e) {
+    if (!orHistoryActive) return;
+    const view = document.getElementById('origin-report-view');
+    if (!view || view.classList.contains('hidden')) return;
+    const state = e.state;
+    if (!state || !state.orScreen) {
+        // Popped past all our entries — view is closing
+        _orCloseInternal();
+        return;
+    }
+    if (state.orScreen === 'fruit')        orShowScreen('or-s-fruit');
+    else if (state.orScreen === 'country') orShowScreen('or-s-country');
+    else if (state.orScreen === 'detail')  orShowScreen('or-s-detail');
 }
 
 function orShowScreen(id) {
@@ -108,6 +139,7 @@ function orPickFruit(fruit) {
         `).join('');
     }
     orShowScreen('or-s-country');
+    if (orHistoryActive) window.history.pushState({ orScreen: 'country' }, '');
 }
 
 // ── SCREEN 3: COUNTRY DETAIL ───────────────────────────────────────────────
@@ -133,6 +165,7 @@ function orPickCountry(idx) {
         `;
     }
     orShowScreen('or-s-detail');
+    if (orHistoryActive) window.history.pushState({ orScreen: 'detail' }, '');
     orLoadReport();
 }
 
@@ -265,5 +298,6 @@ function orRenderReport(d) {
 }
 
 // ── NAVIGATION ─────────────────────────────────────────────────────────────
-function orBackFromCountry() { orShowScreen('or-s-fruit'); }
-function orBackFromDetail()  { orShowScreen('or-s-country'); }
+// In-app back buttons use history.back() so they're in sync with device back
+function orBackFromCountry() { window.history.back(); }
+function orBackFromDetail()  { window.history.back(); }

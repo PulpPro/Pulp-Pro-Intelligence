@@ -333,8 +333,7 @@ const ORIGIN_COUNTRIES = [
     { n: 'Philippines',   r: 'SE Asia',    lat: 12.9, lon: 121.8, t: '33°C' }
 ];
 
-// Placeholder — in-tile feature comes later
-function openOriginReport() {}
+// openOriginReport() lives in js/origin-report.js
 
 function initOriginTileCanvas() {
     const cv = document.getElementById('origin-tile-canvas');

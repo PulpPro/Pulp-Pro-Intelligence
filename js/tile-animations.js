@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initIQTileCanvas();
     initAgeTileCanvas();
     initHolTileCanvas();
+    initOriginTileCanvas();
     initHomeWelcome();
     // Pulp AI aurora — call after short delay to ensure canvas is sized
     setTimeout(() => {
@@ -314,4 +315,149 @@ function initIQTileCanvas() {
         requestAnimationFrame(draw);
     }
     draw();
+}
+
+// ── ORIGIN REPORT TILE — blue rotating dot globe ──────────────────────────
+// Land dots precomputed offline (lon,lat integer pairs) — no CDN, works offline.
+const ORIGIN_LAND_DOTS = "__ORIGIN_DOTS__";
+
+const ORIGIN_COUNTRIES = [
+    { n: 'Ecuador',       r: 'S. America', lat: -1.8, lon: -78.2, t: '26°C' },
+    { n: 'Costa Rica',    r: 'C. America', lat:  9.7, lon: -83.7, t: '29°C' },
+    { n: 'Colombia',      r: 'S. America', lat:  4.6, lon: -74.1, t: '24°C' },
+    { n: 'Panama',        r: 'C. America', lat:  8.5, lon: -80.8, t: '30°C' },
+    { n: 'Guatemala',     r: 'C. America', lat: 15.8, lon: -90.2, t: '27°C' },
+    { n: 'Dom. Republic', r: 'Caribbean',  lat: 18.7, lon: -70.2, t: '31°C' },
+    { n: 'Peru',          r: 'S. America', lat: -9.2, lon: -75.0, t: '23°C' },
+    { n: 'Ivory Coast',   r: 'W. Africa',  lat:  7.5, lon:  -5.5, t: '32°C' },
+    { n: 'Philippines',   r: 'SE Asia',    lat: 12.9, lon: 121.8, t: '33°C' }
+];
+
+// Placeholder — in-tile feature comes later
+function openOriginReport() {}
+
+function initOriginTileCanvas() {
+    const cv = document.getElementById('origin-tile-canvas');
+    if (!cv) return;
+    const tile = cv.parentElement;
+    cv.width = tile.offsetWidth || 350;
+    cv.height = tile.offsetHeight || 180;
+    const W = cv.width, H = cv.height;
+    const ctx = cv.getContext('2d');
+
+    const GCX = W * 0.76, GCY = H / 2;
+    const R = Math.min(H * 0.42, W * 0.2);
+
+    // Parse precomputed land dots
+    const raw = ORIGIN_LAND_DOTS.split(',');
+    const dots = [];
+    for (let i = 0; i < raw.length - 1; i += 2) {
+        dots.push([
+            parseFloat(raw[i]) * Math.PI / 180,        // lon (rad)
+            parseFloat(raw[i + 1]) * Math.PI / 180,    // lat (rad)
+            0.55 + Math.random() * 0.45                // base brightness
+        ]);
+    }
+    const ctrs = ORIGIN_COUNTRIES.map(c => ({
+        ...c,
+        lonR: c.lon * Math.PI / 180,
+        latR: c.lat * Math.PI / 180
+    }));
+
+    // Orthographic projection, view tilted 12° north
+    const TILT = 12 * Math.PI / 180;
+    const sinT = Math.sin(TILT), cosT = Math.cos(TILT);
+
+    let rot = 0, lastT = 0;
+    let active = -1, popA = 0;
+
+    function draw(ts) {
+        const dt = lastT ? Math.min(ts - lastT, 50) : 16;
+        lastT = ts;
+        rot += dt * 0.00021; // radians per ms
+        ctx.clearRect(0, 0, W, H);
+
+        // Sphere outline rings
+        ctx.strokeStyle = 'rgba(61,165,255,0.2)';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(GCX, GCY, R, 0, Math.PI * 2); ctx.stroke();
+        ctx.strokeStyle = 'rgba(61,165,255,0.06)';
+        ctx.beginPath(); ctx.arc(GCX, GCY, R + 7, 0, Math.PI * 2); ctx.stroke();
+
+        // Land dots
+        const flick = Math.random() < 0.4;
+        for (let i = 0; i < dots.length; i++) {
+            const d = dots[i];
+            const lam = d[0] + rot;
+            const cosPhi = Math.cos(d[1]), sinPhi = Math.sin(d[1]);
+            const cosLam = Math.cos(lam);
+            const cosC = sinT * sinPhi + cosT * cosPhi * cosLam;
+            if (cosC <= 0) continue; // back of sphere
+            const x = GCX + R * cosPhi * Math.sin(lam);
+            const y = GCY - R * (cosT * sinPhi - sinT * cosPhi * cosLam);
+            let a = d[2] * (0.25 + cosC * 0.75);
+            if (flick && Math.random() < 0.004) a = 1;
+            ctx.fillStyle = 'rgba(61,165,255,' + a.toFixed(2) + ')';
+            ctx.fillRect(x - 0.8, y - 0.8, 1.7, 1.7);
+        }
+
+        // Country markers — pick the most front-facing for the popup
+        let best = -1, bestC = -1;
+        for (let i = 0; i < ctrs.length; i++) {
+            const c = ctrs[i];
+            const lam = c.lonR + rot;
+            const cosPhi = Math.cos(c.latR), sinPhi = Math.sin(c.latR);
+            const cosLam = Math.cos(lam);
+            const cosC = sinT * sinPhi + cosT * cosPhi * cosLam;
+            if (cosC <= 0) continue;
+            const x = GCX + R * cosPhi * Math.sin(lam);
+            const y = GCY - R * (cosT * sinPhi - sinT * cosPhi * cosLam);
+            c._x = x; c._y = y;
+            const pulse = 0.5 + 0.5 * Math.sin(ts * 0.004 + i * 1.7);
+            ctx.fillStyle = 'rgba(61,165,255,' + (0.6 + pulse * 0.4).toFixed(2) + ')';
+            ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = 'rgba(61,165,255,' + (0.4 * pulse).toFixed(2) + ')';
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.arc(x, y, 4 + pulse * 4, 0, Math.PI * 2); ctx.stroke();
+            if (cosC > bestC) { bestC = cosC; best = i; }
+        }
+
+        // Popup card follows the front-facing country
+        if (best !== active) { active = best; popA = 0; }
+        if (active >= 0 && bestC > 0.54) {
+            popA = Math.min(popA + dt * 0.004, 1);
+        } else {
+            popA = Math.max(popA - dt * 0.006, 0);
+        }
+
+        if (active >= 0 && popA > 0.02 && ctrs[active]._x !== undefined) {
+            const c = ctrs[active];
+            const px = c._x, py = c._y;
+            const bw = 104, bh = 40;
+            let bx = px - bw - 14, by = py - bh - 10;
+            if (bx + bw > W - 6) bx = W - 6 - bw;
+            if (bx < 6) bx = 6;
+            if (by < 6) by = py + 12;
+            if (by + bh > H - 6) by = H - 6 - bh;
+            ctx.globalAlpha = popA;
+            ctx.strokeStyle = 'rgba(61,165,255,0.45)';
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(px, py);
+            ctx.lineTo(bx + (bx > px ? 0 : bw), by + bh / 2); ctx.stroke();
+            ctx.fillStyle = 'rgba(2,12,26,0.93)';
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(bx, by, bw, bh, 7); else ctx.rect(bx, by, bw, bh);
+            ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#3da5ff';
+            ctx.font = '700 11px -apple-system, sans-serif';
+            ctx.fillText(c.n, bx + 9, by + 16);
+            ctx.fillStyle = 'rgba(96,165,250,0.65)';
+            ctx.font = '400 10px -apple-system, sans-serif';
+            ctx.fillText(c.r + ' · ' + c.t, bx + 9, by + 30);
+            ctx.globalAlpha = 1;
+        }
+
+        requestAnimationFrame(draw);
+    }
+    requestAnimationFrame(draw);
 }

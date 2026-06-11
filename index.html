@@ -1053,6 +1053,116 @@ if ('serviceWorker' in navigator) {
 
 </div><!-- end floor-iq-view -->
 
+<!-- ORIGIN REPORT VIEW -->
+<div id="origin-report-view" class="hidden" style="position:fixed;inset:0;background:#020610;z-index:9800;display:flex;flex-direction:column;overflow:hidden;">
+<style>
+.or-screen{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transform:translateX(30px);transition:opacity 0.22s,transform 0.22s;}
+.or-screen.or-active{opacity:1;pointer-events:all;transform:translateX(0);}
+.or-hdr{background:#09080e;padding:12px 16px;border-bottom:1px solid rgba(61,165,255,0.12);display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.or-back{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.45);font-size:12px;cursor:pointer;flex-shrink:0;}
+.or-hdr-ttl{font-size:15px;font-weight:900;color:#fff;letter-spacing:-0.2px;}
+.or-hdr-sub{font-size:9px;color:rgba(96,165,250,0.55);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:1px;}
+.or-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:14px;}
+.or-scroll::-webkit-scrollbar{display:none;}
+.or-fcard{display:flex;align-items:center;gap:12px;padding:16px 14px;border-radius:16px;margin-bottom:11px;cursor:pointer;transition:transform 0.15s;}
+.or-fcard:active{transform:scale(0.98);}
+.or-fc-ban{background:rgba(166,226,46,0.06);border:1px solid rgba(166,226,46,0.22);}
+.or-fc-mng{background:rgba(255,165,0,0.05);border:1px solid rgba(255,165,0,0.2);}
+.or-fc-avo{background:rgba(61,165,255,0.06);border:1px solid rgba(61,165,255,0.22);}
+.or-fc-st{width:4px;align-self:stretch;border-radius:100px;flex-shrink:0;}
+.or-fc-t{font-size:15px;font-weight:900;color:#fff;margin-bottom:2px;letter-spacing:-0.2px;}
+.or-fc-s{font-size:10px;font-weight:700;}
+.or-fc-ban .or-fc-s{color:rgba(166,226,46,0.7);}
+.or-fc-mng .or-fc-s{color:rgba(255,165,0,0.7);}
+.or-fc-avo .or-fc-s{color:rgba(96,165,250,0.7);}
+.or-fc-chev{margin-left:auto;color:rgba(255,255,255,0.3);font-size:18px;}
+.or-crow{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:12px;margin-bottom:6px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);cursor:pointer;transition:transform 0.15s;}
+.or-crow:active{transform:scale(0.98);}
+.or-c-letter{width:28px;height:28px;border-radius:9px;border:1px solid;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;flex-shrink:0;font-family:-apple-system,sans-serif;}
+.or-c-name{flex:1;min-width:0;}
+.or-c-t{font-size:13px;font-weight:800;color:#fff;}
+.or-c-s{font-size:10px;color:rgba(255,255,255,0.4);font-weight:600;margin-top:1px;}
+.or-c-chev{color:rgba(255,255,255,0.25);font-size:15px;}
+.or-sec{margin-bottom:14px;}
+.or-sec-hdr{display:flex;align-items:center;gap:7px;margin-bottom:8px;padding:0 2px;}
+.or-sec-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.or-sec-ttl{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;}
+.or-sec-when{font-size:9px;color:rgba(255,255,255,0.35);margin-left:auto;font-weight:600;}
+.or-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:12px 13px;}
+.or-wx{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;}
+.or-wx-c{text-align:center;background:rgba(255,255,255,0.02);border-radius:9px;padding:8px 4px;}
+.or-wx-v{font-size:15px;font-weight:900;color:#fff;line-height:1;letter-spacing:-0.3px;}
+.or-wx-l{font-size:8px;color:rgba(255,255,255,0.4);font-weight:800;text-transform:uppercase;letter-spacing:0.5px;margin-top:4px;}
+.or-vt{font-size:11px;color:rgba(255,255,255,0.7);line-height:1.55;font-weight:500;}
+.or-verdict{padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);}
+.or-vl{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:5px;}
+.or-defs{display:flex;flex-direction:column;gap:6px;margin-top:9px;}
+.or-def{display:flex;align-items:center;gap:8px;font-size:11px;color:rgba(255,255,255,0.7);font-weight:600;background:rgba(255,255,255,0.02);border-radius:8px;padding:7px 9px;}
+.or-def-bar{width:3px;align-self:stretch;border-radius:100px;min-height:16px;flex-shrink:0;}
+.or-def-name{flex:1;}
+.or-def-sev{font-size:8px;font-weight:900;padding:3px 8px;border-radius:100px;text-transform:uppercase;letter-spacing:0.5px;}
+.or-sev-h{background:rgba(255,77,77,0.14);color:#ff5050;border:1px solid rgba(255,77,77,0.28);}
+.or-sev-m{background:rgba(255,165,0,0.14);color:#ffa500;border:1px solid rgba(255,165,0,0.28);}
+.or-sev-l{background:rgba(166,226,46,0.14);color:#a6e22e;border:1px solid rgba(166,226,46,0.28);}
+.or-spinner{width:36px;height:36px;border:3px solid rgba(61,165,255,0.12);border-top-color:#3da5ff;border-radius:50%;animation:orSpin 0.8s linear infinite;}
+@keyframes orSpin{to{transform:rotate(360deg);}}
+</style>
+
+<!-- SCREEN 1: FRUIT PICKER -->
+<div class="or-screen or-active" id="or-s-fruit">
+    <div class="or-hdr">
+        <div class="or-back" onclick="closeOriginReport()">←</div>
+        <div style="flex:1;margin-left:4px;">
+            <div class="or-hdr-ttl">Origin Report</div>
+            <div class="or-hdr-sub">Live weather · AI quality</div>
+        </div>
+    </div>
+    <div class="or-scroll">
+        <div style="font-size:11px;color:rgba(255,255,255,0.45);line-height:1.6;margin-bottom:14px;padding:0 2px;">Pick a fruit to see live weather and AI-predicted quality across all producing countries.</div>
+        <div class="or-fcard or-fc-ban" onclick="orPickFruit('banana')">
+            <div class="or-fc-st" style="background:#a6e22e;"></div>
+            <div><div class="or-fc-t">Banana</div><div class="or-fc-s">13 origin countries</div></div>
+            <div class="or-fc-chev">›</div>
+        </div>
+        <div class="or-fcard or-fc-mng" onclick="orPickFruit('mango')">
+            <div class="or-fc-st" style="background:#ffa500;"></div>
+            <div><div class="or-fc-t">Mango</div><div class="or-fc-s">13 origin countries</div></div>
+            <div class="or-fc-chev">›</div>
+        </div>
+        <div class="or-fcard or-fc-avo" onclick="orPickFruit('avocado')">
+            <div class="or-fc-st" style="background:#3da5ff;"></div>
+            <div><div class="or-fc-t">Avocado</div><div class="or-fc-s">12 origin countries</div></div>
+            <div class="or-fc-chev">›</div>
+        </div>
+    </div>
+</div>
+
+<!-- SCREEN 2: COUNTRY LIST -->
+<div class="or-screen" id="or-s-country">
+    <div class="or-hdr">
+        <div class="or-back" onclick="orBackFromCountry()">←</div>
+        <div style="flex:1;margin-left:4px;">
+            <div class="or-hdr-ttl" id="or-country-title">Origins</div>
+            <div class="or-hdr-sub" id="or-country-sub">Tap a country</div>
+        </div>
+    </div>
+    <div class="or-scroll" id="or-country-list"></div>
+</div>
+
+<!-- SCREEN 3: COUNTRY DETAIL -->
+<div class="or-screen" id="or-s-detail">
+    <div class="or-hdr">
+        <div class="or-back" onclick="orBackFromDetail()">←</div>
+        <div style="flex:1;margin-left:4px;">
+            <div class="or-hdr-ttl" id="or-detail-title">Country</div>
+            <div class="or-hdr-sub" id="or-detail-sub">Loading</div>
+        </div>
+    </div>
+    <div class="or-scroll" id="or-detail-body"></div>
+</div>
+
+</div><!-- end origin-report-view -->
+
 <!-- REMINDER NOTIFICATION SHEET -->
 <div id="reminder-sheet-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;background:rgba(0,0,0,0.92);z-index:99000;pointer-events:none;">
     <div id="reminder-sheet" style="width:100%;background:#0f0f1a;border-radius:28px 28px 0 0;transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.32,0.72,0,1);box-sizing:border-box;padding-bottom:env(safe-area-inset-bottom,24px);">
@@ -1088,6 +1198,7 @@ if ('serviceWorker' in navigator) {
 <script src="js/tile-animations.js"></script>
 <script src="js/holiday-planner.js"></script>
 <script src="js/floor-iq.js"></script>
+<script src="js/origin-report.js"></script>
 <script>
 // ── NOTIFICATION TOGGLES ──────────────────────────────────────────────────
 const NOTIF_TYPES = [];

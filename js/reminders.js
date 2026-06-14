@@ -45,6 +45,53 @@ function saveReminderFromAI(data) {
     renderReminderTilePreview();
 }
 
+// ── HISTORY API INTEGRATION ───────────────────────────────────────────────
+// Tracks which reminders sub-screen is open so the device back button,
+// browser back, and back-gesture all work. Stack contains 'list', 'edit',
+// or 'sheet' in the order they were opened.
+let _remindersStack = [];
+let _remindersSuppressPush = false;
+
+function _pushRemState(level) {
+    if (_remindersSuppressPush) return;
+    _remindersStack.push(level);
+    history.pushState({ pulpRemLevel: level }, '');
+}
+
+function _closeRemindersListDOM() {
+    document.getElementById('reminders-view').classList.add('hidden');
+    document.getElementById('fruit-hub').classList.remove('hidden');
+    const menuTrigger = document.getElementById('menu-trigger');
+    if (menuTrigger) menuTrigger.style.display = '';
+}
+
+function _closeEditPanelDOM() {
+    const panel = document.getElementById('reminders-edit-panel');
+    if (panel) panel.style.display = 'none';
+}
+
+function _closeSheetDOM() {
+    const sheet = document.getElementById('reminder-sheet');
+    const overlay = document.getElementById('reminder-sheet-overlay');
+    if (sheet) sheet.style.transform = 'translateY(100%)';
+    if (overlay) setTimeout(() => { overlay.style.display = 'none'; overlay.style.pointerEvents = 'none'; }, 300);
+    _sheetReminderId = null;
+}
+
+window.addEventListener('popstate', (e) => {
+    // Only handle if we own a state on the stack
+    if (_remindersStack.length === 0) return;
+
+    _remindersSuppressPush = true;
+    const level = _remindersStack.pop();
+    switch (level) {
+        case 'list': _closeRemindersListDOM(); break;
+        case 'edit': _closeEditPanelDOM(); break;
+        case 'sheet': _closeSheetDOM(); break;
+    }
+    _remindersSuppressPush = false;
+});
+
 // ── OPEN / CLOSE ──────────────────────────────────────────────────────────
 function openReminders() {
     document.getElementById('fruit-hub').classList.add('hidden');
@@ -59,13 +106,26 @@ function openReminders() {
     if (typeof requestPushPermission === 'function' && Notification.permission === 'default') {
         requestPushPermission();
     }
+    // Push history state only if not already in the stack
+    if (!_remindersStack.includes('list')) {
+        _pushRemState('list');
+    }
 }
 
 function closeReminders() {
-    document.getElementById('reminders-view').classList.add('hidden');
-    document.getElementById('fruit-hub').classList.remove('hidden');
-    const menuTrigger = document.getElementById('menu-trigger');
-    if (menuTrigger) menuTrigger.style.display = '';
+    // If called from popstate, just close DOM (already handled by listener)
+    if (_remindersSuppressPush) {
+        _closeRemindersListDOM();
+        return;
+    }
+    // User-initiated close — go through history so the stack stays in sync
+    if (_remindersStack.includes('list')) {
+        // Pop back enough times to clear all reminders levels at once
+        const depth = _remindersStack.length;
+        history.go(-depth);
+    } else {
+        _closeRemindersListDOM();
+    }
 }
 
 function scrollToNewReminder() {
@@ -256,11 +316,26 @@ function openEditReminder(id) {
     `;
 
     panel.style.display = 'flex';
+
+    // Push 'edit' onto the history stack so back closes the edit panel.
+    // Skip if we're already on edit (e.g. opening a different reminder
+    // from within the edit panel — shouldn't happen but safe).
+    if (_remindersStack[_remindersStack.length - 1] !== 'edit') {
+        _pushRemState('edit');
+    }
 }
 
 function closeEditReminder() {
-    const panel = document.getElementById('reminders-edit-panel');
-    if (panel) panel.style.display = 'none';
+    if (_remindersSuppressPush) {
+        _closeEditPanelDOM();
+        return;
+    }
+    // User-initiated — go through history.back so popstate clears the stack
+    if (_remindersStack[_remindersStack.length - 1] === 'edit') {
+        history.back();
+    } else {
+        _closeEditPanelDOM();
+    }
 }
 
 function saveEditReminder(id) {
@@ -475,6 +550,11 @@ function showReminderSheet(reminderId) {
     overlay.style.justifyContent = 'flex-end';
     overlay.style.pointerEvents = 'auto';
     setTimeout(() => { sheet.style.transform = 'translateY(0)'; }, 10);
+
+    // Push 'sheet' onto history so back dismisses the sheet
+    if (_remindersStack[_remindersStack.length - 1] !== 'sheet') {
+        _pushRemState('sheet');
+    }
 }
 
 
@@ -506,14 +586,24 @@ function showReminderSheetWithData(text, datetime, source, id) {
     overlay.style.justifyContent = 'flex-end';
     overlay.style.pointerEvents = 'auto';
     setTimeout(() => { sheet.style.transform = 'translateY(0)'; }, 10);
+
+    // Push 'sheet' onto history so back dismisses the sheet
+    if (_remindersStack[_remindersStack.length - 1] !== 'sheet') {
+        _pushRemState('sheet');
+    }
 }
 
 function hideReminderSheet() {
-    const sheet = document.getElementById('reminder-sheet');
-    const overlay = document.getElementById('reminder-sheet-overlay');
-    sheet.style.transform = 'translateY(100%)';
-    setTimeout(() => { overlay.style.display = 'none'; overlay.style.pointerEvents = 'none'; }, 300);
-    _sheetReminderId = null;
+    if (_remindersSuppressPush) {
+        _closeSheetDOM();
+        return;
+    }
+    // User-initiated — go through history.back
+    if (_remindersStack[_remindersStack.length - 1] === 'sheet') {
+        history.back();
+    } else {
+        _closeSheetDOM();
+    }
 }
 
 function reminderSheetDone() {

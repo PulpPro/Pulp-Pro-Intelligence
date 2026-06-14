@@ -7,6 +7,52 @@ let isAIThinking = false;
 let pulpAIMicActive = false;
 let pulpAIRecognition = null;
 
+// ── HISTORY API INTEGRATION ───────────────────────────────────────────────
+// Tracks which Pulp AI sub-screen is open so the device back button,
+// browser back, and back-gesture all work. Stack contains 'list', 'chat',
+// or 'photo' in the order they were opened.
+let _pulpAIStack = [];
+let _pulpAISuppressPush = false;
+
+function _pushPulpAIState(level) {
+    if (_pulpAISuppressPush) return;
+    _pulpAIStack.push(level);
+    history.pushState({ pulpAILevel: level }, '');
+}
+
+function _closePulpAIViewDOM() {
+    document.getElementById('pulpai-view').classList.add('hidden');
+    document.getElementById('fruit-hub').classList.remove('hidden');
+    const menuTrigger = document.getElementById('menu-trigger');
+    if (menuTrigger) menuTrigger.style.display = '';
+}
+
+function _closePulpAIChatDOM() {
+    currentChatId = null;
+    isAIThinking = false;
+    document.getElementById('pulpai-chat-screen').classList.add('hidden');
+    document.getElementById('pulpai-list-screen').classList.remove('hidden');
+    renderChatList();
+}
+
+function _closePulpAIPhotoDOM() {
+    const popup = document.getElementById('pulpai-photo-popup');
+    if (popup) popup.style.display = 'none';
+}
+
+window.addEventListener('popstate', (e) => {
+    if (_pulpAIStack.length === 0) return;
+
+    _pulpAISuppressPush = true;
+    const level = _pulpAIStack.pop();
+    switch (level) {
+        case 'list':  _closePulpAIViewDOM();  break;
+        case 'chat':  _closePulpAIChatDOM();  break;
+        case 'photo': _closePulpAIPhotoDOM(); break;
+    }
+    _pulpAISuppressPush = false;
+});
+
 // ── AURA ENGINE ──────────────────────────────────────────────────────────
 function createAura(canvas, size) {
     if (!canvas) return;
@@ -346,7 +392,21 @@ async function sendPulpAIMessage() {
 function togglePhotoPopup() {
     const popup = document.getElementById('pulpai-photo-popup');
     if (!popup) return;
-    popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
+    const isOpen = popup.style.display === 'block' || popup.style.display === 'flex';
+    if (isOpen) {
+        // User is closing — go through history.back so popstate handles it
+        if (_pulpAIStack[_pulpAIStack.length - 1] === 'photo') {
+            history.back();
+        } else {
+            popup.style.display = 'none';
+        }
+    } else {
+        // User is opening
+        popup.style.display = 'block';
+        if (_pulpAIStack[_pulpAIStack.length - 1] !== 'photo') {
+            _pushPulpAIState('photo');
+        }
+    }
 }
 
 function triggerCamera() {
@@ -364,8 +424,15 @@ async function handlePhotoSelected(file) {
         alert('Please type the fruit or vegetable name first.');
         return;
     }
+    // Close popup through history so the stack stays in sync
     const popup = document.getElementById('pulpai-photo-popup');
-    if (popup) popup.style.display = 'none';
+    if (popup) {
+        if (_pulpAIStack[_pulpAIStack.length - 1] === 'photo') {
+            history.back();
+        } else {
+            popup.style.display = 'none';
+        }
+    }
 
     const chat = getChatById(currentChatId);
     if (!chat) return;
@@ -545,6 +612,11 @@ function openPulpAI() {
         const menuOrb = document.getElementById('pulpai-menu-orb');
         if (menuOrb) createAura(menuOrb, 42);
     }, 100);
+
+    // Push 'list' onto history so back closes Pulp AI
+    if (!_pulpAIStack.includes('list')) {
+        _pushPulpAIState('list');
+    }
 }
 
 function openChat(chatId) {
@@ -583,6 +655,11 @@ function openChat(chatId) {
     fetchUsage();
     const popup = document.getElementById('pulpai-photo-popup');
     if (popup) popup.style.display = 'none';
+
+    // Push 'chat' onto history (only if not already there)
+    if (_pulpAIStack[_pulpAIStack.length - 1] !== 'chat') {
+        _pushPulpAIState('chat');
+    }
 }
 
 function newPulpAIChat() {
@@ -597,18 +674,29 @@ function deleteChat(chatId) {
 }
 
 function backToChatList() {
-    currentChatId = null;
-    isAIThinking = false;
-    document.getElementById('pulpai-chat-screen').classList.add('hidden');
-    document.getElementById('pulpai-list-screen').classList.remove('hidden');
-    renderChatList();
+    if (_pulpAISuppressPush) {
+        _closePulpAIChatDOM();
+        return;
+    }
+    if (_pulpAIStack[_pulpAIStack.length - 1] === 'chat') {
+        history.back();
+    } else {
+        _closePulpAIChatDOM();
+    }
 }
 
 function closePulpAI() {
-    document.getElementById('pulpai-view').classList.add('hidden');
-    document.getElementById('fruit-hub').classList.remove('hidden');
-    const menuTrigger = document.getElementById('menu-trigger');
-    if (menuTrigger) menuTrigger.style.display = '';
+    if (_pulpAISuppressPush) {
+        _closePulpAIViewDOM();
+        return;
+    }
+    // User-initiated — pop all Pulp AI levels at once
+    if (_pulpAIStack.length > 0) {
+        const depth = _pulpAIStack.length;
+        history.go(-depth);
+    } else {
+        _closePulpAIViewDOM();
+    }
 }
 
 function initPulpAITile() {

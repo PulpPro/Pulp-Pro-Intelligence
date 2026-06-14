@@ -21,6 +21,55 @@ let holTeam = {};        // { userCode: { name, colour, role, entries: [{from,to
 let holMyCode = '';
 let holEditIdx = null;
 
+// ── HISTORY API INTEGRATION ───────────────────────────────────────────────
+// Stack tracks which Holiday Planner level is open so device back button,
+// browser back, and back-gesture work. Levels: 'main', 'day', 'plan',
+// 'cancel', 'edit'.
+let _holStack = [];
+let _holSuppressPush = false;
+
+const _holOvIdToLevel = {
+    'hol-ov-day':    'day',
+    'hol-ov-plan':   'plan',
+    'hol-ov-cancel': 'cancel',
+    'hol-ov-edit':   'edit'
+};
+const _holLevelToOvId = {
+    'day':    'hol-ov-day',
+    'plan':   'hol-ov-plan',
+    'cancel': 'hol-ov-cancel',
+    'edit':   'hol-ov-edit'
+};
+
+function _pushHolState(level) {
+    if (_holSuppressPush) return;
+    _holStack.push(level);
+    history.pushState({ holLevel: level }, '');
+}
+
+function _closeHolMainDOM() {
+    document.getElementById('holiday-planner-view').classList.add('hidden');
+    document.getElementById('fruit-hub').classList.remove('hidden');
+    const mt = document.getElementById('menu-trigger');
+    if (mt) mt.style.display = '';
+}
+
+function _closeHolOvDOM(level) {
+    const id = _holLevelToOvId[level];
+    if (!id) return;
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('show');
+}
+
+window.addEventListener('popstate', (e) => {
+    if (_holStack.length === 0) return;
+    _holSuppressPush = true;
+    const level = _holStack.pop();
+    if (level === 'main') _closeHolMainDOM();
+    else _closeHolOvDOM(level);
+    _holSuppressPush = false;
+});
+
 // ── LOCAL DATE HELPER — never use toISOString() (UTC bug) ───────────────
 function holLocalDate(date) {
     return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
@@ -62,13 +111,25 @@ async function openHolidayPlanner() {
 
     await holLoadTeam();
     holRender();
+
+    // Push 'main' onto history so device/browser back closes Holiday Planner
+    if (!_holStack.includes('main')) {
+        _pushHolState('main');
+    }
 }
 
 function closeHolidayPlanner() {
-    document.getElementById('holiday-planner-view').classList.add('hidden');
-    document.getElementById('fruit-hub').classList.remove('hidden');
-    const mt = document.getElementById('menu-trigger');
-    if (mt) mt.style.display = '';
+    if (_holSuppressPush) {
+        _closeHolMainDOM();
+        return;
+    }
+    if (_holStack.length > 0) {
+        // Pop all levels in one go (in case overlays are open)
+        const depth = _holStack.length;
+        history.go(-depth);
+    } else {
+        _closeHolMainDOM();
+    }
 }
 
 // ── LOAD ──────────────────────────────────────────────────────────────────
@@ -333,7 +394,7 @@ function holOpenDay(ds, people, day, pubHol) {
     const amOff = people.some(p => p.code === holMyCode);
     document.getElementById('hol-dp-action').innerHTML = amOff
         ? `<button class="hol-btn-ghost" style="color:rgba(255,100,100,0.7);border-color:rgba(255,77,77,0.2);" onclick="holQuickRemove('${ds}')">✕ Remove my holiday on this day</button>`
-        : `<button class="hol-btn-primary" onclick="holCloseOv('hol-ov-day');holOpenPlan('${ds}')">🏖️ Mark as my holiday</button>`;
+        : `<button class="hol-btn-primary" onclick="holDayToPlan('${ds}')">🏖️ Mark as my holiday</button>`;
 
     holOpenOv('hol-ov-day');
 }
@@ -351,6 +412,18 @@ function holQuickRemove(ds) {
     me.entries = ne;
     holCloseOv('hol-ov-day');
     holSave();
+}
+
+// ── DAY → PLAN TRANSITION ─────────────────────────────────────────────────
+// Closes the day popup via history.back so the stack stays in sync,
+// then opens the plan popup once popstate has fired.
+function holDayToPlan(ds) {
+    if (_holStack[_holStack.length - 1] === 'day') {
+        history.back();
+    } else {
+        document.getElementById('hol-ov-day').classList.remove('show');
+    }
+    setTimeout(() => holOpenPlan(ds), 150);
 }
 
 // ── PLAN POPUP ────────────────────────────────────────────────────────────
@@ -486,10 +559,35 @@ function holMergeMine() {
 }
 
 // ── OVERLAY HELPERS ───────────────────────────────────────────────────────
-function holOpenOv(id) { document.getElementById(id).classList.add('show'); }
+function holOpenOv(id) {
+    document.getElementById(id).classList.add('show');
+    // Push corresponding history level if known
+    const level = _holOvIdToLevel[id];
+    if (level && _holStack[_holStack.length - 1] !== level) {
+        _pushHolState(level);
+    }
+}
+
 function holCloseOv(id, e) {
-    if (!e || e.target === document.getElementById(id))
-        document.getElementById(id).classList.remove('show');
+    // Tap-outside-to-close: only run when clicking the overlay backdrop itself
+    if (e && e.target !== document.getElementById(id)) return;
+
+    const overlay = document.getElementById(id);
+    if (!overlay || !overlay.classList.contains('show')) return; // already closed
+
+    // Called from popstate — just close DOM, history is already handled
+    if (_holSuppressPush) {
+        overlay.classList.remove('show');
+        return;
+    }
+
+    // User-initiated — route through history.back if this overlay is on top
+    const level = _holOvIdToLevel[id];
+    if (level && _holStack[_holStack.length - 1] === level) {
+        history.back();
+    } else {
+        overlay.classList.remove('show');
+    }
 }
 
 // ── TILE UPDATE ───────────────────────────────────────────────────────────

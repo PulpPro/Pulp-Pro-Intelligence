@@ -17,56 +17,53 @@ const HOL_NL = {
 };
 
 let holCY = 2026, holCM = new Date().getMonth();
-let holTeam = {};        // { userCode: { name, colour, role, entries: [{from,to,note,id}] } }
+let holTeam = {};
 let holMyCode = '';
 let holEditIdx = null;
 
 // ── HISTORY API INTEGRATION ───────────────────────────────────────────────
-// Stack tracks which Holiday Planner level is open so device back button,
-// browser back, and back-gesture work. Levels: 'main', 'day', 'plan',
-// 'cancel', 'edit'.
+// Tracks which Holiday Planner sub-screen is open. Stack contains
+// 'calendar', 'day', 'plan', 'cancel', or 'edit' in order opened.
 let _holStack = [];
 let _holSuppressPush = false;
 
-const _holOvIdToLevel = {
+function _pushHolState(level) {
+    if (_holSuppressPush) return;
+    _holStack.push(level);
+    history.pushState({ pulpHolLevel: level }, '');
+}
+
+const _HOL_LEVEL_MAP = {
     'hol-ov-day':    'day',
     'hol-ov-plan':   'plan',
     'hol-ov-cancel': 'cancel',
     'hol-ov-edit':   'edit'
 };
-const _holLevelToOvId = {
-    'day':    'hol-ov-day',
-    'plan':   'hol-ov-plan',
-    'cancel': 'hol-ov-cancel',
-    'edit':   'hol-ov-edit'
-};
 
-function _pushHolState(level) {
-    if (_holSuppressPush) return;
-    _holStack.push(level);
-    history.pushState({ holLevel: level }, '');
-}
-
-function _closeHolMainDOM() {
+function _closeHolViewDOM() {
     document.getElementById('holiday-planner-view').classList.add('hidden');
     document.getElementById('fruit-hub').classList.remove('hidden');
     const mt = document.getElementById('menu-trigger');
     if (mt) mt.style.display = '';
 }
 
-function _closeHolOvDOM(level) {
-    const id = _holLevelToOvId[level];
-    if (!id) return;
+function _closeHolOverlayDOM(id) {
     const el = document.getElementById(id);
     if (el) el.classList.remove('show');
 }
 
 window.addEventListener('popstate', (e) => {
     if (_holStack.length === 0) return;
+
     _holSuppressPush = true;
     const level = _holStack.pop();
-    if (level === 'main') _closeHolMainDOM();
-    else _closeHolOvDOM(level);
+    switch (level) {
+        case 'calendar': _closeHolViewDOM(); break;
+        case 'day':      _closeHolOverlayDOM('hol-ov-day'); break;
+        case 'plan':     _closeHolOverlayDOM('hol-ov-plan'); break;
+        case 'cancel':   _closeHolOverlayDOM('hol-ov-cancel'); break;
+        case 'edit':     _closeHolOverlayDOM('hol-ov-edit'); break;
+    }
     _holSuppressPush = false;
 });
 
@@ -76,7 +73,6 @@ function holLocalDate(date) {
 }
 
 // ── OPEN ──────────────────────────────────────────────────────────────────
-// Update tile count on app init (background load)
 async function holInitTile() {
     try {
         const res = await fetch(HOL_WORKER + '/holidays-all', {
@@ -112,30 +108,27 @@ async function openHolidayPlanner() {
     await holLoadTeam();
     holRender();
 
-    // Push 'main' onto history so device/browser back closes Holiday Planner
-    if (!_holStack.includes('main')) {
-        _pushHolState('main');
+    if (!_holStack.includes('calendar')) {
+        _pushHolState('calendar');
     }
 }
 
 function closeHolidayPlanner() {
     if (_holSuppressPush) {
-        _closeHolMainDOM();
+        _closeHolViewDOM();
         return;
     }
     if (_holStack.length > 0) {
-        // Pop all levels in one go (in case overlays are open)
         const depth = _holStack.length;
         history.go(-depth);
     } else {
-        _closeHolMainDOM();
+        _closeHolViewDOM();
     }
 }
 
 // ── LOAD ──────────────────────────────────────────────────────────────────
 async function holLoadTeam() {
     try {
-        // Load NL holidays for current year
         const nlRes = await fetch(HOL_WORKER + '/nl-holidays', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ year: holCY })
@@ -159,12 +152,10 @@ async function holLoadTeam() {
             const colour = u.userCode === 'ADMIN' ? '#a6e22e' : HOL_COLS[i % HOL_COLS.length];
             holTeam[u.userCode] = { name: u.name || u.userCode, colour, role: u.role || '', country: u.country || '', entries: u.entries || [] };
         });
-        // Ensure current user exists
         if (!holTeam[holMyCode]) {
             const myName = localStorage.getItem('pulpProUserName') || holMyCode;
             holTeam[holMyCode] = { name: myName.split(' ')[0], colour: '#a6e22e', role: localStorage.getItem('pulpProUserRole') || '', entries: [] };
         }
-        // Update tile count on home screen after team loads
         holUpdateTile();
     } catch(e) {
         console.error('Holiday load error:', e);
@@ -206,7 +197,6 @@ function holADM() {
             });
         });
     });
-    // Sort each day: my country + same role → my country + other → other country
     Object.keys(m).forEach(d => {
         m[d].sort((a, b) => {
             const ac = holTeam[a.code]?.country || a.country || '';
@@ -237,7 +227,6 @@ function holRender() {
     const dim = new Date(holCY, holCM + 1, 0).getDate();
     const today = holLocalDate(new Date());
     const dm = holADM();
-    // Build reminder map for calendar cells
     const allRems = JSON.parse(localStorage.getItem('pulpai_reminders') || '[]');
     const remDayMap = {};
     allRems.filter(r => !r.done).forEach(r => {
@@ -268,39 +257,29 @@ function holRender() {
             (isWknd ? ' hol-wknd' : '') +
             (pubHol ? ' hol-pubhol' : '');
 
-        // NL holiday label row
         const hr = document.createElement('div'); hr.className = 'hol-hlabel';
         if (pubHol) { const hn = document.createElement('div'); hn.className = 'hol-hname'; hn.textContent = pubHol; hr.appendChild(hn); }
         cell.appendChild(hr);
 
-        // date number styling priority:
-        // 1. today = handled by hol-today CSS class (green)
-        // 2. reminder = purple background
-        // 3. my holiday = green number
-        // 4. weekend = red (via hol-wknd CSS)
         const dayRems = remDayMap[ds] || [];
         const hasRem = dayRems.length > 0;
         const dn = document.createElement('div'); dn.className = 'hol-cdate';
         dn.textContent = d;
         if (isToday && hasRem) {
-            // Today + reminder — green from CSS class, add small purple dot
             const dot = document.createElement('span');
             dot.style.cssText = 'display:inline-block;width:4px;height:4px;border-radius:50%;background:rgba(180,150,255,0.9);margin-left:2px;vertical-align:middle;';
             dn.appendChild(dot);
         } else if (hasRem) {
-            // Reminder only — purple pill
             dn.style.background = 'rgba(136,100,255,0.85)';
             dn.style.color = '#fff';
             dn.style.borderRadius = '3px';
             dn.style.padding = '0 2px';
         } else if (isMe && !isToday) {
-            // My holiday (not today) — green date number only, no block
             dn.style.color = '#a6e22e';
             dn.style.fontWeight = '900';
         }
         cell.appendChild(dn);
 
-        // 4 name trays
         for (let t = 0; t < 4; t++) {
             const tray = document.createElement('div');
             if (people[t]) {
@@ -311,7 +290,6 @@ function holRender() {
             cell.appendChild(tray);
         }
 
-        // +more row
         const mt = document.createElement('div'); mt.className = 'hol-tray hol-more' + (hasMore ? ' hol-more-active' : '');
         const ms = document.createElement('div'); ms.className = 'hol-mtext'; ms.textContent = hasMore ? `+${people.length - 4} more` : '';
         mt.appendChild(ms); cell.appendChild(mt);
@@ -327,7 +305,6 @@ async function holChM(dir) {
     holCM += dir;
     if (holCM > 11) { holCM = 0; holCY++; }
     if (holCM < 0) { holCM = 11; holCY--; }
-    // Re-fetch NL holidays if year changed
     if (holCY !== prevYear) {
         try {
             const nlRes = await fetch(HOL_WORKER + '/nl-holidays', {
@@ -354,7 +331,6 @@ function holOpenDay(ds, people, day, pubHol) {
     const hw = document.getElementById('hol-dp-holwrap');
     hw.innerHTML = pubHol ? `<div class="hol-pop-banner"><span style="font-size:18px;">🇳🇱</span><div><div style="font-size:13px;font-weight:800;color:#f87171;">${pubHol}</div><div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:2px;">Nederlandse feestdag</div></div></div>` : '';
 
-    // My reminders
     const reminders = JSON.parse(localStorage.getItem('pulpai_reminders') || '[]');
     const myRems = reminders.filter(r => !r.done && r.datetime && holLocalDate(new Date(r.datetime)) === ds);
     const rw = document.getElementById('hol-dp-remwrap');
@@ -363,7 +339,6 @@ function holOpenDay(ds, people, day, pubHol) {
         return `<div class="hol-rem-banner">🔔 ${localTime} — ${r.text}</div>`;
     }).join('') : '';
 
-    // Sort: my country + same role → my country + other roles → other country
     const myCountry = localStorage.getItem('pulpProUserCountry') || '';
     const myRole = localStorage.getItem('pulpProUserRole') || '';
     const sortedPeople = [...people].sort((a, b) => {
@@ -394,9 +369,31 @@ function holOpenDay(ds, people, day, pubHol) {
     const amOff = people.some(p => p.code === holMyCode);
     document.getElementById('hol-dp-action').innerHTML = amOff
         ? `<button class="hol-btn-ghost" style="color:rgba(255,100,100,0.7);border-color:rgba(255,77,77,0.2);" onclick="holQuickRemove('${ds}')">✕ Remove my holiday on this day</button>`
-        : `<button class="hol-btn-primary" onclick="holDayToPlan('${ds}')">🏖️ Mark as my holiday</button>`;
+        : `<button class="hol-btn-primary" onclick="_holDayToPlan('${ds}')">🏖️ Mark as my holiday</button>`;
 
     holOpenOv('hol-ov-day');
+
+    if (_holStack[_holStack.length - 1] !== 'day') {
+        _pushHolState('day');
+    }
+}
+
+// Transition helper: cleanly swap day popup with plan popup in history.
+// The original onclick did `holCloseOv('hol-ov-day');holOpenPlan(ds)` which
+// would have left a stale 'day' history entry. This replaces the top of
+// the stack instead.
+function _holDayToPlan(ds) {
+    if (_holStack[_holStack.length - 1] === 'day') {
+        _holStack[_holStack.length - 1] = 'plan';
+        _holSuppressPush = true;
+        history.replaceState({ pulpHolLevel: 'plan' }, '');
+        _closeHolOverlayDOM('hol-ov-day');
+        holOpenPlan(ds);
+        _holSuppressPush = false;
+    } else {
+        _closeHolOverlayDOM('hol-ov-day');
+        holOpenPlan(ds);
+    }
 }
 
 function holQuickRemove(ds) {
@@ -412,18 +409,6 @@ function holQuickRemove(ds) {
     me.entries = ne;
     holCloseOv('hol-ov-day');
     holSave();
-}
-
-// ── DAY → PLAN TRANSITION ─────────────────────────────────────────────────
-// Closes the day popup via history.back so the stack stays in sync,
-// then opens the plan popup once popstate has fired.
-function holDayToPlan(ds) {
-    if (_holStack[_holStack.length - 1] === 'day') {
-        history.back();
-    } else {
-        document.getElementById('hol-ov-day').classList.remove('show');
-    }
-    setTimeout(() => holOpenPlan(ds), 150);
 }
 
 // ── PLAN POPUP ────────────────────────────────────────────────────────────
@@ -451,6 +436,10 @@ function holOpenPlan(prefill) {
     holSetDropdowns('hol-plan-to', today);
     document.getElementById('hol-plan-note').value = '';
     holOpenOv('hol-ov-plan');
+
+    if (_holStack[_holStack.length - 1] !== 'plan') {
+        _pushHolState('plan');
+    }
 }
 
 async function holSavePlan() {
@@ -459,7 +448,6 @@ async function holSavePlan() {
     const n = document.getElementById('hol-plan-note').value.trim();
     if (!f || !t) { alert('Please select a day, month and year for both dates'); return; }
     if (t < f) { alert('End date must be after start date'); return; }
-    // Find or create current user in holTeam
     const existingKey = Object.keys(holTeam).find(k => k.toUpperCase() === holMyCode.toUpperCase());
     if (!existingKey) {
         const myName = localStorage.getItem('pulpProUserName') || holMyCode;
@@ -481,11 +469,14 @@ async function holSavePlan() {
 function holOpenCancel() {
     holRenderCancelList();
     holOpenOv('hol-ov-cancel');
+
+    if (_holStack[_holStack.length - 1] !== 'cancel') {
+        _pushHolState('cancel');
+    }
 }
 
 function holRenderCancelList() {
     const list = document.getElementById('hol-cancel-list');
-    // Find user case-insensitively
     const meKey = Object.keys(holTeam).find(k => k.toUpperCase() === holMyCode.toUpperCase()) || holMyCode;
     const me = holTeam[meKey];
     const entries = me ? me.entries.filter(e => new Date(e.to + 'T00:00:00') >= new Date()) : [];
@@ -525,6 +516,10 @@ function holOpenEdit(idx) {
     holSetDropdowns('hol-edit-to', e.to);
     document.getElementById('hol-edit-note').value = e.note || '';
     holOpenOv('hol-ov-edit');
+
+    if (_holStack[_holStack.length - 1] !== 'edit') {
+        _pushHolState('edit');
+    }
 }
 
 async function holSaveEdit() {
@@ -559,34 +554,23 @@ function holMergeMine() {
 }
 
 // ── OVERLAY HELPERS ───────────────────────────────────────────────────────
-function holOpenOv(id) {
-    document.getElementById(id).classList.add('show');
-    // Push corresponding history level if known
-    const level = _holOvIdToLevel[id];
-    if (level && _holStack[_holStack.length - 1] !== level) {
-        _pushHolState(level);
-    }
-}
-
+function holOpenOv(id) { document.getElementById(id).classList.add('show'); }
 function holCloseOv(id, e) {
-    // Tap-outside-to-close: only run when clicking the overlay backdrop itself
+    // Only close if either no event, or clicked on backdrop (matches original behaviour)
     if (e && e.target !== document.getElementById(id)) return;
 
-    const overlay = document.getElementById(id);
-    if (!overlay || !overlay.classList.contains('show')) return; // already closed
-
-    // Called from popstate — just close DOM, history is already handled
+    // If we're responding to a popstate, just close DOM
     if (_holSuppressPush) {
-        overlay.classList.remove('show');
+        _closeHolOverlayDOM(id);
         return;
     }
 
-    // User-initiated — route through history.back if this overlay is on top
-    const level = _holOvIdToLevel[id];
-    if (level && _holStack[_holStack.length - 1] === level) {
+    // Route through history.back so popstate keeps the stack in sync
+    const expectedLevel = _HOL_LEVEL_MAP[id];
+    if (expectedLevel && _holStack[_holStack.length - 1] === expectedLevel) {
         history.back();
     } else {
-        overlay.classList.remove('show');
+        _closeHolOverlayDOM(id);
     }
 }
 
@@ -597,7 +581,6 @@ function holUpdateTile() {
     const dow = today.getDay() === 0 ? 6 : today.getDay() - 1;
     monday.setDate(today.getDate() - dow);
     const friday = new Date(monday); friday.setDate(monday.getDate() + 4);
-    // Count unique people off this week (including yourself)
     const offPeople = new Set();
     Object.entries(holTeam).forEach(([code, u]) => {
         u.entries.forEach(e => {

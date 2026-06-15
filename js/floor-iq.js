@@ -15,6 +15,65 @@ function iqExitQuiz() {
 // ── FLOOR IQ ─────────────────────────────────────────────────────────────
 const IQ_WORKER = 'https://pulppro-access.pulpprobrain.workers.dev';
 
+// ── HISTORY API INTEGRATION ───────────────────────────────────────────────
+// Tracks Floor IQ navigation depth. Levels:
+//   'view'    — Floor IQ is open (lang screen or lobby)
+//   'session' — in an active quiz session (quiz/results/limit screens)
+//   'badge'   — badge detail overlay
+//   'profile' — profile overlay
+let _iqStack = [];
+let _iqSuppressPush = false;
+
+function _pushIQState(level) {
+    if (_iqSuppressPush) return;
+    _iqStack.push(level);
+    history.pushState({ pulpIQLevel: level }, '');
+}
+
+function _closeIQViewDOM() {
+    document.getElementById('floor-iq-view').classList.add('hidden');
+    document.getElementById('fruit-hub').classList.remove('hidden');
+    const menuTrigger = document.getElementById('menu-trigger');
+    if (menuTrigger) menuTrigger.style.display = '';
+    clearInterval(iqTimerInt);
+    clearInterval(iqAutoRefreshInt);
+}
+
+function _closeIQBadgeDOM() {
+    const overlay = document.getElementById('iq-badge-overlay');
+    if (overlay) overlay.classList.remove('iq-overlay-show');
+}
+
+function _closeIQProfileDOM() {
+    const overlay = document.getElementById('iq-profile-overlay');
+    if (overlay) overlay.classList.remove('iq-overlay-show');
+}
+
+window.addEventListener('popstate', (e) => {
+    if (_iqStack.length === 0) return;
+
+    _iqSuppressPush = true;
+    const level = _iqStack.pop();
+    switch (level) {
+        case 'view':    _closeIQViewDOM(); break;
+        case 'session':
+            // Exiting a quiz session — submit score and return to lobby
+            clearInterval(iqTimerInt);
+            if (iqScore > 0) {
+                iqSaveLocalStats();
+                const acc = (iqCorrectCount + iqWrongCount) > 0
+                    ? Math.round(iqCorrectCount / (iqCorrectCount + iqWrongCount) * 100)
+                    : 0;
+                iqSubmitScore(iqScore, acc);
+            }
+            iqShowScreen('iq-s-lobby');
+            break;
+        case 'badge':   _closeIQBadgeDOM(); break;
+        case 'profile': _closeIQProfileDOM(); break;
+    }
+    _iqSuppressPush = false;
+});
+
 // ── HELPERS ───────────────────────────────────────────────────────────────
 function iqGetUserCode() {
     const isAdmin = localStorage.getItem('pulpProAdmin') === 'true';
@@ -25,20 +84,17 @@ function iqGetUserCode() {
 function iqGetDisplayName(code) {
     if (!code) return 'Unknown';
     const upper = (code || '').toUpperCase();
-    // Admin — always full name
     if (upper === 'ADMIN' || code === 'admin') {
         const adminName = localStorage.getItem('pulpProUserName');
         if (adminName && adminName.trim()) return adminName;
         return 'Akash Varma';
     }
-    if (upper.startsWith('TEST')) return null; // excluded
-    // Current user — return full name
+    if (upper.startsWith('TEST')) return null;
     const myCode = localStorage.getItem('pulpProAccessCode') || '';
     if (myCode && myCode.toUpperCase() === upper) {
         const savedName = localStorage.getItem('pulpProUserName');
         if (savedName && savedName.trim()) return savedName;
     }
-    // Fallback: parse first name from code string
     const parts = upper.split('-');
     const raw = parts[0] || '';
     return raw.charAt(0) + raw.slice(1).toLowerCase();
@@ -59,7 +115,7 @@ let iqCategoryStats = {};
 let iqLobbyRefreshInt = null;
 let iqAutoRefreshInt = null;
 let iqSessionActive = false;
-let iqAskedTopics = []; // track category_ids asked this session to avoid repeats
+let iqAskedTopics = [];
 
 // ── OPEN / CLOSE ──────────────────────────────────────────────────────────
 function openFloorIQ() {
@@ -74,19 +130,37 @@ function openFloorIQ() {
     if (menuTrigger) menuTrigger.style.display = 'none';
     iqShowScreen('iq-s-lang');
     iqUpdateTilePreview();
+
+    // Push 'view' onto history so back closes Floor IQ
+    if (!_iqStack.includes('view')) {
+        _pushIQState('view');
+    }
 }
 
 function closeFloorIQ() {
-    document.getElementById('floor-iq-view').classList.add('hidden');
-    document.getElementById('fruit-hub').classList.remove('hidden');
-    const menuTrigger = document.getElementById('menu-trigger');
-    if (menuTrigger) menuTrigger.style.display = '';
-    clearInterval(iqTimerInt);
-    clearInterval(iqAutoRefreshInt);
+    if (_iqSuppressPush) {
+        _closeIQViewDOM();
+        return;
+    }
+    if (_iqStack.length > 0) {
+        const depth = _iqStack.length;
+        history.go(-depth);
+    } else {
+        _closeIQViewDOM();
+    }
 }
 
 // ── SCREEN NAVIGATION ─────────────────────────────────────────────────────
 function iqShowScreen(id) {
+    // When transitioning back to lobby/lang from inside a quiz session,
+    // route through history.back so the 'session' stack entry gets popped.
+    if (!_iqSuppressPush
+        && (id === 'iq-s-lobby' || id === 'iq-s-lang')
+        && _iqStack[_iqStack.length - 1] === 'session') {
+        history.back();
+        return;
+    }
+
     document.querySelectorAll('.iq-screen').forEach(s => {
         s.classList.remove('iq-active');
         s.classList.add('iq-out');
@@ -281,11 +355,22 @@ function iqShowBadgeDetail(catId) {
         </div>`;
 
     overlay.classList.add('iq-overlay-show');
+
+    if (_iqStack[_iqStack.length - 1] !== 'badge') {
+        _pushIQState('badge');
+    }
 }
 
 function iqHideBadgeDetail() {
-    const overlay = document.getElementById('iq-badge-overlay');
-    if (overlay) overlay.classList.remove('iq-overlay-show');
+    if (_iqSuppressPush) {
+        _closeIQBadgeDOM();
+        return;
+    }
+    if (_iqStack[_iqStack.length - 1] === 'badge') {
+        history.back();
+    } else {
+        _closeIQBadgeDOM();
+    }
 }
 
 // ── START QUIZ ────────────────────────────────────────────────────────────
@@ -299,6 +384,13 @@ async function iqStartQuiz() {
     iqCategoryStats = {};
     iqAskedTopics = [];
     iqSessionActive = true;
+
+    // Push 'session' onto history so back exits the quiz cleanly.
+    // Skip if already in a session (e.g. "More questions" from results).
+    if (_iqStack[_iqStack.length - 1] !== 'session') {
+        _pushIQState('session');
+    }
+
     iqShowScreen('iq-s-quiz');
     iqUpdateScoreHdr();
     await iqLoadNextBatch();
@@ -320,10 +412,8 @@ async function iqLoadNextBatch() {
         }
         if (data.questions && data.questions.length > 0) {
             iqQuestions = [...iqQuestions, ...data.questions];
-            // Track which categories were used so next batch avoids them
             if (data.usedCategoryIds) {
                 iqAskedTopics = [...new Set([...iqAskedTopics, ...data.usedCategoryIds])];
-                // Reset after 20 topics so we can cycle back through
                 if (iqAskedTopics.length > 20) iqAskedTopics = iqAskedTopics.slice(-10);
             }
         }
@@ -411,7 +501,6 @@ function iqAnswer(choice) {
         el.style.pointerEvents = 'none';
     });
 
-    // Track category stats
     const catId = q.category_id || 'general';
     if (!iqCategoryStats[catId]) iqCategoryStats[catId] = { correct: 0, wrong: 0 };
 
@@ -427,7 +516,6 @@ function iqAnswer(choice) {
                 ? `${iqStreak} op rij! 2x punten actief`
                 : `${iqStreak} in a row! 2x points active`;
         }
-        // Points animation
         const pop = document.createElement('div');
         pop.style.cssText = 'position:absolute;right:10px;top:50%;font-size:14px;font-weight:900;color:#a6e22e;pointer-events:none;animation:iqFloatUp 1s forwards;z-index:10;';
         pop.textContent = '+' + pts + (iqStreak >= 3 ? '🔥' : '');
@@ -442,14 +530,12 @@ function iqAnswer(choice) {
 
     iqUpdateScoreHdr();
 
-    // Show explanation
     const exp = document.getElementById('iq-expblock');
     document.getElementById('iq-why-correct-text').textContent = q.explanation_correct;
     document.getElementById('iq-why-wrong-text').textContent = q.explanation_wrong;
     document.getElementById('iq-floor-text').textContent = q.real_world;
     document.getElementById('iq-know-text').textContent = q.did_you_know;
 
-    // Labels
     document.getElementById('iq-wc-lbl').textContent = iqLang === 'nl' ? 'Waarom dit correct is' : 'Why this is correct';
     document.getElementById('iq-ww-lbl').textContent = iqLang === 'nl' ? 'Waarom de andere antwoorden fout zijn' : 'Why the others are wrong';
     document.getElementById('iq-floor-lbl').textContent = iqLang === 'nl' ? 'Op de vloer' : 'On the fruit floor';
@@ -458,7 +544,6 @@ function iqAnswer(choice) {
 
     exp.style.display = 'block';
 
-    // Gentle scroll to explanation — 600ms delay, ease-in-out
     setTimeout(() => {
         const expEl = document.getElementById('iq-exp-top');
         const scroll = document.getElementById('iq-qscroll');
@@ -500,7 +585,6 @@ function iqShowResults() {
     document.getElementById('iq-res-summary').textContent = `${iqCorrectCount} ${iqLang === 'nl' ? 'goed' : 'correct'} · ${iqWrongCount} ${iqLang === 'nl' ? 'fout' : 'wrong'} · ${iqStreak}🔥`;
     document.getElementById('iq-res-acc').textContent = acc + '%';
 
-    // Best/worst category
     let best = null, worst = null, bestScore = -1, worstScore = 999;
     Object.entries(iqCategoryStats).forEach(([id, s]) => {
         const pct = s.correct / (s.correct + s.wrong);
@@ -513,7 +597,6 @@ function iqShowResults() {
     document.getElementById('iq-res-best').textContent = bestCat ? bestCat.icon + ' ' + (bestCat.name[iqLang] || bestCat.name.en) : '—';
     document.getElementById('iq-res-worst').textContent = worstCat ? worstCat.icon + ' ' + (worstCat.name[iqLang] || worstCat.name.en) : '—';
 
-    // Save and submit score
     iqSaveLocalStats();
     iqSubmitScore(iqScore, acc);
 
@@ -533,7 +616,6 @@ function iqSaveLocalStats() {
     stats.totalAnswered = (stats.totalAnswered || 0) + iqCorrectCount + iqWrongCount;
     stats.totalCorrect = (stats.totalCorrect || 0) + iqCorrectCount;
 
-    // Update category correct counts for badges
     if (!stats.categoryCorrect) stats.categoryCorrect = {};
     Object.entries(iqCategoryStats).forEach(([id, s]) => {
         stats.categoryCorrect[id] = (stats.categoryCorrect[id] || 0) + s.correct;
@@ -548,7 +630,7 @@ async function iqSubmitScore(score, accuracy) {
     const code = iqGetUserCode();
     if (!code) return;
     const name = iqGetDisplayName(code);
-    if (!name) return; // TEST codes excluded
+    if (!name) return;
     try {
         await fetch(IQ_WORKER + '/iq-submit', {
             method: 'POST',
@@ -596,10 +678,9 @@ async function iqLoadLeaderboard() {
 
         const myCode = iqGetUserCode();
 
-        // Podium top 3
         if (podium) {
             const top3 = entries.slice(0, 3);
-            const order = [1, 0, 2]; // silver, gold, bronze display order
+            const order = [1, 0, 2];
             const medals = ['🥈', '🥇', '🥉'];
             const heights = ['36px', '42px', '32px'];
             const barH = ['36px', '50px', '24px'];
@@ -618,7 +699,6 @@ async function iqLoadLeaderboard() {
             }).join('');
         }
 
-        // Full list
         if (container) {
             container.innerHTML = entries.map((e, i) => {
                 const isMe = e.userCode === myCode;
@@ -671,6 +751,10 @@ async function iqShowProfile(userCode) {
 
     sheet.innerHTML = `<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:12px;">${iqLang === 'nl' ? 'Laden...' : 'Loading...'}</div>`;
     overlay.classList.add('iq-overlay-show');
+
+    if (_iqStack[_iqStack.length - 1] !== 'profile') {
+        _pushIQState('profile');
+    }
 
     try {
         const res = await fetch(IQ_WORKER + '/iq-profile', {
@@ -727,8 +811,17 @@ async function iqShowProfile(userCode) {
 }
 
 function iqHideProfile(e) {
-    if (e.target === document.getElementById('iq-profile-overlay')) {
-        document.getElementById('iq-profile-overlay').classList.remove('iq-overlay-show');
+    // Only close if backdrop click (matches original behaviour) — or called with no event
+    if (e && e.target !== document.getElementById('iq-profile-overlay')) return;
+
+    if (_iqSuppressPush) {
+        _closeIQProfileDOM();
+        return;
+    }
+    if (_iqStack[_iqStack.length - 1] === 'profile') {
+        history.back();
+    } else {
+        _closeIQProfileDOM();
     }
 }
 

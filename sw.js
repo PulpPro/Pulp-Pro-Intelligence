@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const CACHE_NAME = 'pulp-pro-' + CACHE_VERSION;
 const ASSETS = [
     '/',
@@ -89,10 +89,11 @@ self.addEventListener('push', (event) => {
         badge: '/edited-image.png',
         tag: 'pulpro-reminder-' + (id || Date.now()),
         requireInteraction: true,
+        // Android typically shows only the last 2 actions inline. Keeping it to 2
+        // ensures both Done and Snooze are visible. Dismiss is provided by the OS.
         actions: [
             { action: 'done', title: '✓ Done' },
-            { action: 'snooze', title: '⏰ +1 hr' },
-            { action: 'dismiss', title: '✕ Dismiss' }
+            { action: 'snooze', title: '⏰ +1 hr' }
         ],
         data: { reminderId: id || null, usercode: uc || null }
     });
@@ -146,21 +147,26 @@ self.addEventListener('notificationclick', (event) => {
         return;
     }
 
-    if (event.action === 'dismiss') return;
-
-    // plain tap — store reminderId in Cache API then iOS opens PWA natively
-    // if app already open, postMessage directly
+    // Plain tap — open or focus the app.
+    // Android needs explicit openWindow; iOS opens PWA on tap and also handles openWindow.
     event.waitUntil(
         caches.open('pulpro-pending').then(cache => {
             return cache.put('/pending-reminder', new Response(JSON.stringify({ reminderId, usercode })));
         }).then(() => {
             return clients.matchAll({ type: 'window', includeUncontrolled: true });
         }).then(clientList => {
-            if (clientList.length > 0) {
-                clientList[0].focus();
-                clientList[0].postMessage({ type: 'OPEN_REMINDERS', reminderId });
+            // Existing window open — focus it and tell it to navigate to the reminder
+            for (const c of clientList) {
+                if ('focus' in c) {
+                    c.postMessage({ type: 'OPEN_REMINDERS', reminderId });
+                    return c.focus();
+                }
             }
-            // No openWindow — iOS opens PWA natively on notification tap
+            // No window open — open the app fresh.
+            // The OPEN_REMINDERS payload is cached above and picked up by the app on load.
+            if (clients.openWindow) {
+                return clients.openWindow('/');
+            }
         })
     );
 });

@@ -205,6 +205,7 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 @keyframes iqBrain{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 @keyframes iqFloatUp{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-30px)}}
 @keyframes iqSpin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+@keyframes dagDot{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:0.5}}
 .hbstat-num{font-size:1.1rem;font-weight:900;color:#a6e22e;letter-spacing:-0.5px}
 .hbstat-lbl{font-size:0.45rem;font-weight:700;color:rgba(255,255,255,0.22);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
 </style>
@@ -215,6 +216,31 @@ if (document.readyState === 'complete' && document.body && document.body.innerHT
 <div class="home-sub">Professional tools for the fruit floor. Built fast, works offline.</div>
 
 <div class="tool-cards">
+
+    <!-- 0. DAGRAPPORT — lime pulse line -->
+    <div class="tc" onclick="openDagrapport()" style="background:#050a05;border:1px solid rgba(166,226,46,0.22);padding:24px 26px;">
+        <canvas id="dag-tile-canvas" style="position:absolute;inset:0;width:100%;height:100%;border-radius:22px;pointer-events:none;z-index:0;"></canvas>
+        <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(166,226,46,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(166,226,46,0.025) 1px,transparent 1px);background-size:24px 24px;mask:radial-gradient(ellipse at center,#000 30%,transparent 80%);-webkit-mask:radial-gradient(ellipse at center,#000 30%,transparent 80%);pointer-events:none;z-index:1;"></div>
+        <div style="position:absolute;top:10px;right:12px;z-index:3;display:flex;align-items:center;gap:4px;background:rgba(166,226,46,0.1);border:1px solid rgba(166,226,46,0.25);border-radius:100px;padding:3px 9px;">
+            <div style="width:5px;height:5px;border-radius:50%;background:#a6e22e;animation:livePulse 2s infinite;box-shadow:0 0 6px #a6e22e;"></div>
+            <div style="font-size:7px;font-weight:800;color:#a6e22e;text-transform:uppercase;letter-spacing:1.2px;">Live</div>
+        </div>
+        <div style="position:relative;z-index:2;">
+            <div class="tc-tag" style="color:rgba(166,226,46,0.6);">Team · Shift · Dagrapport</div>
+            <div class="tc-title"><span style="color:#a6e22e;">Dagrapport</span></div>
+            <div class="tc-sub" style="color:rgba(166,226,46,0.4);margin-bottom:14px;">Log · Comment · Follow-up</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid rgba(166,226,46,0.1);">
+                <div style="display:flex;align-items:baseline;gap:5px;">
+                    <div id="dag-tile-entries" style="font-size:18px;font-weight:900;color:#fff;font-family:monospace;line-height:1;">0</div>
+                    <div style="font-size:8px;color:rgba(255,255,255,0.45);font-weight:700;letter-spacing:0.5px;text-transform:uppercase;">entries vandaag</div>
+                </div>
+                <div style="display:flex;align-items:baseline;gap:5px;">
+                    <div id="dag-tile-followups" style="font-size:18px;font-weight:900;color:#ff5050;font-family:monospace;line-height:1;">0</div>
+                    <div style="font-size:8px;color:rgba(255,80,80,0.7);font-weight:700;letter-spacing:0.5px;text-transform:uppercase;">vervolg aankomend</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- 1. BANANA AGE — cyan + radar -->
     <div class="tc tc-age" onclick="openAgeChecker()">

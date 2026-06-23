@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initAgeTileCanvas();
     initHolTileCanvas();
     initOriginTileCanvas();
+    initDagrapportTileCanvas();
     initHomeWelcome();
     // Pulp AI aurora — call after short delay to ensure canvas is sized
     setTimeout(() => {
@@ -468,4 +469,135 @@ function initOriginTileCanvas() {
         requestAnimationFrame(draw);
     }
     requestAnimationFrame(draw);
+}
+
+// ── DAGRAPPORT TILE — lime ECG pulse line with team dots ─────────────────
+function initDagrapportTileCanvas() {
+    const cv = document.getElementById('dag-tile-canvas');
+    if (!cv) return;
+    const tile = cv.parentElement;
+    cv.width = tile.offsetWidth || 350;
+    cv.height = tile.offsetHeight || 180;
+    const W = cv.width, H = cv.height;
+    const ctx = cv.getContext('2d');
+    const t0 = Date.now();
+
+    // ECG waveform — generated once as a long path (loops by translating)
+    // Pattern: flat baseline with periodic sharp QRS spikes
+    const baseY = H * 0.55;
+    const segW = W * 0.5; // one full pattern segment
+    const spikes = [
+        { x: 0.18, up: 18, down: 24 },
+        { x: 0.42, up: 22, down: 28 },
+        { x: 0.72, up: 16, down: 22 }
+    ];
+
+    // Team dots — positioned along the strip, pulse on their own rhythm
+    const dots = [
+        { x: W * 0.18, color: 'rgba(136,153,255,', initial: 'M', time: '08:14', phase: 0 },
+        { x: W * 0.52, color: 'rgba(166,226,46,',  initial: 'A', time: '07:55', phase: 0.7 },
+        { x: W * 0.82, color: 'rgba(255,165,0,',   initial: 'S', time: '11:22', phase: 1.4 }
+    ];
+
+    function drawWave(offsetX) {
+        ctx.beginPath();
+        let cursorX = -offsetX;
+        let cursorY = baseY;
+        ctx.moveTo(cursorX, cursorY);
+
+        // Draw two full segments so wrap is seamless
+        for (let seg = 0; seg < 3; seg++) {
+            const segStart = seg * segW - offsetX;
+            spikes.forEach(s => {
+                const sx = segStart + segW * s.x;
+                // flat lead-in
+                ctx.lineTo(sx - 8, baseY);
+                // upward spike
+                ctx.lineTo(sx - 4, baseY - s.up);
+                // sharp downward
+                ctx.lineTo(sx, baseY + s.down);
+                // recovery up
+                ctx.lineTo(sx + 4, baseY - 4);
+                // back to baseline
+                ctx.lineTo(sx + 8, baseY);
+            });
+            // flat tail
+            ctx.lineTo(segStart + segW, baseY);
+        }
+
+        // Gradient stroke — fade in/out at edges
+        const grad = ctx.createLinearGradient(0, 0, W, 0);
+        grad.addColorStop(0, 'rgba(166,226,46,0)');
+        grad.addColorStop(0.1, 'rgba(166,226,46,0.3)');
+        grad.addColorStop(0.5, 'rgba(166,226,46,0.85)');
+        grad.addColorStop(0.9, 'rgba(166,226,46,0.3)');
+        grad.addColorStop(1, 'rgba(166,226,46,0)');
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 1.6;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+    }
+
+    function drawDot(d, t) {
+        // Pulse scale on each dot's own 2.2s rhythm with phase offset
+        const phase = (t / 2.2 + d.phase) % 1;
+        const scale = 1 + 0.35 * Math.sin(phase * Math.PI * 2);
+        const opacity = 0.7 + 0.3 * Math.sin(phase * Math.PI * 2);
+
+        // Glow halo
+        const glowR = 10 * scale;
+        const halo = ctx.createRadialGradient(d.x, baseY, 0, d.x, baseY, glowR);
+        halo.addColorStop(0, d.color + (0.6 * opacity).toFixed(2) + ')');
+        halo.addColorStop(1, d.color + '0)');
+        ctx.fillStyle = halo;
+        ctx.beginPath();
+        ctx.arc(d.x, baseY, glowR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Core dot
+        ctx.fillStyle = d.color + opacity.toFixed(2) + ')';
+        ctx.beginPath();
+        ctx.arc(d.x, baseY, 4 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Border ring (matches tile background)
+        ctx.strokeStyle = '#050a05';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(d.x, baseY, 4 * scale, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Initial above dot
+        ctx.fillStyle = d.color + '0.85)';
+        ctx.font = '700 8px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(d.initial, d.x, baseY - 14);
+
+        // Time below dot
+        ctx.fillStyle = d.color + '0.55)';
+        ctx.font = '400 7px monospace';
+        ctx.fillText(d.time, d.x, baseY + 18);
+    }
+
+    function draw() {
+        const t = (Date.now() - t0) / 1000;
+        ctx.clearRect(0, 0, W, H);
+
+        // ECG line — scrolls left at constant speed
+        const speed = W / 7; // full segment in ~7s
+        const offset = (t * speed) % segW;
+        drawWave(offset);
+
+        // Team dots — pulse on their own rhythm
+        dots.forEach(d => drawDot(d, t));
+
+        requestAnimationFrame(draw);
+    }
+    draw();
+}
+
+// ── DAGRAPPORT — placeholder until feature is built ──────────────────────
+function openDagrapport() {
+    alert('Dagrapport komt eraan — feature wordt binnenkort gebouwd');
 }
